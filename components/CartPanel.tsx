@@ -16,6 +16,8 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const liffStatus = useLiff();
   const [sendState, setSendState] = useState<SendState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [paypayLoading, setPaypayLoading] = useState(false);
+  const [paypayError, setPaypayError] = useState("");
 
   const buildMessageText = () => {
     const lines = state.items.map(
@@ -32,10 +34,8 @@ export default function CartPanel({ isOpen, onClose }: Props) {
 
   const handleOrder = async () => {
     if (sendState === "sending") return;
-
     const text = buildMessageText();
 
-    // LIFF未初期化・環境変数未設定時はコンソール出力のみ
     if (liffStatus.state !== "ready") {
       console.log("【LINE送信プレビュー（LIFF未初期化）】\n" + text);
       setSendState("done");
@@ -48,14 +48,11 @@ export default function CartPanel({ isOpen, onClose }: Props) {
 
     try {
       const { default: liff } = await import("@line/liff");
-
       if (!liff.isInClient()) {
-        // ブラウザ（非LIFFクライアント）: sendMessages は使えないためログのみ
         console.log("【LINE送信プレビュー（ブラウザ環境）】\n" + text);
       } else {
         await liff.sendMessages([{ type: "text", text }]);
       }
-
       setSendState("done");
       dispatch({ type: "CLEAR" });
       setTimeout(() => {
@@ -70,25 +67,47 @@ export default function CartPanel({ isOpen, onClose }: Props) {
     }
   };
 
+  const handlePayPay = async () => {
+    if (paypayLoading) return;
+    setPaypayLoading(true);
+    setPaypayError("");
+
+    try {
+      const res = await fetch("/api/paypay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: state.items, total }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "PayPay QRコードの生成に失敗しました");
+      }
+
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setPaypayError(msg);
+    } finally {
+      setPaypayLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto slide-up">
-        <div className="bg-kirinji-charcoal rounded-t-3xl border-t border-kirinji-yellow/30 max-h-[80vh] flex flex-col">
-          {/* Handle */}
+        <div className="bg-kirinji-charcoal rounded-t-3xl border-t border-kirinji-yellow/30 max-h-[85vh] flex flex-col">
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 bg-white/20 rounded-full" />
           </div>
 
-          {/* Header */}
           <div className="px-5 py-3 flex items-center justify-between border-b border-white/10">
             <h2
               className="text-white font-black text-2xl tracking-wider"
@@ -104,7 +123,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             </button>
           </div>
 
-          {/* Items */}
           <div className="flex-1 overflow-y-auto px-5 py-3">
             {state.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -154,10 +172,8 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             )}
           </div>
 
-          {/* Footer */}
           {state.items.length > 0 && (
-            <div className="px-5 py-5 border-t border-white/10 bg-kirinji-charcoal rounded-b-none">
-              {/* Total */}
+            <div className="px-5 py-5 border-t border-white/10 bg-kirinji-charcoal">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-white/60 font-bold text-sm">合計金額</span>
                 <span
@@ -168,7 +184,42 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 </span>
               </div>
 
-              {/* LIFF status indicator */}
+              {/* PayPay button */}
+              <button
+                onClick={handlePayPay}
+                disabled={paypayLoading}
+                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 mb-3 ${
+                  paypayLoading
+                    ? "bg-[#ff0033]/50 text-white"
+                    : "bg-[#ff0033] text-white active:scale-[0.98]"
+                }`}
+                style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
+              >
+                {paypayLoading ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    PayPay処理中…
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+                      <circle cx="50" cy="50" r="50" fill="white"/>
+                      <text x="50%" y="58%" dominantBaseline="middle" textAnchor="middle" fill="#ff0033" fontSize="36" fontWeight="bold" fontFamily="sans-serif">P</text>
+                    </svg>
+                    PayPayで支払う
+                  </>
+                )}
+              </button>
+              {paypayError && (
+                <p className="text-red-400/70 text-[11px] text-center mb-3 px-2">{paypayError}</p>
+              )}
+
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-white/20 text-xs">または</span>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+
               {liffStatus.state === "loading" && (
                 <p className="text-white/30 text-xs text-center mb-3 flex items-center justify-center gap-1.5">
                   <span className="inline-block w-3 h-3 border-2 border-white/20 border-t-kirinji-yellow rounded-full animate-spin" />
@@ -181,13 +232,12 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 </p>
               )}
 
-              {/* Order button */}
               <button
                 onClick={handleOrder}
                 disabled={sendState === "sending" || sendState === "done"}
                 className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 ${
                   sendState === "done"
-                    ? "bg-green-500 text-white scale-100"
+                    ? "bg-green-500 text-white"
                     : sendState === "error"
                     ? "bg-red-500 text-white"
                     : sendState === "sending"
@@ -215,7 +265,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 )}
               </button>
 
-              {/* Error detail */}
               {sendState === "error" && errorMsg && (
                 <p className="text-red-400/60 text-[11px] text-center mt-1.5 px-2">{errorMsg}</p>
               )}
