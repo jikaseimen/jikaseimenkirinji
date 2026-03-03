@@ -54,7 +54,8 @@ function CompleteContent() {
 
           <div className="bg-kirinji-yellow/10 border border-kirinji-yellow/20 rounded-2xl px-5 py-4 max-w-xs w-full">
             <p className="text-kirinji-yellow text-xs font-bold text-center leading-relaxed">
-              📍 お店でこの番号をお伝えください<br />
+              📍 お店でこの番号をお伝えください
+              <br />
               <span className="text-white/60 font-normal">
                 商品ができましたらお呼びします
               </span>
@@ -62,13 +63,15 @@ function CompleteContent() {
           </div>
 
           <p className="text-white/40 text-xs text-center leading-relaxed">
-            ご注文ありがとうございます。<br />
+            ご注文ありがとうございます。
+            <br />
             準備ができましたらお声がけします。
           </p>
         </>
       ) : (
         <p className="text-white/60 text-sm text-center leading-relaxed">
-          ご注文ありがとうございます。<br />
+          ご注文ありがとうございます。
+          <br />
           お席でお待ちください。
         </p>
       )}
