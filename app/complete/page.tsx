@@ -8,11 +8,8 @@ function CompleteContent() {
   const type = params.get("type");
   const orderNumber = params.get("order");
   const pickupRaw = params.get("pickup");
-
   const isTakeout = type === "takeout" && orderNumber && pickupRaw;
-  const pickupTime = pickupRaw
-    ? `${pickupRaw.slice(0, 2)}:${pickupRaw.slice(2, 4)}`
-    : "";
+  const pickupTime = pickupRaw ? pickupRaw.slice(0, 2) + ":" + pickupRaw.slice(2, 4) : "";
 
   return (
     <div className="min-h-screen bg-kirinji-black flex flex-col items-center justify-center px-6 gap-6">
@@ -26,25 +23,15 @@ function CompleteContent() {
       {isTakeout ? (
         <div>
           <div className="w-full max-w-xs bg-kirinji-charcoal rounded-3xl border border-kirinji-yellow/30 px-6 py-6 flex flex-col items-center gap-4">
-            <p className="text-white/50 text-xs font-bold tracking-widest uppercase">
-              Order Number
-            </p>
-            <p
-              className="text-kirinji-yellow text-6xl font-black tracking-widest"
-              style={{ fontFamily: "'Bebas Neue', serif" }}
-            >
+            <p className="text-white/50 text-xs font-bold tracking-widest uppercase">Order Number</p>
+            <p className="text-kirinji-yellow text-6xl font-black tracking-widest" style={{ fontFamily: "'Bebas Neue', serif" }}>
               {orderNumber}
             </p>
             <div className="w-full h-px bg-white/10" />
-            <p className="text-white/50 text-xs font-bold tracking-widest uppercase">
-              受け取り時間の目安
-            </p>
+            <p className="text-white/50 text-xs font-bold tracking-widest uppercase">受け取り時間の目安</p>
             <div className="flex items-center gap-2">
               <span className="text-2xl">🕐</span>
-              <p
-                className="text-white text-4xl font-black"
-                style={{ fontFamily: "'Bebas Neue', serif" }}
-              >
+              <p className="text-white text-4xl font-black" style={{ fontFamily: "'Bebas Neue', serif" }}>
                 {pickupTime} 頃
               </p>
             </div>
@@ -53,9 +40,7 @@ function CompleteContent() {
             <p className="text-kirinji-yellow text-xs font-bold text-center leading-relaxed">
               📍 お店でこの番号をお伝えください
               <br />
-              <span className="text-white/60 font-normal">
-                商品ができましたらお呼びします
-              </span>
+              <span className="text-white/60 font-normal">商品ができましたらお呼びします</span>
             </p>
           </div>
           <p className="text-white/40 text-xs text-center leading-relaxed mt-4">
