@@ -18,7 +18,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const [errorMsg, setErrorMsg] = useState("");
   const [paypayLoading, setPaypayLoading] = useState(false);
   const [paypayError, setPaypayError] = useState("");
-  // テイクアウトモード
   const [isTakeout, setIsTakeout] = useState(false);
 
   const buildMessageText = () => {
@@ -38,17 +37,14 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const handleOrder = async () => {
     if (sendState === "sending") return;
     const text = buildMessageText();
-
     if (liffStatus.state !== "ready") {
       console.log("【LINE送信プレビュー（LIFF未初期化）】\n" + text);
       setSendState("done");
       setTimeout(() => setSendState("idle"), 3000);
       return;
     }
-
     setSendState("sending");
     setErrorMsg("");
-
     try {
       const { default: liff } = await import("@line/liff");
       if (!liff.isInClient()) {
@@ -74,7 +70,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
     if (paypayLoading) return;
     setPaypayLoading(true);
     setPaypayError("");
-
     try {
       const res = await fetch("/api/paypay", {
         method: "POST",
@@ -82,11 +77,9 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         body: JSON.stringify({ items: state.items, total, isTakeout }),
       });
       const data = await res.json();
-
       if (!res.ok || !data.url) {
         throw new Error(data.error ?? "PayPay QRコードの生成に失敗しました");
       }
-
       window.location.href = data.url;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -99,18 +92,16 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <>
+    <div>
       <div
         className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
-
       <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto slide-up">
         <div className="bg-kirinji-charcoal rounded-t-3xl border-t border-kirinji-yellow/30 max-h-[85vh] flex flex-col">
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 bg-white/20 rounded-full" />
           </div>
-
           <div className="px-5 py-3 flex items-center justify-between border-b border-white/10">
             <h2
               className="text-white font-black text-2xl tracking-wider"
@@ -126,15 +117,12 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             </button>
           </div>
 
-          {/* ─── テイクアウト / 店内 切り替えトグル ─── */}
           <div className="px-5 pt-4 pb-2">
             <div className="flex bg-kirinji-black rounded-2xl p-1 border border-white/10">
               <button
                 onClick={() => setIsTakeout(false)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-black tracking-wider transition-all ${
-                  !isTakeout
-                    ? "bg-kirinji-yellow text-kirinji-black"
-                    : "text-white/40"
+                  !isTakeout ? "bg-kirinji-yellow text-kirinji-black" : "text-white/40"
                 }`}
                 style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
               >
@@ -143,9 +131,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               <button
                 onClick={() => setIsTakeout(true)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-black tracking-wider transition-all ${
-                  isTakeout
-                    ? "bg-kirinji-yellow text-kirinji-black"
-                    : "text-white/40"
+                  isTakeout ? "bg-kirinji-yellow text-kirinji-black" : "text-white/40"
                 }`}
                 style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
               >
@@ -212,3 +198,64 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             <div className="px-5 py-5 border-t border-white/10 bg-kirinji-charcoal">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-white/60 font-bold text-sm">合計金額</span>
+                <span
+                  className="text-kirinji-yellow font-black text-3xl"
+                  style={{ fontFamily: "'Bebas Neue', serif", letterSpacing: "0.02em" }}
+                >
+                  ¥{total.toLocaleString()}
+                </span>
+              </div>
+              <button
+                onClick={handlePayPay}
+                disabled={paypayLoading}
+                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 mb-3 ${
+                  paypayLoading ? "bg-[#ff0033]/50 text-white" : "bg-[#ff0033] text-white active:scale-[0.98]"
+                }`}
+                style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
+              >
+                {paypayLoading ? (
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <span>PayPayで支払う{isTakeout ? "（テイクアウト）" : ""}</span>
+                )}
+              </button>
+              {paypayError && (
+                <p className="text-red-400/70 text-[11px] text-center mb-3 px-2">{paypayError}</p>
+              )}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-white/20 text-xs">または</span>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+              <button
+                onClick={handleOrder}
+                disabled={sendState === "sending" || sendState === "done"}
+                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  sendState === "done"
+                    ? "bg-green-500 text-white"
+                    : sendState === "error"
+                    ? "bg-red-500 text-white"
+                    : sendState === "sending"
+                    ? "bg-kirinji-amber/70 text-kirinji-black"
+                    : "bg-kirinji-yellow text-kirinji-black active:scale-[0.98]"
+                }`}
+                style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
+              >
+                {sendState === "sending" ? "送信中…" : sendState === "done" ? "✓ 送信しました" : sendState === "error" ? "⚠ 送信失敗 — タップで再試行" : "注文する（LINEで送信）"}
+              </button>
+              {sendState === "error" && errorMsg && (
+                <p className="text-red-400/60 text-[11px] text-center mt-1.5 px-2">{errorMsg}</p>
+              )}
+              <button
+                onClick={() => dispatch({ type: "CLEAR" })}
+                className="w-full mt-2 py-2 text-white/30 text-xs font-bold tracking-wider"
+              >
+                カートを空にする
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
