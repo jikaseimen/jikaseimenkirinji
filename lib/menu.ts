@@ -1,6 +1,7 @@
 export type MenuItem = {
   name: string;
   price: number;
+  takeoutAvailable?: boolean;
 };
 
 export type MenuCategory = {
@@ -12,35 +13,35 @@ export const MENU_DATA: MenuCategory[] = [
   {
     category: "こってり",
     items: [
-      { name: "こってり", price: 950 },
-      { name: "味玉こってり", price: 1050 },
-      { name: "野菜こってり", price: 1150 },
-      { name: "豚増こってり", price: 1330 },
+      { name: "こってり", price: 950, takeoutAvailable: true },
+      { name: "味玉こってり", price: 1050, takeoutAvailable: true },
+      { name: "野菜こってり", price: 1150, takeoutAvailable: true },
+      { name: "豚増こってり", price: 1330, takeoutAvailable: true },
     ],
   },
   {
     category: "あっさり",
     items: [
-      { name: "あっさり", price: 900 },
-      { name: "味玉あっさり", price: 1000 },
-      { name: "野菜あっさり", price: 1050 },
-      { name: "豚増あっさり", price: 1250 },
+      { name: "あっさり", price: 900, takeoutAvailable: true },
+      { name: "味玉あっさり", price: 1000, takeoutAvailable: true },
+      { name: "野菜あっさり", price: 1050, takeoutAvailable: true },
+      { name: "豚増あっさり", price: 1250, takeoutAvailable: true },
     ],
   },
   {
     category: "汁無し",
     items: [
-      { name: "汁無し", price: 1000 },
-      { name: "チーズ汁無し", price: 1150 },
-      { name: "野菜汁無し", price: 1150 },
-      { name: "豚マシ汁無し", price: 1350 },
+      { name: "汁無し", price: 1000, takeoutAvailable: true },
+      { name: "チーズ汁無し", price: 1150, takeoutAvailable: true },
+      { name: "野菜汁無し", price: 1150, takeoutAvailable: true },
+      { name: "豚マシ汁無し", price: 1350, takeoutAvailable: true },
     ],
   },
   {
     category: "油そば・飲み物",
     items: [
-      { name: "【冷】油そば", price: 800 },
-      { name: "【温】油そば", price: 800 },
+      { name: "【冷】油そば", price: 800, takeoutAvailable: true },
+      { name: "【温】油そば", price: 800, takeoutAvailable: true },
       { name: "コーラ", price: 250 },
       { name: "ビール", price: 600 },
     ],
@@ -57,10 +58,10 @@ export const MENU_DATA: MenuCategory[] = [
       { name: "ライス", price: 250 },
       { name: "豚増", price: 400 },
       { name: "かす増", price: 400 },
-      { name: "テイクアウトあぶらかす", price: 600 },
+      { name: "テイクアウトあぶらかす", price: 600, takeoutAvailable: true },
       { name: "粒ニンニク", price: 400 },
       { name: "麺特盛", price: 350 },
-      { name: "かす飯", price: 400 },
+      { name: "かす飯", price: 400, takeoutAvailable: true },
     ],
   },
 ];
