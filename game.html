@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>あぶらかすキャッチ - 自家製麺キリンジ</title>
+    <script src="https://unpkg.com/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* ========================================
+           リセット & ベース
+        ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Twemoji画像化 */
+        img.emoji {
+            height: 1.2em;
+            width: 1.2em;
+            margin: 0 0.1em;
+            vertical-align: middle;
+        }
+        
+        /* ========================================
+           ニュースバナー（大きく表示、タイトル直下）
+        ======================================== */
+        #newsBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+            padding: 6px 12px;
+            padding-top: calc(6px + 18px);
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 1);
+            z-index: 9999999;
+            pointer-events: none;
+            border-bottom: 3px solid #ffd700;
+        }
+        
+        #newsBanner.show {
+            animation: slideDown 0.4s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .news-label {
+            display: inline-block;
+            background: #ffd700;
+            color: #8b0000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 900;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        
+        .news-text {
+            display: inline;
+            font-size: 12px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 3px #000;
+            line-height: 1.4;
+            vertical-align: middle;
+        }
+        
+        .news-stocktag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        
+        .news-stocktag.up {
+            background: #1b5e20;
+            color: #a5d6a7;
+        }
+        
+        .news-stocktag.down {
+            background: #b71c1c;
+            color: #ffcdd2;
+        }
+        
+        /* 実況解説バー完全削除 */
+        #commentBar {
+            display: none !important;
+        }
+        
+        /* ========================================
+           メインコンテナ
+        ======================================== */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ========================================
+           ヘッダー（スコア表示）
+        ======================================== */
+        .header {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            padding: 3px 8px;
+            text-align: center;
+            padding-top: calc(3px + env(safe-area-inset-top, 0px));
+        }
+        
+        .header h1 {
+            font-size: 11px;
+            margin-bottom: 0;
+        }
+        
+        /* スコア・ボタンエリアを下部に配置 */
+        .bottom-ui {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            padding: 3px 8px;
+            padding-bottom: calc(3px + env(safe-area-inset-bottom, 0px));
+            z-index: 1000;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .score-row {
+            display: flex;
+            justify-content: space-around;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+        
+        .bonby-row {
+            display: flex;
+            justify-content: space-around;
+            font-size: 8px;
+            margin-bottom: 2px;
+        }
+        
+        .btn-row {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 2px;
+        }
+        
+        /* ========================================
+           ボタンスタイル
+        ======================================== */
+        .btn {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        .floating-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #2d7a2d 100%);
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 3px 4px;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            pointer-events: auto;
+            flex: 1;
+            line-height: 1.1;
+            z-index: 1000;
+        }
+        
+        .floating-btn.tamago {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #8b0000;
+            border-color: #ff4444;
+        }
+        
+        .floating-btn.red {
+            background: linear-gradient(135deg, #8b0000 0%, #c41e3a 100%);
+            border-color: #ff8888;
+        }
+        
+        .floating-btn.blue {
+            background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+            border-color: #90caf9;
+        }
+        
+        .floating-btn.purple {
+            background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
+            border-color: #ce93d8;
+        }
+        
+        .floating-btn.disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+        
+        /* ========================================
+           ゲームエリア
+        ======================================== */
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+            overflow: hidden;
+            padding-top: 57px;
+            padding-bottom: 82px;
+        }
+        
+        /* ボタンエリア削除（bottom-ui使用） */
+        
+        .item {
+            position: absolute;
+            cursor: grab;
+            z-index: 100;
+            will-change: transform;
+        }
+        
+        .item img.emoji {
+            width: 80px;
+            height: 80px;
+        }
+        
+        /* 黄金アイテム */
+        .item.golden-glow {
+            filter: drop-shadow(0 0 12px gold);
+            animation: goldenPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes goldenPulse {
+            from { filter: drop-shadow(0 0 6px gold); }
+            to { filter: drop-shadow(0 0 20px #ffd700); }
+        }
+        
+        /* 高速アイテム */
+        .item.speedy {
+            animation: speedyWiggle 0.12s infinite alternate;
+        }
+        
+        @keyframes speedyWiggle {
+            from { transform: rotate(-6deg) scale(1.08); }
+            to { transform: rotate(6deg) scale(0.93); }
+        }
+        
+        /* ボンビーキャラ */
+        .item.bonby-char {
+            border: 3px solid #ff4444;
+            border-radius: 50%;
+            padding: 4px;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+            animation: bonbyPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes bonbyPulse {
+            from { box-shadow: 0 0 8px rgba(255, 68, 68, 0.4); }
+            to { box-shadow: 0 0 28px rgba(255, 68, 68, 0.9); }
+        }
+        
+        /* ========================================
+           ヒント表示
+        ======================================== */
+        .hint-up {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 11px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: hintBlink 1s infinite;
+        }
+        
+        @keyframes hintBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        #holdHint {
+            position: fixed;
+            top: 38%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.88);
+            border: 2px solid #ff4444;
+            border-radius: 12px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #ff8a80;
+            pointer-events: none;
+            z-index: 9999997;
+            display: none;
+        }
+        
+        /* ========================================
+           操作説明バー（削除）
+        ======================================== */
+        
+        /* ========================================
+           実況解説バー（ニュースの下）
+        ======================================== */
+        #commentBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(90deg, #1a0000, #0d0d0d, #1a0000);
+            border-bottom: 2px solid #ffa500;
+            padding: 3px 8px;
+            padding-top: calc(3px + 81px);
+            z-index: 99;
+            pointer-events: none;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            min-height: 26px;
+        }
+        
+        .comment-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        #commentText {
+            font-size: 9px;
+            font-weight: bold;
+            color: #fff;
+            line-height: 1.2;
+            flex: 1;
+        }
+        
+        #commentText.good { color: #a5d6a7; }
+        #commentText.bad { color: #ff8a80; }
+        #commentText.meh { color: #ffd700; }
+        
+        @keyframes commentSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .comment-anim {
+            animation: commentSlide 0.3s ease;
+        }
+        
+        /* ========================================
+           コンボ表示
+        ======================================== */
+        #comboDisplay {
+            position: fixed;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 44px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 3px 3px 0 #000;
+            pointer-events: none;
+            z-index: 9999999;
+            opacity: 0;
+        }
+        
+        #comboDisplay.show {
+            animation: comboPop 0.6s ease forwards;
+        }
+        
+        @keyframes comboPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+            40% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+        
+        /* ========================================
+           長押しプログレスリング
+        ======================================== */
+        #holdRing {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999998;
+            display: none;
+        }
+        
+        #holdRing svg {
+            width: 96px;
+            height: 96px;
+        }
+        
+        #holdRingPath {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            stroke: #ffd700;
+            stroke-width: 7;
+            fill: none;
+            stroke-linecap: round;
+        }
+        
+        #holdLabel {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999999;
+            display: none;
+            font-size: 11px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px #000;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        /* ========================================
+           天使の仙台四郎
+        ======================================== */
+        .angel-burst {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.35) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9000000;
+            animation: angelFlash 1s ease forwards;
+        }
+        
+        @keyframes angelFlash {
+            0% { opacity: 0; }
+            30% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        #angelPopup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            background: linear-gradient(135deg, #fffde7, #ffd700);
+            border: 5px solid #fff;
+            border-radius: 20px;
+            padding: 20px 28px;
+            z-index: 35000000;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
+            animation: angelPop 0.4s ease;
+            display: none;
+        }
+        
+        @keyframes angelPop {
+            from { transform: translate(-50%, -60%) scale(0.2); }
+            to { transform: translate(-50%, -60%) scale(1); }
+        }
+        
+        .angel-face {
+            font-size: 55px;
+            display: block;
+        }
+        
+        .angel-msg {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8b0000;
+            margin-top: 6px;
+        }
+        
+        .angel-pts {
+            font-size: 34px;
+            font-weight: bold;
+            color: #c41e3a;
+            margin: 4px 0;
+        }
+        
+        /* ========================================
+           トースト通知
+        ======================================== */
+        .toast {
+            position: fixed;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 99999999;
+            white-space: nowrap;
+            pointer-events: none;
+            animation: toastAnim 3s ease forwards;
+        }
+        
+        @keyframes toastAnim {
+            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            75% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        /* ========================================
+           ポップアップ共通
+        ======================================== */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 25000000;
+        }
+        
+        .panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 5px solid #ffd700;
+            border-radius: 20px;
+            padding: 20px;
+            width: 92%;
+            max-width: 480px;
+            z-index: 30000000;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* ========================================
+           スタート画面
+        ======================================== */
+        .start-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000000;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+        }
+        
+        /* ========================================
+           株式パネル
+        ======================================== */
+        .stock-panel {
+            background: linear-gradient(135deg, #2d5a2d 0%, #1a3a1a 100%);
+        }
+        
+        .stock-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            text-align: left;
+        }
+        
+        .stock-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+        
+        .stock-desc {
+            font-size: 10px;
+            color: #eee;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        
+        .stock-mult {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        
+        .stock-mult.up {
+            background: #1b5e20;
+            color: #a5d6a7;
+        }
+        
+        .stock-mult.down {
+            background: #b71c1c;
+            color: #ffcdd2;
+        }
+        
+        .stock-mult.neutral {
+            background: #555;
+            color: #aaa;
+        }
+        
+        .stock-btns {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .stock-btns button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-buy {
+            background: linear-gradient(135deg, #1565c0, #1976d2);
+            color: white;
+        }
+        
+        .btn-short {
+            background: linear-gradient(135deg, #8b0000, #c41e3a);
+            color: white;
+        }
+        
+        .dividend-badge {
+            display: inline-block;
+            background: #ffd700;
+            color: #333;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        
+        /* ========================================
+           コレクションパネル
+        ======================================== */
+        .collection-panel {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .menu-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .menu-card.unlocked {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.12);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+        
+        .menu-card.locked {
+            filter: grayscale(1);
+            opacity: 0.4;
+        }
+        
+        .card-icon {
+            font-size: 26px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .card-name {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 11px;
+        }
+        
+        .card-cond {
+            color: #aaa;
+            font-size: 9px;
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+        
+        /* ========================================
+           ランキングパネル
+        ======================================== */
+        .rank-panel {
+            background: linear-gradient(135deg, #0d1b2a, #1b2838);
+        }
+        
+        .rank-row {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+        }
+        
+        .rank-num {
+            font-size: 20px;
+            font-weight: bold;
+            width: 36px;
+            color: #aaa;
+        }
+        
+        .rank-num.gold { color: #ffd700; }
+        .rank-num.silver { color: #c0c0c0; }
+        .rank-num.bronze { color: #cd7f32; }
+        
+        .rank-name {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .rank-score {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        /* ========================================
+           シェイク演出
+        ======================================== */
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+        
+        .shaking {
+            animation: shakeAnim 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ニュースバナー -->
+<div id="newsBanner">
+    <span class="news-label">【速報】<span id="newsIcon"></span></span>
+    <span id="newsText" class="news-text">市場が開場しました</span>
+    <span id="newsStockTag" class="news-stocktag" style="display:none"></span>
+</div>
+
+<!-- コンボ表示 -->
+<div id="comboDisplay"></div>
+
+<!-- 実況解説バー -->
+<div id="commentBar">
+    <span class="comment-icon" id="commentIcon">🎙️</span>
+    <span id="commentText" class="meh">実況・解説 待機中...</span>
+</div>
+
+<!-- 天使の仙台四郎ポップアップ -->
+<div id="angelPopup">
+    <span class="angel-face">👼</span>
+    <div class="angel-msg">天使の仙台四郎 降臨！</div>
+    <div class="angel-pts" id="angelPtsText">+500🥓</div>
+    <div style="font-size:13px; color:#333; margin-top:6px;">ご利益MAX！</div>
+</div>
+
+<!-- 長押しプログレスリング -->
+<div id="holdRing">
+    <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="45" id="holdRingPath"/></svg>
+</div>
+<div id="holdLabel">長押し中...</div>
+<div id="holdHint">長押し→スワイプ！</div>
+
+<!-- メインコンテナ -->
+<div class="container">
+    <!-- ヘッダー -->
+    <!-- ヘッダー（タイトルのみ） -->
+    <div class="header">
+        <h1>あぶらかすキャッチ</h1>
+    </div>
+
+    <!-- ゲームエリア -->
+    <div class="game-area" id="gameArea">
+        <div id="activeItem" class="item" style="display:none;"></div>
+        <div id="upHint" class="hint-up" style="display:none;">⬆️ 上スワイプ！</div>
+    </div>
+
+    <!-- スコア・ボタンエリア（最下部） -->
+    <div class="bottom-ui">
+        <!-- スコア行（下から4番目） -->
+        <div class="score-row">
+            <div>Lv.<span id="level">1</span></div>
+            <div><span class="bIcon"></span><span id="points">0</span></div>
+            <div>❌<span id="mistakes">0</span></div>
+            <div>🔥<span id="comboCount">0</span></div>
+        </div>
+        <!-- ボンビー行（下から3番目） -->
+        <div class="bonby-row">
+            <div>支倉<span id="hasekuraCount">0</span></div>
+            <div>伊達<span id="dateCount">0</span></div>
+            <div>芭蕉<span id="bashoCount">0</span></div>
+            <div>カード<span id="cardCount">0</span>/10</div>
+        </div>
+        <!-- ボタン行1（下から2番目） -->
+        <div class="btn-row">
+            <button class="floating-btn tamago disabled" id="tamagoBtn" onclick="handleTamagoClick()">🥚 味玉券</button>
+            <button class="floating-btn" onclick="showStocks()">📈 株式</button>
+            <button class="floating-btn blue" onclick="showCollection()">🎴 カード</button>
+        </div>
+        <!-- ボタン行2（最下層） -->
+        <div class="btn-row">
+            <button class="floating-btn purple" onclick="showRank()">🏆 ランキング</button>
+            <button class="floating-btn red" onclick="shareScore()">𝕏 シェア</button>
+            <button class="floating-btn" onclick="showReferral()">🎁 招待</button>
+        </div>
+    </div>
+
+    <!-- 統合バナー削除（コメントアウト） -->
+</div>
+
+<!-- スタート画面 -->
+<div class="start-screen" id="startScreen">
+    <div style="font-size:70px; margin-bottom:15px;"><span class="bIcon"></span></div>
+    <h2 style="font-size:20px; color:#ffd700; margin-bottom:10px;">あぶらかすキャッチ</h2>
+    <p style="font-size:13px; margin-bottom:5px;">一万点ゲットでお店で味玉ゲット！</p>
+    <p style="font-size:11px; color:#aaa; margin-bottom:3px;">🥓🍜右スワイプ　🥩⬅️左スワイプ</p>
+    <p style="font-size:11px; color:#ffd700; margin-bottom:3px;">🍲 芋煮鍋→スマホを振る！</p>
+    <p style="font-size:11px; color:#90caf9; margin-bottom:3px;">🍵 スープ→上にスワイプ！</p>
+    <p style="font-size:11px; color:#ff8a80; margin-bottom:3px;">🥓 長押しあぶらかす→2秒長押し！</p>
+    <p style="font-size:11px; color:#ff5252; margin-bottom:3px;">🧄🫚 ニンニク・生姜→超速！即スワイプ！</p>
+    <p style="font-size:11px; color:#ce93d8; margin-bottom:12px;">✈️⚔️🥷 ボンビーキャラ→長押し後スワイプ！</p>
+    <button class="btn" onclick="startGame()">🎮 ゲーム開始</button>
+    <button class="btn" style="background:#444; font-size:13px; padding:8px 20px;" onclick="applyReferral()">🎁 招待コード入力 (+500pt)</button>
+</div>
+
+<!-- 株式パネル -->
+<div class="popup-overlay hidden" id="stockOverlay" onclick="closeStocks()"></div>
+<div class="panel stock-panel hidden" id="stockPanel">
+    <div style="font-size:20px; font-weight:bold; color:white; margin-bottom:8px; text-align:center;">📈 株式投資</div>
+    <div style="text-align:center; color:#ffd700; margin-bottom:5px; font-weight:bold;">資産: <span id="balanceText">0</span>🥓</div>
+    <div style="text-align:center; color:#aaa; font-size:11px; margin-bottom:12px;">📰ニュース連動中 | 保有株は毎日配当あり</div>
+    <div id="stocksList"></div>
+    <button class="btn" onclick="closeStocks()" style="width:100%; background:#444; padding:10px;">戻る</button>
+</div>
+
+<!-- コレクションパネル -->
+<div class="popup-overlay hidden" id="collectionOverlay" onclick="closeCollection()"></div>
+<div class="panel collection-panel hidden" id="collectionPanel">
+    <div style="font-size:20px; font-weight:bold; color:#ffd700; text-align:center; margin-bottom:4px;">🎴 キリンジカード</div>
+    <div style="text-align:center; color:#aaa; font-size:11px; margin-bottom:12px;">全10種のメニューカードを集めよう！</div>
+    <div class="card-grid" id="cardGrid"></div>
+    <button class="btn" onclick="closeCollection()" style="width:100%; background:#444; padding:10px;">閉じる</button>
+</div>
+
+<!-- ランキングパネル -->
+<div class="popup-overlay hidden" id="rankOverlay" onclick="closeRank()"></div>
+<div class="panel rank-panel hidden" id="rankPanel">
+    <div style="font-size:20px; font-weight:bold; color:#ffd700; text-align:center; margin-bottom:12px;">🏆 ランキング</div>
+    <div id="rankList"></div>
+    <div style="text-align:center; margin:12px 0 0;">
+        <div style="color:#aaa; font-size:11px; margin-bottom:8px;">あなたのスコアを登録</div>
+        <input id="rankNameInput" type="text" maxlength="10" placeholder="名前(10文字以内)" style="width:65%; padding:8px; border-radius:8px; border:2px solid #ffd700; background:#1a1a1a; color:white; font-size:13px; text-align:center;">
+        <button class="btn" onclick="submitScore()" style="padding:8px 15px; font-size:13px; margin-left:5px;">登録</button>
+    </div>
+    <button class="btn" onclick="closeRank()" style="width:100%; background:#444; padding:10px; margin-top:8px;">閉じる</button>
+</div>
+
+<script>
+// ========================================
+// 定数定義
+// ========================================
+const E = {
+    bacon: '\uD83E\uDD53',
+    ramen: '\uD83C\uDF5C',
+    chef: '\uD83D\uDC68\u200D\uD83C\uDF73',
+    niku: '\uD83E\uDD69',
+    news: '\uD83D\uDCB9',
+    money: '\uD83D\uDCB0',
+    sword: '\u2694\uFE0F',
+    ship: '\uD83D\uDEA2',
+    bag: '\uD83D\uDCBC',
+    hotel: '\uD83C\uDFE8',
+    soccer: '\u26BD\uFE0F',
+    rocket: '\uD83D\uDE80',
+    skull: '\uD83D\uDC80',
+    soup: '\uD83C\uDF75',
+    imoni: '\uD83C\uDF72',
+    star: '\u2B50',
+    garlic: '\uD83E\uDDC4',
+    ginger: '\uD83E\uDEDA',
+    angel: '\uD83D\uDC7C',
+    plane: '\u2708\uFE0F',
+    ninja: '\uD83E\uDD77'
+};
+
+// ========================================
+// アイテム定義
+// ========================================
+const ITEMS = [
+    { emoji: E.bacon, action: 'right', points: 5, type: 'normal', weight: 28 },
+    { emoji: E.ramen, action: 'right', points: 15, type: 'normal', weight: 18 },
+    { emoji: E.chef, action: 'right', points: 10, type: 'normal', weight: 14 },
+    { emoji: E.niku, action: 'left', points: 1, type: 'normal', weight: 22 },
+    { emoji: E.soup, action: 'up', points: 20, type: 'normal', weight: 4 },
+    { emoji: E.imoni, action: 'shake', points: 30, type: 'normal', weight: 4 },
+    { emoji: E.bacon, action: 'hold', points: 25, type: 'hold', weight: 3 },
+    { emoji: E.garlic, action: 'right', points: 8, type: 'speedy', weight: 4 },
+    { emoji: E.ginger, action: 'right', points: 8, type: 'speedy', weight: 4 },
+    { emoji: E.plane, action: 'bonby', points: 0, type: 'bonby', who: 'hasekura', weight: 1 },
+    { emoji: E.sword, action: 'bonby', points: 0, type: 'bonby', who: 'date', weight: 1 },
+    { emoji: E.ninja, action: 'bonby', points: 0, type: 'bonby', who: 'basho', weight: 1 }
+];
+
+// ========================================
+// 株式定義
+// ========================================
+const STOCKS = [
+    { id: 'date', name: E.sword + ' 伊達建設', rate: 1.05, desc: '主な業務は道路や河川など、自治体から発注される公共インフラの整備。近年裏金問題、パワハラ、セクハラが蔓延し、暴行動画流出でSNS炎上。謝罪会見も大炎上。' },
+    { id: 'gyutan', name: '🥩 土井の牛タン', rate: 1.12, desc: '全国牛タンチェーン。フランチャイズ導入で急速に店舗数を拡大し、IPOを果たした企業。飲食、サービス、フィットネスなど多岐。FC高額な違約金を請求された音声が文春砲で株主総会紛糾。' },
+    { id: 'hasekura', name: E.ship + ' 支倉海事', rate: 1.15, desc: '外航海運は中小型ばら積み船、タンカー主力、倉庫・運送や賃貸が収益柱。土地含み益大。リスク要因、気候変動による航路変更による保険金変動とタンカー事故の裁判中。' },
+    { id: 'ujiie', name: E.bag + ' 氏家証券', rate: 1.25, desc: '富裕層向け対面コンサル営業に特化してきたが不動産・高齢者施設等の事業も多岐に展開。投信にも注力。トクリュウへの情報提供で社会的な大問題。相場操縦、保険金詐取など不祥事が相次いでいる。' },
+    { id: 'okamoto', name: E.money + ' 岡本商事', rate: 8.5, desc: '祖業は地金まがい商法、近年ビットコイントレジャリー事業に転換。コンピューティングパワーリース事業、牛タン商社、宇宙事業、AI事業にも参入。爆発的な成長。 エプスタイン氏とも交流で炎上。' },
+    { id: 'aoba', name: E.hotel + ' 青葉百貨店', rate: 1.45, desc: '仙台の老舗百貨店。EC台頭と郊外SC進出で苦戦。一等地に土地持ちで含み益大。タワマン開発、不動産に事業転換。創業家・親族間で経営権のトラブルで骨肉の裁判に発展。週刊誌を巻き込んで争い訴訟は続く。' },
+    { id: 'soccer', name: E.soccer + ' サッカークラブ', rate: 1.80, desc: 'プロリーグのサッカーチーム運営。熱狂的ファンがいるが赤字経営続き。スポンサー撤退で資金難。謎の中国企業が出資して経営権取得。監督解任、天然芝偽造問題、八百長疑惑も補強強気' }
+];
+
+// ========================================
+// 株式ニュースマップ
+// ========================================
+const STOCK_NEWS_MAP = {
+    okamoto: ['岡本商事', '岡本社長'],
+    date: ['伊達建設', '四ッ谷用水'],
+    gyutan: ['土井の牛タン', '牛タン'],
+    hasekura: ['支倉海事', '貞山運河'],
+    ujiie: ['氏家証券'],
+    aoba: ['青葉百貨店'],
+    soccer: ['仙台SC', 'オコチャ', 'サッカー']
+};
+
+const UP_WORDS = ['S高', 'ストップ高', '暴騰', '爆上げ', 'UP', '復活', '世界遺産', '爆売れ', '満室', '収益UP', 'ボーナス', '増配', '獲得', '成功', '好調', '奇跡', '大正解'];
+const DOWN_WORDS = ['暴落', '倒産', '逮捕', '炎上', '廃止', '没収', '破産', '沈没', 'ダウン', '苦情', '空振り', '不祥事', '債務超過', '裏金', 'パワハラ', '疑惑', '損失', '監禁', '偽造'];
+
+// ========================================
+// キリンジカード定義
+// ========================================
+const MENU_CARDS = [
+    { id: 'bacon', icon: '🥓', name: 'あぶらかす', key: 'catchBacon', need: 50, cond: 'あぶらかす50枚' },
+    { id: 'ramen', icon: '🍜', name: 'らーめん', key: 'catchRamen', need: 30, cond: 'ラーメン30枚' },
+    { id: 'tamago', icon: '🥚', name: '味玉', key: 'tamago', need: 1, cond: '10,000pt達成' },
+    { id: 'chef', icon: '👨‍🍳', name: '店主', key: 'catchChef', need: 20, cond: '店主20枚' },
+    { id: 'gyutan', icon: '🥩', name: '牛タン', key: 'invest', need: 5, cond: '株式投資5回' },
+    { id: 'shiro', icon: '👴', name: '仙台四郎', key: 'shiro', need: 1, cond: '四郎モード体験' },
+    { id: 'golden', icon: '⭐', name: '黄金あぶらかす', key: 'golden', need: 1, cond: '黄金をキャッチ' },
+    { id: 'imoni', icon: '🍲', name: '芋煮', key: 'imoni', need: 1, cond: 'シェイクで芋煮' },
+    { id: 'soup', icon: '🍵', name: 'スープ', key: 'catchSoup', need: 10, cond: '上スワイプ10回' },
+    { id: 'tshirt', icon: '👕', name: 'キリンジTシャツ', key: 'level99', need: 1, cond: 'Lv.99到達' }
+];
+
+// ========================================
+// ニュースデータ（182本）
+// ========================================
+const NEWS_DATA = [
+    '【2億回再生】岡本社長、釈放後にTikTokで踊ったダンスが2億回再生世界中でバズる',
+    '【IR】伊達建設、梅田川補修案件受注。受注背景に不透明な指摘も',
+    '【S高】サッカークラブ、オコチャ電撃入団！マラドーナも土でもやると賛同',
+    '【S高】伊達建設、新技術発表でストップ高',
+    '【S高】土井の牛タン、新製品発表でストップ高',
+    '【S高】支倉海事、LNGタンカー発表により買い気配',
+    '【S高】支倉海事、増配発表でストップ高。貞山運河を延長計画か？',
+    '【S高】青葉百貨店TOB発表でストップ高',
+    '【S高】青葉百貨店、TOB発表。骨肉の争いは資本力で強制解決へ',
+    '【あの眼帯】政宗の眼帯、実は史実の記録には残っていない。あの眼帯デマだったことが話題',
+    '【お騒がせ】岡本商事の投資先、オイルマネー獲得でNASDAQ+400%暴騰！岡本社長は勾留中',
+    '【はらこ飯】はらこ飯イクラ豊作！秋の味覚フェア爆発！',
+    '【ひょうたん】ひょうたん揚げ「当たり」倍増！大行列発生！',
+    '【サバ】金華サバ最高脂乗り！水産物件収益UP！',
+    '【スッパ抜き】支倉海事の船長と船員との「漆黒の海上でストップ高」動画が流出',
+    '【スマホの呪い】ボンビー3種類すべてに憑りつかれたプレイヤー、リアルで財布を二日町で落とす。',
+    '【セリ】せり鍋の根っこ泥棒！農家物件収益ダウン！',
+    '【セリ】セリ高騰で仙台より東京の方が高く売れるため銀座の名産へ',
+    '【トクリュウ】支倉ボンビー、ヨーロッパ旅行の領収書（500万BTC）をプレイヤーに送りつける。',
+    '【ブチギレ】「あぶらかすと野菜食え」と主張するホラエモン、ブチギレ',
+    '【ホヤ】ホヤの旬到来！呑兵衛集結で活況！岡本商事+200%爆上げ',
+    '【リストラ】支倉海事、管理部門を今治へ集約しリストラ断行',
+    '【不倫】氏家証券のトレーダー、顧客の人妻とインサイダー不倫',
+    '【不穏】岡本社長、出馬を匂わせ。ネット民からは猛反発',
+    '【世界】四ッ谷用水逆サイフォン型が世界的報道、周辺収益UP！',
+    '【世界】貞山運河が世界遺産へ！沿岸物件に臨時収入',
+    '【世界】貞山運河も世界遺産へ！沿岸物件に臨時収入',
+    '【二日町大火】二日町は昔は家具の街だった。二日町大火で家具の街は消失した。',
+    '【仙台SC】 監督、「戦術は気合」と発表。サポーター絶望で暴動',
+    '【仙台SC】ナイジェリアの英雄オコチャ入団',
+    '【仙台SC】パワハラ報道で選手が解雇',
+    '【仙台SC】協会の発言に違和感。サポーター、お前が言うなコール変更',
+    '【仙台SC】天然芝からコンクリート片。監督「むしろ戦術」',
+    '【仙台SC】天然芝偽造！「土でもやる」発言に賛否！',
+    '【仙台SC】天然芝問題にメス。マラドーナは土でもやる発言に賛否',
+    '【仙台SC】契約違反報道で今期選手獲得できず、全ユースがトップ入り',
+    '【仙台SC】新外国人FW、契約金全額を国分町でサポーターに奢る→帰国',
+    '【仙台SC】監督がパワーハラスメントを訴え、選手逮捕へ。',
+    '【仙台SC】祝勝会で広瀬川ダイブ！業務上過失致死傷罪で逮捕',
+    '【仙台SC】選手が不同意性交容疑で逮捕され後に不起訴処分、翌日ハットトリック',
+    '【仙台SC】選手のSNSトラブル多発。SNS禁止、伝書鳩支給へ',
+    '【仙台いじめ動画流出】撮影者の卒アル特定',
+    '【仙台いじめ動画流出】撮影者の卒アル特定、両親特定',
+    '【仙台は傘が売れない】日本一の長さを誇るアーケード街、雨に濡れずに国分町に行けるため、仙台は傘が売れない。',
+    '【仙台は傘が売れない】日本一の長さを誇るアーケード街、雨に濡れずに国分町まで行けるため、仙台は傘が売れない',
+    '【仙台味噌は兵器】仙台味噌は伊達軍の兵器食だった！藁に味噌や納豆を詰めて戦いに挑んだ',
+    '【仙台四郎】仙台四郎の写真を飾る店が急増！ご利益ラッシュMAX',
+    '【仙台城】仙台城石垣修復！インバウンド復活！観光バス増発！',
+    '【仙台城】仙台城石垣修復！青葉山物件に臨時収入！観光バス臨時便増発！',
+    '【仙台抗争】芋煮会論争勃発。「味噌か醤油か」異例のSATが出動。',
+    '【仙山線】 愛子を「あいこ」と読んだ乗車客、晒されバズる',
+    '【伊達建設】 工場の煙が「ずんだの香り」苦情殺到',
+    '【伊達建設】 裏金プール疑惑、掘削現場から「埋蔵金」として発見される',
+    '【伊達建設】子会社が愛人社長の幽霊会社で確定！代表は愛人なのに実務ゼロで炎上。',
+    '【伊達建設】定禅寺通りの道路工事、終わらないまま「遺産」として登録申請へ',
+    '【伊達建設】提携先の岡本商事は否定するだけで対案がないとブチギレ。株主総会が風雲急を告げる',
+    '【伊達建設】提携先の岡本商事は否定するだけで対案がないとブチギレ。株主総会が風雲急を告げる。',
+    '【会計】サッカークラブ不適切会計で株価暴落！',
+    '【借金地獄】芭蕉ボンビーの旅行費が嵩み、窃盗の旅へ',
+    '【偉業】四ッ谷用水の逆サイフォン式が世界遺産登録か？',
+    '【偉業】支倉常長の墓の数は世界7位ランクイン',
+    '【偉業】日本1の貞山運河が世界遺産登録か？',
+    '【光ぺ】光のページェントのパレード復活と定禅寺の復活決定か？',
+    '【光ペ】ページェントLED化するも、電気系統ボヤ発生で一時騒然',
+    '【八幡】四ッ谷用水逆サイフォン型が世界的報道、周辺収益UP！',
+    '【八百長疑惑】仙台SC、元監督とチーム、司法へ！',
+    '【共倒れ】土井の牛タン、岡本商事と業務提携発表で両社株価急落',
+    '【冷やし中華】仙台発祥で夏場のラーメンの売上低下を防ぐためだった。もはや発明',
+    '【号外】仙台四郎の写真を飾る店が急増！ご利益ラッシュで仙台市内の商売繁盛度がMAXに到達！',
+    '【号外】仙台四郎降臨！15秒間の天国モード突入！',
+    '【号外】伊達ボンビー、貞山運河修繕費という名目でプレイヤーの全財産を差し押さえ。',
+    '【噂】岡本商事、トクリュウへ情報提供か？街の声は会社がトクリュウなのではとの声',
+    '【四ッ谷用水】伊達建設、用水新技術発表！ストップ高！',
+    '【国分町】風営法改定で人気ホストが女性専用風俗店に大量移籍',
+    '【土井の牛タン】FCオーナー連合、本部へ「格闘技」で決闘',
+    '【土井の牛タン】「成型肉ではありません、芸術です」社長発言で炎上',
+    '【土井の牛タン】酔っ払いブログが炎上！主語述語が行方不明！深夜の改行連投ポエムで絶賛炎上中',
+    '【大人】あぶらかすキャッチ「R-18版」が発売予定とデマ回る',
+    '【大炎上】岡本社長、滝沢ダレナノ砲により大炎上',
+    '【大観音】仙台大観音ピンク化！近隣住民苦情殺到',
+    '【大﨑八幡宮】どんと祭裸参り過去最多！八幡の物件ストップ高！',
+    '【天守閣】仙台城に天守閣は最初から無かった！理由は伊達政宗は常に狙われてから？',
+    '【失態】氏家証券、上場維持基準未達にSNSで金融庁へ暴言連投',
+    '【奇跡】英雄オコチャ電撃入団！グッズ即2分で完売！',
+    '【契約違反】サッカー運営会社、上場契約違反。社長は「ルールは壊すもの」',
+    '【密談】岡本商事、ドナルド・トランプと会談。関税より牛タン優先を合意',
+    '【岡本商事】スタジアム命名権取得！「岡本商事スタジアム」ひたすらダサいと話題',
+    '【岡本商事】スタジアム命名権費用をBTCショートで捻出か？',
+    '【岡本商事】社長、BTCに全ツッパ。目的はインサイダー取引か？',
+    '【川内〜仙台】鹿児島県民困惑ベスト10の第1位',
+    '【強奪】伊達ボンビー、仙台競馬場の復活費として稼いだポイントを全額マネロンへ。',
+    '【復活】仙台競馬場が復活？住民有志ら署名提出か？',
+    '【急騰】支倉海事、株主還元策の強化で暴騰。貞山運河の通行権も視野へ',
+    '【恒例】岡本社長、SNSでブチギレ。「上場廃止は自分からする」',
+    '【悪夢】芭蕉ボンビー、実は忍者ではなくただの強盗だったことが判明。借金ごと逃走。',
+    '【悲報】5ミスで支倉ボンビー！資産50〜70%没収！',
+    '【悲報】土井の牛タン、熊出没で客足減。株価に激痛の打撃',
+    '【悲報】氏家証券の営業マン、顧客の資産を勝手にFXに突っ込み全額溶かす事案が発生。',
+    '【戦争】秋保vs作並「奥座敷論争」！客困惑で収益減！',
+    '【指名手配】芭蕉ボンビー、窃盗の現行犯で奉行所に追われるも歌を謳って釈放',
+    '【捜索】岡本商事、マネロンの疑いでFBIと中国当局が合同家宅捜索',
+    '【提携】土井の牛タン、謎の企業と業務提携でストップ高',
+    '【支倉海事】 研究船、広瀬川で座礁。船長「芋煮会に参加したかった発言で」大炎上',
+    '【支倉海事】LNGタンカー受注増',
+    '【支倉海事】LPG船受注一巡、停滞',
+    '【支倉海事】データ改ざん発覚。「冬は寒いので数値が縮んだ」で株価暴落',
+    '【支倉海事】リストラで今治に管理部門集約',
+    '【支倉海事】低炭素メタノール船開発',
+    '【支倉海事】多様な海路に対応する小型化へ',
+    '【支倉海事】新燃料船の継続的な受注に強気',
+    '【支倉海事】新航路発見か？松島湾を直進し遊覧船とニアミス',
+    '【支倉海事】気候変動で航路変更、保険金増額へ。利益来期繰り越し',
+    '【支倉海事】環境対応技術を研究で株価急伸',
+    '【支倉海事】社長、海で遭難「脂で浮いた」で生還',
+    '【支倉海事】船舶管理システムの専門人材強化',
+    '【政宗トランプ級】政宗が千代から仙臺に変えた。トランプがメキシコ湾からアメリカ湾に変えたぐらいに横暴だったと話題',
+    '【日本三景】松島遊覧船、ウミネコ餌やりVR化！支倉海事暴騰！',
+    '【晒し】岡本社長、談合現場をパパ活女子に晒され株価ストップ安。',
+    '【晩翠通り】土井晩翠の未発表詩発見！ゆかりの地ありすぎて晩翠通りがインバウンド！',
+    '【晩翠通り】土井晩翠の未発表詩発見！土井晩翠のゆかりの地ありすぎて晩翠通りがインバウンド！',
+    '【暴落】伊達建設、債務超過発覚。社長は「数字は誤差」と釈明',
+    '【暴落】岡本社長、エプスタインとの交流が流出。株価が垂直落下',
+    '【暴落】青葉百貨店、債務超過発覚で暴落',
+    '【暴露】岡本商事の美人広報、裏垢で投資家を「養分」呼びで、もう別のプレイだと話題。',
+    '【杜の都】杜の都の木々、元来は観賞用ではなく非常食だった。実用性と機能性、今は光ぺの木',
+    '【東北新幹線】「やまびこ」その遅さに改名を打診',
+    '【横暴】政宗が千代から仙臺に変えた。トランプがメキシコ湾からアメリカ湾に変えたぐらいに横暴だったとネットで話題',
+    '【正論】氏家証券セミナー企画が爆死！渾身企画に「大損してるお前が言うな、儲かるなら自分やれ」で炎上',
+    '【歴史的デマ】政宗の眼帯、実は記録には残っていない。あの眼帯はデマだったことが有力',
+    '【氏家証券】 トクリュウへの情報漏洩疑惑、鳩に運ばせた。',
+    '【氏家証券】トレーダーの神頼みが「仙台四郎」で炎上、システムダウン',
+    '【氏家証券】元社員、保険金目的で養子縁組を悪用。実刑判決へ',
+    '【氏家証券】元社員、顧客データ持ち出し翌日関係者宅に放火か',
+    '【気仙沼】気仙沼フカヒレ爆売れ！港町物件に臨時収入！',
+    '【沈没】支倉海事のタンカー、貞山運河で座礁。重油流出で賠償金請求により倒産危機。',
+    '【河岸段丘】豪雨で評定河原球場が浸水し湖に。昔牧場だったとことが話題',
+    '【油揚げ】定義山油揚げが世界的ブームに！熊もビックリ!?',
+    '【治安ゲー】 国分町のキャッチ、通行の障害問題を逆利用。通行ゲームでバズる',
+    '【波乱】岡本社長、株式併合に自ら嫌気し株を手放す',
+    '【滝沢砲】 超高利回り岡本商事、実態は自転車操業のポンジ・スキームと発覚！社長は海外逃亡か。',
+    '【炎上】土井の牛タン、FC契約でトラブル炎上',
+    '【炎上】岡本社長、日本のIPOは「上場ゴールだ」と暴言連発し投資家激怒',
+    '【熊】四ッ谷用水の歴史的跡地に熊出没',
+    '【爆騰】伊達建設、AIリストラによる人件費削減で株価上昇',
+    '【特報】伊達建設、四ッ谷用水の補修受注。利権が動いたとの噂',
+    '【特需】ナイジェリア直行便就航！英雄オコチャ入団効果！',
+    '【理不尽】支倉ボンビー、為替介入に失敗し負債を仲間に押し付け',
+    '【理解不能】仙台SC、最下位でも黒字転換でストップ高。サポーター、バス取り囲みブチギレ',
+    '【疑惑】仙台SC、不適切会計で来季選手の草刈り場確定か？',
+    '【発見】レゲエパンチ（ピーチウーロン）、国分町以外の認知度ゼロ説が立証される',
+    '【白石】白石城復元技術に絶賛！伊達建設へ視察殺到！',
+    '【白石】白石温麺、茹でやすいと宇宙食に採用決定！',
+    '【矛盾】低位株へ急な資金集中で株暴騰も岡本商事は上場廃止危機',
+    '【破滅】15ミスで芭蕉ボンビー！全財産没収＆借金地獄！',
+    '【破産】ボンビーの集団訴訟により、プレイヤーのポイントがマイナス9999に',
+    '【秋の風物詩】 仙山線の敵は落ち葉',
+    '【空振り】地下鉄、つり革がずんだ餅化の謎施策で空振りと話題に！',
+    '【立町】女性専用風俗店が活況、連日の水揚げを確認',
+    '【笹かま】笹かまぼこの形は伊達家の家紋「竹に雀」の笹の葉が由来',
+    '【粉飾】伊達建設マンションの杭打ちデータ改ざんが発覚。傾いたマンションが聖地入り。',
+    '【経済】仙台の最低賃金、ラーメン1杯分に換算されデモ多発。',
+    '【絶望】10ミスで伊達ボンビー！全財産即没収！',
+    '【萩の月】萩の月は日本初の脱酸素剤の個包装菓子でパッケージ界生菓子の先駆者だった件',
+    '【蔵王】蔵王の御釜で五色観測！宿泊物件満室！',
+    '【衝撃】岡本商事、イーロン・マスクと会談。火星に発電施設か',
+    '【被害者ヅラ】土井の牛タン「店が潰れたのはスタッフのせい」！被害者ヅラで土井社長が華麗に責任逃れで炎上',
+    '【複雑】土井の牛タン、好決算でストップ高も大量閉店、EC好調',
+    '【設定迷走】青葉城という名前は通称で、正式名称は「仙台城」',
+    '【詐欺】支倉ボンビー、「ローマ法王に会わせたる」と嘘をつき旅費をBTC詐取',
+    '【認知の歪み】土井社長、自らの失敗談をあたかも成功談ように話すと国分町のキャバクラで話題。',
+    '【謎】仙台市内で熊出没、岡本商事暴騰',
+    '【謎】支倉海事、データ改ざん報道でも暴騰。貞山運河をスエズ運河にする発言。',
+    '【謎の行商人】二日町に謎のワッフル売りの行商集団が現れ、二日町が一時騒然',
+    '【謎の行商人】二日町に謎のワッフル売りの行商集団が現れ一時騒然',
+    '【謝罪】伊達建設社長、謝罪ヤンキー会見で「ゾス！」と叫び開き直り、違う意味で入院か',
+    '【負け戦】岡本商事がスポンサーに！70%でクラブ消滅危機！？',
+    '【足場特許】伊達建設と岡本商事足場特許でキックバック問題が発覚！',
+    '【転落】岡本商事、本社がもぬけの殻であることがYouTuberの突撃で判明。高速道路を走りながらアポ電業務か',
+    '【迷走】青葉城という名前は通称で、正式名称は「仙台城」',
+    '【通報】自家製麺キリンジの 味玉券（1万点）の交換条件が厳しすぎると消費者庁とＢＰＯ通報殺到。',
+    '【速報】岡本社長、マイニングに成功。翌日には中国当局へ連行',
+    '【逮捕】岡本社長、盗撮で逮捕。自宅から大量のラーメン画像押収',
+    '【還元】支倉海事、増配と株主優待に海事オタク採用で株価上昇',
+    '【釈放】釈放後、岡本商事社長のダンスがバズって、インド映画出演へ',
+    '【長文テロ】牛タンの土井社長、結論ゼロの「覚悟」ポエム連発！スリの銀次も真っ青の時間を奪うテロ行為だとネットで話題',
+    '【長文乙】自家製麺キリンジの「昔のblog」、誰も聞いてない自分語りの長文ポエムが発掘されネットのおもちゃに。',
+    '【閖上】閖上で幻の赤貝！海産物件収益急上昇！',
+    '【闇】岡本社長、トクリュウへ顧客リスト提供の指示か？警察が家宅捜索',
+    '【電撃入団】オコチャ入団会見はリモート会見。ビザ問題で。',
+    '【青葉区デカすぎ問題に終止符】もう青葉区が千代市になれ',
+    '【青葉百貨店】デパ地下で試食係が客を監禁。「買うまで帰さない」事件発生',
+    '【青葉百貨店】創業家お家騒動、決着は「格闘技」に委ねられる',
+    '【青葉百貨店社長】 戦略を語る裏で、自社の赤字は放置！見事なダブルスタンダードで社員苦笑',
+    '【非常事態】仙台市内に熊出没。牛タンの匂いを追って国分町に籠城',
+    '【驚愕】岡本社長、東南アジアに隠し子50人。',
+    '【骨肉】青葉百貨店、骨肉の争いで債務超過発覚！株暴落！',
+    '※このニュースはフィクションであり、実在の仙台とは（たぶん）関係ありません。',
+];
+
+// ========================================
+// 実況解説コメントデータ（大幅拡張版）
+// ========================================
+const COMMENTARY = {
+    good: [
+        '実況「ナイスキャッチ！さすがです！」解説「基本通りで完璧ですね」',
+        '実況「うおおお！完璧です！」解説「教科書に載せたいムーブでした」',
+        '実況「素晴らしい！コンボ継続中！」解説「まあ当然ですけどね」',
+        '実況「キャッチしましたーっ！」解説「...普通ですね」',
+        '実況「これは！これは見事！」解説「まあ誰でもできますけど」',
+        '実況「素晴らしいプレイ！」解説「たまたまですね」',
+        '実況「ナイス反射神経！口先だけじゃない行動力です！」',
+        '実況「店主登場！右スワイプで大量ボーナス獲得だー！」',
+        '実況「💀を見事回避！危険（不良債権）を察知する能力がカンストしています！」',
+        '実況「逃げるが勝ち！💀には関わらないのが一番の戦略（防衛策）です！」',
+        '実況「レベルアップ！スピードがさらに加速します！」',
+        '実況「ルール変更にも即座に対応！素晴らしい順応性です！」',
+        '実況「奇跡の連続回避！動体視力が完全に覚醒しています！」',
+        '実況「レベル10到達！ここからは神の領域です！」',
+        '実況「レベル15！未踏の領域へようこそ！」',
+        '実況「スピードの向こう側へ！あぶらかすマスターの誕生か！？」',
+        '実況「ルール反転の直後は要注意！冷静に方向を確認してください！」',
+        '実況「店主のボーナスポイントで一息つきました！」解説「他人の力に乗っかるのだけは上手いようですね」',
+        '実況「生姜を鮮やかにスワイプ！」解説「無駄にキレがいいですね。他に活かす場所はないんでしょうか」',
+        '実況「ギリギリで伊達ボンビーをスワイプ！」解説「悪運だけは強い。それだけが彼の取り柄ですね」',
+        '実況「さあ、市場が開場しました！稼いだポイントを増やす時間です！」',
+        '実況「さあ、ポイントが貯まってきました！投資へ回す準備はいいですか！？」',
+        '実況「ストップ高キター！資産が一気に膨れ上がる大チャンス！」',
+        '実況「奇跡の生還！岡本商事チャレンジ成功で最高利回りをゲット！」',
+        '実況「土井の牛タンが好決算！手堅い投資が光ります！」',
+        '実況「堅実な分散投資！薄っぺらい言葉に頼らない、確かな数字の力です！」',
+        '実況「投資の才能アリ！？ポイントが雪だるま式に増えています！」',
+        '実況「資産ゼロからの再出発！ここから這い上がる力を見せてくれ！」',
+        '実況「一万点達成への最短ルートか、それとも破滅か！？運命のダイスロール！」',
+        '実況「岡本商事のストップ高！ギャンブラーの執念が実った！」',
+        '実況「ポジショニングの勝利！完璧な位置取りでアイテムを回収！」',
+        '実況「情報戦（ルール反転）を制した者が、この戦いを制す！」',
+        '実況「奇跡の生還！絶望の淵（岡本商事投資）から舞い戻った不死鳥！」',
+        '実況「攻守一体！スワイプの軌道が、そのまま鉄壁の盾となる！」',
+        '実況「戦略なき戦術はただの暴走！次はしっかりとプラン（目標ポイント）を立てましょう！」',
+        '実況「言い訳（他責）を捨てた瞬間、あなたの本当の戦いが始まります！」',
+        '実況「今日の戦いは終わりました。しかし、明日もまた新たな戦場が待っています！」',
+        '実況「さあ、己の限界を超えろ！これが『あぶらかすキャッチ』だ！」',
+        '実況「見事、一万点到達！あなたは口だけじゃない、真の『実務家（プレイヤー）』です！」',
+        '実況「敵の備えなきを攻め、その不意に出ず！ルール反転の隙を突け！」',
+        '実況「ゲリラ戦の極意！ルール反転の混乱に乗じてポイントを稼げ！」',
+        '実況「陽動（偽物）に騙されるな！本丸（あぶらかす）だけを叩け！」',
+        '実況「大局（全体のポイント）を見つつ、局地（目の前のアイテム）に集中せよ！」',
+        '実況「強者の模倣（真似事）はするな！あなただけのプレイスタイルを確立しろ！」',
+        '実況「リソースの集中投下！ボーナスタイムに全力を注げ！」',
+        '実況「弱者は奇襲を狙え！岡本商事のストップ高で一発逆転だ！」',
+        '実況「二極分化の法則！本物か偽物か、戦いは常にシンプルだ！」',
+        '実況「一撃の法則！岡本商事への投資、この一手が戦局を完全にひっくり返す！」'
+    ],
+    bad: [
+        '実況「あー！もったいないミスですっ！」解説「集中してください、本当に」',
+        '実況「えっ！？なんで！？なんでそっちに！？」解説「落ち着いて見れば分かりますよ」',
+        '実況「ミスです！貴重なポイントが！！」解説「これは頭を使ってほしかったですね」',
+        '実況「あーあ。やっちゃいましたね」解説「練習が足りないんじゃないですか」',
+        '実況「信じられない！なぜ！」解説「まあ、仕方ないですけど...ね？」',
+        '実況「これは痛いミスですよぉ」解説「私が見ててイライラします正直」',
+        '実況「あ〜！長押しが足りなかった！」解説「もうちょっとです」',
+        '実況「集中が切れたか？酒に逃げるのはまだ早いですよ！」',
+        '実況「ああっ！💀に触れてしまった！キングサイズの絶望が襲いかかる！」',
+        '実況「画面が💀だらけ！これはもはや地獄絵図だー！」',
+        '実況「パニック状態！正解の方向が分からなくなってきたー！」',
+        '実況「逆転ルールの罠にハマった！連続ミス発生！」',
+        '実況「ルール反転で大混乱！」',
+        '実況「スピードアップで💀の回避が激ムズに！」',
+        '実況「おっと、いきなり偽物を掴みにいきました！」解説「視力検査からやり直した方がいいかもしれませんね」',
+        '実況「あぶらかすを左にスワイプして捨ててしまいました！」解説「もったいない。普段からチャンスをドブに捨てるタイプなんでしょう」',
+        '実況「全く反応できていません！画面を見ているのでしょうか！？」解説「指ではなく、脳の伝達速度に問題がありそうですね」',
+        '実況「偽物ばかり集めていますね〜」解説「本物を見る目がない。彼の交友関係が心配になります」',
+        '実況「あー！またミス！これで3連続です！」解説「学習能力という言葉を辞書で引いてきてほしいですね」',
+        '実況「右へ左へ、指が迷子になっています！」解説「人生の迷走ぶりがプレイにも表れていますね」',
+        '実況「50ptを超えてルールが反転しました！途端にボロボロです！」解説「環境の変化に極端に弱い。現代のストレス社会を生き抜けませんよ」',
+        '実況「あぶらかす長押し、2秒待てずに離してしまったー！」解説「堪え性がないですね。カップラーメンも1分で開けちゃう人でしょう」',
+        '実況「ニンニク・生姜の超速スワイプに全く追いつけません！」解説「反射神経が完全に初老のそれですね」',
+        '実況「おーっと、スマホを振るのが弱すぎる！芋煮鍋が反応しません！」解説「手首のスナップが死んでますね。やる気が感じられません」',
+        '実況「スープの上スワイプ、勢い余って画面外まで指が飛び出しました！」解説「力加減を知らない。不器用な生き方をしてきたんでしょうね」',
+        '実況「今の偽物は分かりやすかったはずですが！？」解説「欲に目が眩むと、目の前の現実が見えなくなる良い例です」',
+        '実況「連続キャッチが途切れました！」解説「集中力がウルトラマンより短いですね」',
+        '実況「指の動きが止まりました！フリーズでしょうか！？」解説「情報処理能力の限界を超えたようですね。オーバーヒートです」',
+        '実況「ただ無心で右にスワイプし続けています！」解説「思考を放棄しましたね。AIに仕事を奪われるタイプです」',
+        '実況「おっと、今のは惜しかった！」解説「惜しくても0点です。結果が全ての厳しい世界ですよ」',
+        '実況「あぶらかすを見逃してしまいました！」解説「目の前に札束が落ちていても気づかない人なんでしょうね」',
+        '実況「またしてもフェイントに引っかかった！」解説「騙されやすい性格ですね。詐欺に気をつけてほしいものです」',
+        '実況「懸命にスワイプしていますが、タイミングが全てズレています！」解説「リズム感が絶望的ですね。カラオケには一緒に行きたくないタイプです」',
+        '実況「あぶらかすを無視して、ラーメン丼ばかり狙っています！」解説「ハイリスクな高得点狙い。身の丈に合っていない欲のかき方です」',
+        '実況「店主が連続で流れてきました！全部スルーです！」解説「大人の事情を察して目を逸らしたんでしょうか」',
+        '実況「アイテムを取りこぼしまくっています！」解説「穴の空いたバケツで水を汲んでいるようなものですね」',
+        '実況「出たー！支倉ボンビーです！」解説「5回のミスで呼び寄せるとは。疫病神に愛されていますね」',
+        '実況「支倉ボンビーの直撃！ポイントが半分奪われました！」解説「ビットコインの暴落より悲惨な光景ですね」',
+        '実況「あっ！伊達ボンビー登場！画面が凍りつきます！」解説「出た瞬間に全財産没収。無慈悲すぎますね。日頃の行いの報いです」',
+        '実況「伊達ボンビーを回避できず、ポイントがゼロに！」解説「今までの苦労が全て水の泡。笑いが止まりませんね」',
+        '実況「最悪の事態！芭蕉ボンビー降臨です！」解説「終わりましたね。彼の人生もここまででしょう」',
+        '実況「全財産没収に加え、借金まで背負わされました！」解説「『草の戸も 住み替わる代ぞ 借金地獄』……一句詠んでいる場合じゃありませんね」',
+        '実況「借金返済のために、ただタダ働きです！」解説「現代の蟹工船ですね。涙なしには見られません」',
+        '実況「ボンビーが連続で出現しています！」解説「貧乏神の集会でも開かれているんでしょうか」',
+        '実況「ボンビーの恐怖で指が震えています！」解説「プレッシャーに弱すぎる。大事な場面で必ず失敗するタイプです」',
+        '実況「支倉ボンビーにポイントを献上し続けています！」解説「もはや彼専属のパトロンですね」',
+        '実況「伊達ボンビーのプレッシャーに耐えきれず、自爆！」解説「勝手に自滅していく。見ていて清々しいですね」',
+        '実況「借金が全く減りません！」解説「利息の恐ろしさをゲームで学べて良かったですね。実生活で活かせればいいですが」',
+        '実況「芭蕉ボンビーの鎖の音が響き渡ります！」解説「地獄からの迎えが来ましたよ。大人しく連行されなさい」',
+        '実況「ボンビーを避けようとして、本物のあぶらかすも捨てました！」解説「パニックになると判断力がゼロになりますね」',
+        '実況「もはやポイントがマイナスで底が見えません！」解説「マリアナ海溝より深い借金ですね。自己破産をおすすめします」',
+        '実況「ボンビー出現で、スマホを投げ捨てそうになっています！」解説「モノに当たるのは三流の証拠です」',
+        '実況「ボンビーの猛攻！画面がドクロだらけです！」解説「これが本当のデッドヒートというやつですかね。意味が違いますが」',
+        '実況「株価暴落！プレイヤーの資産がみるみる溶けていくー！」',
+        '実況「岡本商事に投資！？70%で全額没収の超ハイリスク勝負に出た！」',
+        '実況「青葉百貨店が債務超過！株主は大パニックだー！」',
+        '実況「支倉海事のデータ改ざん報道！海運株が海の底へ沈んでいく！」',
+        '実況「欲を出しすぎた！暴落に巻き込まれて大損害！」',
+        '実況「土井の牛タンに投資！手堅いところを狙いました！」解説「FCトラブルで炎上したばかりなのに。ニュースを見ていない証拠です」',
+        '実況「支倉海事へ投資！為替リスクに挑みます！」解説「データ改ざん報道が出ている企業によく投資できますね。勇気ではなく無知です」',
+        '実況「あーっと、支倉海事がリストラ発表で株価が動いた！」解説「人の不幸で飯を食う。投資家の鑑ですね」',
+        '実況「お！仙台SCの株を買いました！高利回りです！」解説「パワハラに不同意性交容疑……まさに不祥事集団。スリル中毒ですね」',
+        '実況「仙台SC、天然芝問題で株価が乱高下しています！」解説「『マラドーナは土でもやる』……名言ですが株価の言い訳にはなりませんね」',
+        '実況「青葉百貨店に全ツッパだー！」解説「債務超過発覚で暴落中ですよ。落ちるナイフを素手で掴みに行きましたね」',
+        '実況「そして出たー！岡本商事への投資！一発逆転狙いだ！」解説「70%で上場廃止ですよ。これを『投資』と呼ぶのは投資家に失礼です。ただの『ギャンブル』です」',
+        '実況「岡本商事の株価が……ああーっと！大暴落！社長逮捕です！！」解説「ほら言わんこっちゃない。全損ですね。彼の人生計画もこれで全損です」',
+        '実況「低位株へ急な資金集中で株価が暴騰しています！」解説「イナゴタワーの完成ですね。彼も立派なイナゴの一員です」',
+        '実況「株価のチャートばかり見て、本業がおろそかになっています！」解説「本末転倒ですね。ラーメン屋のゲームだということを忘れています」',
+        '実況「全ポイントを株に突っ込んで身動きが取れません！」解説「資金管理ができない人間は破滅する。良い教訓ですね」',
+        '実況「オコチャ入団のニュースで仙台SCの株を買いました！」解説「何十年前の話ですか。情報のアップデートができていません」',
+        '実況「配当金で細々と生計を立てようとしています！」解説「チマチマしたプレイングですね。器の小ささが滲み出ています」',
+        '実況「株価暴落で画面の前でフリーズしています！」解説「現実を受け止めきれていませんね。目を覚ましなさい」',
+        '実況「岡本商事の30%の爆上げを引いたー！！」解説「……チッ。悪党ほど運が良いとは本当ですね」',
+        '実況「暴落した株を損切りできずに持ち続けています！」解説「『いつか上がる』という幻想に囚われていますね。塩漬けのプロです」',
+        '実況「ニュース連動に振り回されて売買を繰り返しています！」解説「典型的な養分ですね。市場に手数料を貢ぐためだけに存在しています」',
+        '実況「株で大損して、またあぶらかすを拾い始めました！」解説「地道な労働の大切さに気づいたようですね。遅すぎますが」',
+        '実況「『投資は余剰資金で』という警告を完全に無視しています！」解説「文字が読めないんでしょうね。義務教育の敗北です」',
+        '実況「資産ゼロからの再出発！ここから這い上がる力を見せてくれ！」',
+        '実況「一瞬の判断の遅れが、命取り（全額没収）になるぞ！」',
+        '実況「戦いとは、常に非情なものだ！💀に触れた瞬間に全てが終わる！」',
+        '実況「補給線（ポイント）が断たれた！借金を背負ってでも戦い抜く覚悟はあるか！」',
+        '実況「まさに泥沼の消耗戦！精神力が試される時間帯です！」'
+    ],
+    meh: [
+        '実況「試合が動いています」解説「動いてますね」',
+        '実況「なかなか渋い展開です」解説「まあそうですね」',
+        '実況「ここは辛抱のしどころ」解説「辛抱ですね」',
+        '実況「今日のプレイヤー、どうですか？」解説「普通です」',
+        '実況「ボンビーが迫っています！」解説「ミスしなければいいだけです」',
+        '実況「あぶらかすとは何か。哲学的です」解説「豚の脂です」',
+        '実況「仙台の空に祈りを捧げます」解説「関係ないですよ」',
+        '実況「レゲエパンチ飲みたいですね」解説「飲んでから来てください」',
+        '実況「今日のニュース気になりますね！」解説「ゲームに集中してください」',
+        '実況「岡本商事また何かやりましたね」解説「毎回ですね」',
+        '実況「やる気あるんですかね、表向きだけで」解説「ないですね」',
+        '実況「クソゲーに期待されてもね、困りますよね」解説「そうですね」',
+        '実況「そもそも自分の理想を他人に押し付けないで欲しいですね」解説「そうですね」',
+        '実況「落ち着いて！落ち着いて、本物とニセモノの見極めが経営の基本です！」',
+        '実況「さあ、ポイントが貯まってきました！投資へ回す準備はいいですか！？」',
+        '実況「逃げるが勝ち！💀には関わらないのが一番の戦略（防衛策）です！」',
+        '実況「スピード3.0倍！これは人間の限界を超えている！」',
+        '実況「どんどん速くなる！瞬き厳禁の超絶スピードバトル！」',
+        '実況「レベル10到達！ここからは神の領域です！」',
+        '実況「脳の処理が追いつかない！直感（感性）だけでスワイプだ！」',
+        '実況「ルール反転の直後は要注意！冷静に方向を確認してください！」',
+        '実況「そもそもお店でお金払って味玉買った方が早いのに」解説「そうなんですよね。人生苦行です」',
+        '実況「ようやく100pt到達です！」解説「ここからが地獄の始まりだというのに、随分と嬉しそうですね」',
+        '実況「味玉券まであと9000pt！」解説「永遠にも等しい距離ですね。お店でお金払って買った方が早いですよ」',
+        '実況「キリンジカード、全く集まっていません！」解説「コンプリートする気力もない。何事も中途半端な人生ですね」',
+        '実況「あぶらかすキャッチの称号レベルが上がりません！」解説「成長の限界が早いですね。底が見えました」',
+        '実況「たかがゲームのキャラクターを捕まえて、何を誇っているんでしょうか」',
+        '実況「出たー！超激レア、仙台四郎モード突入です！」解説「普段の行いが悪いのに、なぜかこういう時だけ運が良い。不条理ですね」',
+        '実況「15秒間の天国モード！高得点アイテムを取り放題です！」解説「浅ましい手つきで乱獲していますね。人間の業の深さを感じます」',
+        '実況「しかし手が震えてうまくキャッチできていません！」解説「千載一遇のチャンスで緊張する。本番に弱い小市民の典型です」',
+        '実況「あーっと、仙台四郎モード終了！あっという間でした！」解説「魔法が解けて、また惨めな現実（通常モード）に戻りましたね」',
+        '実況「長押しからスワイプ、そしてフリック！操作が複雑になってきました！」解説「彼の単細胞な脳みそでは、もう処理しきれていないでしょう」',
+        '実況「招待コードで500ptもらって喜んでいます！」解説「友達を売って得た小銭の味はどうですか？」',
+        '実況「SNSでシェアして、自分の下手さを世界に発信しています！」解説「承認欲求のバケモノですね。同情のいいねでも欲しいんでしょうか」',
+        '実況「ひたすら無言でプレイし続けています。もう3時間経過！」解説「その情熱と時間を、もっと自分の人生の有意義なことに使えなかったのでしょうか」',
+        '実況「1万点ゲットでお店で味玉無料券です！まだまだ遠い！」解説「時給換算したら絶望的な数字ですよ。普通に働きなさい」',
+        '実況「バッテリー残量が残り5%！それでもやめません！」解説「依存症ですね。専門の機関への相談を強く推奨します」',
+        '実況「あぶらかすテイクアウトの広告に気を取られました！」解説「食欲に負けましたね。本能のままに生きる野生動物のようです」',
+        '実況「『ルール反転』の文字が出た瞬間にパニック！」解説「適応能力ゼロ。恐竜と一緒に絶滅しておくべきでしたね」',
+        '実況「高リスク高リターンの上級者向け攻略法に手を出そうとしています！」解説「初心者がF1カーに乗るようなものです。事故死確定ですね」',
+        '実況「ミス5回未満を維持する初級者向けの教えを守れません！」解説「基礎ができない人間に応用は無理です。人生の基本からやり直してください」',
+        '実況「ゲームオーバー画面を見つめて固まっています！」解説「自分の無力さを噛み締める、良い時間ですね」',
+        '実況「すぐに『ゲーム開始』ボタンを押してコンティニュー！」解説「反省というプロセスがスッポリ抜け落ちていますね」',
+        '実況「いやー、今日も酷いプレイの連続でした！」解説「ええ、他人の不幸と無様を観察するのには、最高のエンターテイメントでしたよ」',
+        '実況「さあ、伊達建設を買いました！」解説「利回り3%。堅実すぎて面白みが全くありませんね。つまらない人間です」',
+        '実況「サッカーSCが黒字転換！サポーターも株主も大歓喜！」',
+        '実況「どこかの『実体のない会社』の株は買わないのが大正解です！」',
+        '実況「投資は自己責任！自分が失敗したのを他人のせいにはできませんよ！」',
+        '実況「株価の乱高下に心臓がバクバク！これが市場の醍醐味！」',
+        '実況「一万点達成への最短ルートか、それとも破滅か！？運命のダイスロール！」',
+        '実況「言い訳ばかりの長文を読んでいる暇はありません！さあ、手を動かせ！」',
+        '実況「実務から逃げて『上のステージに行った』と強がっても、ポイントは増えませんよ！」',
+        '実況「他人のやり方を批判する前に、まずは自分の資産（ポイント）を増やして見せろ！」',
+        '実況「現実逃避している場合ではありません！シラフで挑め！」',
+        '実況「逃げるな！戦え！厳しい結果（スコア）から目を背けるな！」',
+        '実況「ゲームオーバー！『辞め時を探していた』なんて痛い負け惜しみは聞きたくありません！」',
+        '実況「誰かの救世主になる前に、まずは自分のポイントを救ってください！」',
+        '実況「嘘で塗り固めたハリボテの防御力はゼロです！実力のみがモノを言う世界！」',
+        '実況「市場（株価）が荒れ狂っている！これが資本主義のリアルな戦場だ！」',
+        '実況「SNSでシェアして、自分の下手さを世界に発信しています！」解説「承認欲求のバケモノですね。同情のいいねでも欲しいんでしょうか」',
+        '実況「ひたすら無言でプレイし続けています。もう3時間経過！」解説「その情熱と時間を、もっと自分の人生の有意義なことに使えなかったのでしょうか」',
+        '実況「1万点ゲットでお店で味玉無料券です！まだまだ遠い！」解説「時給換算したら絶望的な数字ですよ。普通に働きなさい」',
+        '実況「バッテリー残量が残り5%！それでもやめません！」解説「依存症ですね。専門の機関への相談を強く推奨します」',
+        '実況「あぶらかすテイクアウトの広告に気を取られました！」解説「食欲に負けましたね。本能のままに生きる野生動物のようです」',
+        '実況「『ルール反転』の文字が出た瞬間にパニック！」解説「適応能力ゼロ。恐竜と一緒に絶滅しておくべきでしたね」',
+        '実況「高リスク高リターンの上級者向け攻略法に手を出そうとしています！」解説「初心者がF1カーに乗るようなものです。事故死確定ですね」',
+        '実況「ミス5回未満を維持する初級者向けの教えを守れません！」解説「基礎ができない人間に応用は無理です。人生の基本からやり直してください」',
+        '実況「ゲームオーバー画面を見つめて固まっています！」解説「自分の無力さを噛み締める、良い時間ですね」',
+        '実況「すぐに『ゲーム開始』ボタンを押してコンティニュー！」解説「反省というプロセスがスッポリ抜け落ちていますね」',
+        '実況「いやー、今日も酷いプレイの連続でした！」解説「ええ、他人の不幸と無様を観察するのには、最高のエンターテイメントでしたよ」',
+        '実況「サッカーSCが黒字転換！サポーターも株主も大歓喜！」',
+        '実況「どこかの『実体のない会社』の株は買わないのが大正解です！」',
+        '実況「投資は自己責任！自分が失敗したのを他人のせいにはできませんよ！」',
+        '実況「株価の乱高下に心臓がバクバク！これが市場の醍醐味！」',
+        '実況「一万点達成への最短ルートか、それとも破滅か！？運命のダイスロール！」',
+        '実況「言い訳ばかりの長文を読んでいる暇はありません！さあ、手を動かせ！」',
+        '実況「実務から逃げて『上のステージに行った』と強がっても、ポイントは増えませんよ！」',
+        '実況「他人のやり方を批判する前に、まずは自分の資産（ポイント）を増やして見せろ！」',
+        '実況「現実逃避している場合ではありません！シラフで挑め！」',
+        '実況「逃げるな！戦え！厳しい結果（スコア）から目を背けるな！」',
+        '実況「ゲームオーバー！『辞め時を探していた』なんて痛い負け惜しみは聞きたくありません！」',
+        '実況「誰かの救世主になる前に、まずは自分のポイントを救ってください！」',
+        '実況「嘘で塗り固めたハリボテの防御力はゼロです！実力のみがモノを言う世界！」',
+        '実況「敵の備えなきを攻め、その不意に出ず！ルール反転の隙を突け！」',
+        '実況「ゲリラ戦の極意！ルール反転の混乱に乗じてポイントを稼げ！」',
+        '実況「陽動（偽物）に騙されるな！本丸（あぶらかす）だけを叩け！」',
+        '実況「大局（全体のポイント）を見つつ、局地（目の前のアイテム）に集中せよ！」',
+        '実況「強者の模倣（真似事）はするな！あなただけのプレイスタイルを確立しろ！」',
+        '実況「リソースの集中投下！ボーナスタイムに全力を注げ！」',
+        '実況「弱者は奇襲を狙え！岡本商事のストップ高で一発逆転だ！」',
+        '実況「二極分化の法則！本物か偽物か、戦いは常にシンプルだ！」',
+        '実況「一撃の法則！岡本商事への投資、この一手が戦局を完全にひっくり返す！」',
+        '実況「情報戦（ルール反転）を制した者が、この戦いを制す！」',
+        '実況「市場（株価）が荒れ狂っている！これが資本主義のリアルな戦場だ！」',
+        '実況「戦略なき戦術はただの暴走！次はしっかりとプラン（目標ポイント）を立てましょう！」',
+        '実況「言い訳（他責）を捨てた瞬間、あなたの本当の戦いが始まります！」',
+        '実況「今日の戦いは終わりました。しかし、明日もまた新たな戦場が待っています！」'
+    ],
+    speedy: [
+        '実況「速い！ニンニクが！速すぎます！」解説「早く取ってください」',
+        '実況「生姜だ！一瞬です一瞬！」解説「考えてる暇ないですよ」',
+        '実況「これは速い！反射神経が試されます！」解説「普通に右スワイプです」',
+        '実況「目が！目がついていかない！」解説「慣れれば普通です」',
+        '実況「速すぎて取れなかった！！」解説「遅いです」'
+    ]
+};
+
+// ========================================
+// ボンビーキャラ報酬テーブル
+// ========================================
+const BONBY_REWARDS = {
+    hasekura: [
+        { pt: 50, msg: '支倉「お返しします！航海で稼いだ50pt！」' },
+        { pt: 100, msg: '支倉「感謝を込めて100pt！スペイン土産です！」' },
+        { pt: 30, msg: '支倉「30ptしかないんです...遠征費が...」' },
+        { pt: 200, msg: '支倉「LOT！ローマ法王からのご祝儀200pt！」' },
+        { pt: 10, msg: '支倉「10ptです。BTC手数料で消えました」' }
+    ],
+    date: [
+        { pt: 80, msg: '政宗「四ッ谷用水の利権で80pt献上する」' },
+        { pt: 150, msg: '政宗「仙台城の埋蔵金だ！150pt取れ！」' },
+        { pt: 20, msg: '政宗「眼帯はデマだ！腹いせに20ptだ」' },
+        { pt: 300, msg: '政宗「天下布武！300ptを与えよう！」' },
+        { pt: 5, msg: '政宗「競馬で負けた...5ptしかない」' }
+    ],
+    basho: [
+        { pt: 60, msg: '芭蕉「古池や…詠んだので60pt返す」' },
+        { pt: 120, msg: '芭蕉「旅先で儲けた120pt！俳句料だ」' },
+        { pt: 1, msg: '芭蕉「閑さや…1ptしかない。忍術費で…」' },
+        { pt: 250, msg: '芭蕉「松尾流ポンジスキームで250pt！」' },
+        { pt: 40, msg: '芭蕉「蛙が飛び込んで40pt濡れた」' }
+    ]
+};
+
+// ========================================
+// ゲーム状態変数
+// ========================================
+let points = parseInt(localStorage.getItem('kirinji-points') || '0');
+let gamePoints = 0;
+let mistakes = 0;
+let combo = 0;
+let gameRunning = false;
+
+// ボンビーカウント
+let dateCount = 0;
+let hasekuraCount = 0;
+let bashoCount = 0;
+
+// タッチ操作
+let touchStartX = 0;
+let touchStartY = 0;
+let isGrabbing = false;
+
+// アイテム状態
+let goldenActive = false;
+
+// 長押し
+let holdTimer = null;
+let holdAnimFrame = null;
+let holdStartTime = 0;
+
+// ボンビーキャラ
+let isBonbyHolding = false;
+let bonbyHoldDone = false;
+let currentBonbyWho = null;
+
+// シェイク
+let lastShakeTime = 0;
+
+// タイマー
+let spawnTimer = null;
+let commentInterval = null;
+let angelCooldown = false;
+
+// データ永続化
+let stockMultipliers = JSON.parse(localStorage.getItem('kirinji-mult') || '{}');
+let investedStocks = JSON.parse(localStorage.getItem('kirinji-invested') || '{}');
+let cardProgress = JSON.parse(localStorage.getItem('kirinji-cardprog') || '{}');
+let unlockedCards = JSON.parse(localStorage.getItem('kirinji-cards') || '[]');
+let rankings = JSON.parse(localStorage.getItem('kirinji-rankings') || '[]');
+let referralCode = localStorage.getItem('kirinji-ref') || generateRefCode();
+let referralUsed = localStorage.getItem('kirinji-refused') === '1';
+
+// ========================================
+// ユーティリティ関数
+// ========================================
+function generateRefCode() {
+    const code = 'KIRINJI-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+    localStorage.setItem('kirinji-ref', code);
+    return code;
+}
+
+function pickItem() {
+    const totalWeight = ITEMS.reduce((sum, item) => sum + item.weight, 0);
+    let r = Math.random() * totalWeight;
+    for (const item of ITEMS) {
+        r -= item.weight;
+        if (r <= 0) return item;
+    }
+    return ITEMS[0];
+}
+
+function showToast(msg) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 3000);
+}
+
+// ========================================
+// Twemoji初期化
+// ========================================
+const twemojiObserver = new MutationObserver(() => {
+    twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+});
+twemojiObserver.observe(document.body, { childList: true, subtree: true });
+
+// 初期表示
+document.querySelectorAll('.bIcon').forEach(el => el.textContent = E.bacon);
+document.getElementById('newsIcon').textContent = E.news;
+
+// ========================================
+// ゲーム開始
+// ========================================
+function startGame() {
+    document.getElementById('startScreen').classList.add('hidden');
+    gamePoints = 0;
+    mistakes = 0;
+    combo = 0;
+    gameRunning = true;
+    
+    checkDividend();
+    scheduleAngel();
+    updateUI();
+    spawn();
+    startNews();
+}
+
+// ========================================
+// ニュースシステム
+// ========================================
+function startNews() {
+    const banner = document.getElementById('newsBanner');
+    const textEl = document.getElementById('newsText');
+    const tagEl = document.getElementById('newsStockTag');
+    
+    function showNext() {
+        if (!gameRunning) {
+            setTimeout(showNext, 2000);
+            return;
+        }
+        
+        const news = NEWS_DATA[Math.floor(Math.random() * NEWS_DATA.length)];
+        textEl.textContent = news;
+        banner.classList.add('show');
+        
+        const affected = applyNewsToStocks(news);
+        if (affected) {
+            tagEl.style.display = 'inline-block';
+            tagEl.className = 'news-stocktag ' + (affected.up ? 'up' : 'down');
+            tagEl.textContent = affected.up ? '↑株連動' : '↓株連動';
+            setTimeout(() => { tagEl.style.display = 'none'; }, 5500);
+        } else {
+            tagEl.style.display = 'none';
+        }
+        
+        setTimeout(showNext, 6000);
+    }
+    
+    textEl.textContent = NEWS_DATA[0];
+    banner.classList.add('show');
+    setTimeout(showNext, 5000);
+}
+
+function applyNewsToStocks(newsText) {
+    const isUp = UP_WORDS.some(w => newsText.includes(w));
+    const isDown = DOWN_WORDS.some(w => newsText.includes(w));
+    if (!isUp && !isDown) return null;
+    
+    let affected = null;
+    Object.entries(STOCK_NEWS_MAP).forEach(([id, keywords]) => {
+        if (keywords.some(k => newsText.includes(k))) {
+            const cur = stockMultipliers[id] || 1.0;
+            if (isUp) stockMultipliers[id] = Math.min(2.5, cur + 0.25);
+            if (isDown) stockMultipliers[id] = Math.max(0.2, cur - 0.25);
+            affected = { id, up: isUp };
+        }
+    });
+    localStorage.setItem('kirinji-mult', JSON.stringify(stockMultipliers));
+    return affected;
+}
+
+// ========================================
+// アイテム出現
+// ========================================
+function spawn() {
+    if (!gameRunning) return;
+    clearTimeout(spawnTimer);
+    
+    const ai = document.getElementById('activeItem');
+    const upHint = document.getElementById('upHint');
+    const holdHint = document.getElementById('holdHint');
+    
+    upHint.style.display = 'none';
+    holdHint.style.display = 'none';
+    bonbyHoldDone = false;
+    isBonbyHolding = false;
+    currentBonbyWho = null;
+    
+    // 黄金あぶらかす（Lv5以上、1/40）
+    const lv = Math.floor(gamePoints / 50) + 1;
+    if (lv >= 5 && Math.random() < 0.025 && !goldenActive) {
+        goldenActive = true;
+        ai.textContent = E.star;
+        ai.dataset.action = 'right';
+        ai.dataset.points = '100';
+        ai.dataset.type = 'golden';
+        ai.className = 'item golden-glow';
+        showToast('⭐ 黄金あぶらかす出現！');
+    } else {
+        goldenActive = false;
+        const item = pickItem();
+        ai.textContent = item.emoji;
+        ai.dataset.action = item.action;
+        ai.dataset.points = item.points;
+        ai.dataset.type = item.type;
+        ai.dataset.who = item.who || '';
+        ai.className = 'item';
+        
+        if (item.type === 'speedy') {
+            ai.className = 'item speedy';
+            addComment('meh', COMMENTARY.speedy[Math.floor(Math.random() * COMMENTARY.speedy.length)]);
+        } else if (item.type === 'hold') {
+            showToast('🥓 長押し！');
+        } else if (item.type === 'bonby') {
+            ai.className = 'item bonby-char';
+            holdHint.style.display = 'block';
+        } else if (item.action === 'up') {
+            upHint.style.display = 'block';
+        } else if (item.action === 'shake') {
+            showToast('🍲 振れ！');
+        }
+    }
+    
+    const area = document.getElementById('gameArea');
+    ai.style.left = Math.random() * (area.clientWidth - 100) + 'px';
+    ai.style.top = Math.random() * (area.clientHeight - 160) + 'px';
+    ai.style.display = 'block';
+    twemoji.parse(ai, { folder: 'svg', ext: '.svg' });
+    
+    // タイムアウト設定
+    const type = ai.dataset.type;
+    const timeout = type === 'speedy' ? 800 : type === 'bonby' ? 6000 : 2500;
+    spawnTimer = setTimeout(() => {
+        if (gameRunning && ai.style.display !== 'none') {
+            if ((type === 'bonby' && (isBonbyHolding || bonbyHoldDone)) || (type === 'hold' && isGrabbing)) {
+                return;
+            }
+            mistakes++;
+            combo = 0;
+            if (type === 'speedy') {
+                addComment('bad', COMMENTARY.speedy[4]);
+            }
+            checkBonby();
+            updateUI();
+            ai.style.display = 'none';
+            upHint.style.display = 'none';
+            holdHint.style.display = 'none';
+            stopHoldRing();
+            setTimeout(spawn, 250);
+        }
+    }, timeout);
+}
+
+// ========================================
+// スワイプ処理
+// ========================================
+function handleSwipe(dir) {
+    const ai = document.getElementById('activeItem');
+    const correct = ai.dataset.action;
+    const type = ai.dataset.type;
+    
+    ai.style.display = 'none';
+    document.getElementById('upHint').style.display = 'none';
+    
+    if (dir === correct) {
+        const pts = parseInt(ai.dataset.points);
+        gamePoints += pts;
+        combo++;
+        
+        // カード進捗
+        if (type === 'normal' || type === 'golden') {
+            if (ai.textContent.includes(E.bacon.slice(0, 2))) incCard('catchBacon');
+            if (ai.textContent.includes(E.ramen.slice(0, 2))) incCard('catchRamen');
+            if (ai.textContent.includes(E.chef.slice(0, 2))) incCard('catchChef');
+        }
+        if (dir === 'up') incCard('catchSoup');
+        if (type === 'golden') {
+            incCard('golden');
+            showToast('⭐ +100pt！');
+        }
+        
+        showCombo();
+        if (Math.random() < 0.4 && type !== 'speedy') {
+            addComment('good', COMMENTARY.good[Math.floor(Math.random() * COMMENTARY.good.length)]);
+        }
+    } else {
+        combo = 0;
+        mistakes++;
+        checkBonby();
+        if (Math.random() < 0.7 && type !== 'speedy') {
+            addComment('bad', COMMENTARY.bad[Math.floor(Math.random() * COMMENTARY.bad.length)]);
+        }
+    }
+    
+    updateUI();
+    setTimeout(spawn, 250);
+}
+
+// ========================================
+// ボンビーシステム
+// ========================================
+function checkBonby() {
+    const total = points + gamePoints;
+    if (mistakes > 0 && mistakes % 15 === 0) {
+        bashoCount++;
+        triggerBonby('basho', total);
+    } else if (mistakes > 0 && mistakes % 10 === 0) {
+        hasekuraCount++;
+        triggerBonby('hasekura', total);
+    } else if (mistakes > 0 && mistakes % 5 === 0) {
+        dateCount++;
+        triggerBonby('date', total);
+    }
+}
+
+function triggerBonby(type, total) {
+    const reasons = {
+        date: ['四ッ谷用水の補修費', '仙台競馬場復活費', '貞山運河の保守費', '仙台堀の開拓費'],
+        hasekura: ['ヨーロッパ渡航費', '海外移住費BTC払い', '海外の布教活動費', 'ローマ教皇への献金'],
+        basho: ['松尾芭蕉は忍者', '旅費カンパ', 'ボッタクリ歌人', '俳句詐欺']
+    };
+    const reason = reasons[type][Math.floor(Math.random() * reasons[type].length)];
+    combo = 0;
+    
+    if (type === 'date') {
+        const rate = 0.5 + Math.random() * 0.2;
+        const stolen = Math.floor(total * rate);
+        if (gamePoints >= stolen) gamePoints -= stolen;
+        else {
+            points -= (stolen - gamePoints);
+            gamePoints = 0;
+            if (points < 0) points = 0;
+        }
+        alert('⚔️💀 伊達ボンビー発動！\n\n理由: ' + reason + '\n\n' + Math.floor(rate * 100) + '%奪取！\n奪われた: ' + stolen + '🥓');
+    } else if (type === 'hasekura') {
+        alert('✈️💀 支倉ボンビー発動！\n\n理由: ' + reason + '\n\n全額奪取！\n奪われた: ' + total + '🥓');
+        points = 0;
+        gamePoints = 0;
+    } else {
+        const debt = Math.floor(total * 1.5);
+        alert('🥷💀 芭蕉ボンビー発動！\n\n理由: ' + reason + '\n\n全額奪取＋借金！\n借金: ' + debt + '🥓');
+        points = -debt;
+        gamePoints = 0;
+    }
+    
+    localStorage.setItem('kirinji-points', points);
+    updateUI();
+}
+
+// ========================================
+// UI更新
+// ========================================
+function updateUI() {
+    const total = points + gamePoints;
+    const currentLevel = Math.floor(gamePoints / 50) + 1;
+    
+    document.getElementById('points').textContent = total;
+    document.getElementById('mistakes').textContent = mistakes;
+    document.getElementById('level').textContent = currentLevel;
+    document.getElementById('comboCount').textContent = combo;
+    document.getElementById('dateCount').textContent = dateCount;
+    document.getElementById('hasekuraCount').textContent = hasekuraCount;
+    document.getElementById('bashoCount').textContent = bashoCount;
+    document.getElementById('cardCount').textContent = unlockedCards.length;
+    
+    // レベル99でTシャツ解放
+    if (currentLevel >= 99 && !unlockedCards.includes('tshirt')) {
+        cardProgress['level99'] = 1;
+        unlockedCards.push('tshirt');
+        localStorage.setItem('kirinji-cardprog', JSON.stringify(cardProgress));
+        localStorage.setItem('kirinji-cards', JSON.stringify(unlockedCards));
+        alert('🎉👕 Lv.99到達おめでとうございます！\n\n自家製麺キリンジTシャツ進呈！\n\nお店でカードを提示してください');
+        document.getElementById('cardCount').textContent = unlockedCards.length;
+    }
+    
+    // ボンビーボーナス
+    const bonbyTotal = hasekuraCount + dateCount + bashoCount;
+    if (bonbyTotal > 0 && bonbyTotal % 100 === 0) {
+        gamePoints += 1000;
+        alert('🎊 ボンビーボーナス！\n\n累計100回達成！\n+1000🥓');
+        hasekuraCount = dateCount = bashoCount = 0;
+        updateUI();
+        return;
+    } else if (bonbyTotal >= 90 && bonbyTotal < 100 && !window['bw' + bonbyTotal]) {
+        window['bw' + bonbyTotal] = true;
+        showToast('⚠️ ボンビーボーナスまであと' + (100 - bonbyTotal) + '回！');
+    }
+    
+    document.getElementById('tamagoBtn').classList.toggle('disabled', total < 10000);
+}
+
+// ========================================
+// タッチイベントハンドラー
+// ========================================
+const activeItem = document.getElementById('activeItem');
+
+activeItem.addEventListener('touchstart', e => {
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    isGrabbing = true;
+    const type = activeItem.dataset.type;
+    
+    if (type === 'hold') {
+        holdStartTime = Date.now();
+        startHoldRing(e.touches[0].clientX, e.touches[0].clientY);
+        holdTimer = setTimeout(() => {
+            if (isGrabbing) {
+                stopHoldRing();
+                activeItem.style.display = 'none';
+                document.getElementById('upHint').style.display = 'none';
+                gamePoints += 25;
+                combo++;
+                showCombo();
+                updateUI();
+                showToast('🥓 長押し成功！ +25pt！');
+                addComment('good', '実況「長押しいいですねえ！」解説「基本中の基本です」');
+                setTimeout(spawn, 300);
+                isGrabbing = false;
+            }
+        }, 2000);
+    } else if (type === 'bonby') {
+        holdStartTime = Date.now();
+        isBonbyHolding = true;
+        currentBonbyWho = activeItem.dataset.who;
+        startHoldRing(e.touches[0].clientX, e.touches[0].clientY, '#ff4444');
+        holdTimer = setTimeout(() => {
+            if (isGrabbing && isBonbyHolding) {
+                stopHoldRing();
+                bonbyHoldDone = true;
+                document.getElementById('holdHint').textContent = '離してスワイプ！';
+                document.getElementById('holdHint').style.borderColor = '#ffd700';
+                document.getElementById('holdHint').style.color = '#ffd700';
+                showToast('準備完了！スワイプ！');
+            }
+        }, 1500);
+    }
+}, { passive: false });
+
+activeItem.addEventListener('touchend', e => {
+    if (!isGrabbing) return;
+    isGrabbing = false;
+    clearTimeout(holdTimer);
+    stopHoldRing();
+    document.getElementById('holdHint').style.display = 'none';
+    
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const type = activeItem.dataset.type;
+    
+    if (type === 'hold') {
+        const held = Date.now() - holdStartTime;
+        if (held < 1800) {
+            activeItem.style.display = 'none';
+            mistakes++;
+            combo = 0;
+            addComment('bad', COMMENTARY.bad[6]);
+            checkBonby();
+            updateUI();
+            setTimeout(spawn, 250);
+        }
+    } else if (type === 'bonby' && bonbyHoldDone) {
+        activeItem.style.display = 'none';
+        document.getElementById('upHint').style.display = 'none';
+        bonbyHoldDone = false;
+        isBonbyHolding = false;
+        triggerBonbyCharReward(currentBonbyWho);
+        combo++;
+        showCombo();
+        updateUI();
+        setTimeout(spawn, 400);
+    } else if (type === 'bonby' && !bonbyHoldDone) {
+        activeItem.style.display = 'none';
+        isBonbyHolding = false;
+        mistakes++;
+        combo = 0;
+        addComment('bad', '実況「長押しが甘い！ボンビーが怒った！」解説「触ると逃げますね」');
+        checkBonby();
+        updateUI();
+        setTimeout(spawn, 250);
+    } else if (type === 'speedy') {
+        activeItem.style.display = 'none';
+        clearTimeout(spawnTimer);
+        if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+            const pts = parseInt(activeItem.dataset.points);
+            gamePoints += pts;
+            combo++;
+            showCombo();
+            updateUI();
+            showToast('💨 素早い！+' + pts + 'pt！');
+        } else {
+            mistakes++;
+            combo = 0;
+            checkBonby();
+            updateUI();
+        }
+        setTimeout(spawn, 250);
+    } else {
+        if (Math.abs(dy) > Math.abs(dx) && dy < -50) {
+            handleSwipe('up');
+        } else if (Math.abs(dx) > 50) {
+            handleSwipe(dx > 0 ? 'right' : 'left');
+        }
+    }
+}, { passive: false });
+
+// ========================================
+// 長押しプログレスリング
+// ========================================
+function startHoldRing(x, y, color) {
+    color = color || '#ffd700';
+    const ring = document.getElementById('holdRing');
+    const path = document.getElementById('holdRingPath');
+    const label = document.getElementById('holdLabel');
+    
+    path.style.stroke = color;
+    ring.style.left = (x - 48) + 'px';
+    ring.style.top = (y - 48) + 'px';
+    ring.style.display = 'block';
+    label.style.left = (x - 30) + 'px';
+    label.style.top = (y + 50) + 'px';
+    label.style.display = 'block';
+    
+    const duration = (activeItem.dataset.type === 'bonby') ? 1500 : 2000;
+    const start = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - start;
+        const progress = Math.min(1, elapsed / duration);
+        path.style.strokeDashoffset = 283 * (1 - progress);
+        label.textContent = Math.ceil((duration - elapsed) / 1000 * 10) / 10 + 's';
+        if (progress < 1 && isGrabbing) {
+            holdAnimFrame = requestAnimationFrame(animate);
+        }
+    }
+    holdAnimFrame = requestAnimationFrame(animate);
+}
+
+function stopHoldRing() {
+    cancelAnimationFrame(holdAnimFrame);
+    document.getElementById('holdRing').style.display = 'none';
+    document.getElementById('holdLabel').style.display = 'none';
+    document.getElementById('holdRingPath').style.strokeDashoffset = 283;
+}
+
+// ========================================
+// ボンビーキャラ報酬
+// ========================================
+function triggerBonbyCharReward(who) {
+    const table = BONBY_REWARDS[who] || BONBY_REWARDS.date;
+    const reward = table[Math.floor(Math.random() * table.length)];
+    gamePoints += reward.pt;
+    const icon = who === 'hasekura' ? '✈️' : who === 'date' ? '⚔️' : '🥷';
+    showToast(icon + ' +' + reward.pt + 'pt！');
+    addComment('good', reward.msg);
+    return reward.pt;
+}
+
+// ========================================
+// シェイク検出
+// ========================================
+window.addEventListener('devicemotion', e => {
+    const a = e.accelerationIncludingGravity;
+    if (!a || !gameRunning) return;
+    const mag = Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2);
+    const now = Date.now();
+    if (mag > 22 && now - lastShakeTime > 800) {
+        lastShakeTime = now;
+        const ai = document.getElementById('activeItem');
+        if (ai.dataset.action === 'shake') {
+            gamePoints += 30;
+            combo++;
+            incCard('imoni');
+            showCombo();
+            document.body.classList.add('shaking');
+            setTimeout(() => document.body.classList.remove('shaking'), 400);
+            ai.style.display = 'none';
+            document.getElementById('upHint').style.display = 'none';
+            updateUI();
+            setTimeout(spawn, 250);
+            showToast('🍲 芋煮キャッチ！+30pt！');
+        } else if (Math.random() < 0.15) {
+            gamePoints += 5;
+            updateUI();
+            showToast('🪙 +5pt');
+        }
+    }
+});
+
+// ========================================
+// コンボ表示
+// ========================================
+function showCombo() {
+    document.getElementById('comboCount').textContent = combo;
+    if (combo < 2) return;
+    const el = document.getElementById('comboDisplay');
+    const msgs = ['', '', '2コンボ！', '3コンボ！', '4コンボ！', '5コンボ！', '神ゲー！', '伝説！', '無双中！'];
+    el.textContent = (combo < msgs.length ? msgs[combo] : combo + 'コンボ！！');
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+}
+
+// ========================================
+// 実況解説
+// ========================================
+function startCommentary() {
+    // 実況解説機能削除 - 何もしない
+    return;
+}
+
+function addComment(type, text) {
+    // 実況解説機能削除 - 何もしない
+    return;
+}
+
+// ========================================
+// 天使の仙台四郎
+// ========================================
+function scheduleAngel() {
+    const delay = (60 + Math.random() * 120) * 1000;
+    setTimeout(() => {
+        if (gameRunning && !angelCooldown) triggerAngel();
+        scheduleAngel();
+    }, delay);
+}
+
+function triggerAngel() {
+    angelCooldown = true;
+    const bonuses = [50, 100, 200, 300, 500, 1000];
+    const weights = [30, 25, 20, 15, 8, 2];
+    let r = Math.random() * 100, pt = 50, acc = 0;
+    for (let i = 0; i < bonuses.length; i++) {
+        acc += weights[i];
+        if (r <= acc) {
+            pt = bonuses[i];
+            break;
+        }
+    }
+    
+    incCard('shiro');
+    const burst = document.createElement('div');
+    burst.className = 'angel-burst';
+    document.body.appendChild(burst);
+    setTimeout(() => burst.remove(), 1000);
+    
+    const popup = document.getElementById('angelPopup');
+    document.getElementById('angelPtsText').textContent = '+' + pt + '🥓';
+    popup.style.display = 'block';
+    gamePoints += pt;
+    updateUI();
+    addComment('good', '実況「天使の仙台四郎降臨！！！」解説「ご利益ですね」');
+    showToast('👼 天使の四郎！ +' + pt + 'pt！');
+    
+    setTimeout(() => {
+        popup.style.display = 'none';
+        angelCooldown = false;
+    }, 3000);
+}
+
+// ========================================
+// 株式投資システム
+// ========================================
+function showStocks() {
+    const total = points + gamePoints;
+    if (total < 100) {
+        alert('投資には最低100🥓必要です！');
+        return;
+    }
+    gameRunning = false;
+    document.getElementById('balanceText').textContent = total;
+    
+    let html = '';
+    STOCKS.forEach(s => {
+        const mult = stockMultipliers[s.id] || 1.0;
+        const held = investedStocks[s.id]?.amount || 0;
+        const multClass = mult > 1.05 ? 'up' : mult < 0.95 ? 'down' : 'neutral';
+        const multLabel = mult > 1.05 ? '↑ニュース連動中' : mult < 0.95 ? '↓ニュース連動中' : '通常';
+        const divBadge = held > 0 ? `<span class="dividend-badge">配当保有中 ${held}🥓</span>` : '';
+        
+        html += `<div class="stock-card">
+            <div class="stock-name">${s.name}${divBadge}</div>
+            <span class="stock-mult ${multClass}">${multLabel} (x${mult.toFixed(2)})</span>
+            <div class="stock-desc">${s.desc}</div>
+            <div class="stock-btns">
+                <button class="btn-buy" onclick="invest('${s.id}',${s.rate})">📈 買い</button>
+                <button class="btn-short" onclick="shortSell('${s.id}',${s.rate})">📉 空売り</button>
+            </div>
+        </div>`;
+    });
+    
+    document.getElementById('stocksList').innerHTML = html;
+    document.getElementById('stockOverlay').classList.remove('hidden');
+    document.getElementById('stockPanel').classList.remove('hidden');
+    twemoji.parse(document.getElementById('stocksList'), { folder: 'svg', ext: '.svg' });
+}
+
+function closeStocks() {
+    document.getElementById('stockOverlay').classList.add('hidden');
+    document.getElementById('stockPanel').classList.add('hidden');
+    gameRunning = true;
+    spawn();
+}
+
+function getStockNews(stockId, type) {
+    const keywords = STOCK_NEWS_MAP[stockId] || [];
+    const targetWords = type === 'good' ? UP_WORDS : DOWN_WORDS;
+    
+    const filtered = NEWS_DATA.filter(news => {
+        const isRelated = keywords.some(k => news.includes(k));
+        return isRelated && targetWords.some(w => news.includes(w));
+    });
+    
+    if (filtered.length > 0) {
+        return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+    
+    const defaults = type === 'good' 
+        ? ['業績好調で株価上昇！', '新規契約で収益拡大！', '市場評価が高まりS高！', '増配発表で投資家歓喜！']
+        : ['不祥事発覚で株価暴落', '経営陣トラブルで信用失墜', '業績悪化で債務超過', '法令違反で行政処分'];
+    return defaults[Math.floor(Math.random() * defaults.length)];
+}
+
+function invest(id, rate) {
+    const total = points + gamePoints;
+    const amt = parseInt(prompt('投資額を入力 (100〜' + total + ')'));
+    if (isNaN(amt) || amt < 100 || amt > total) {
+        alert('金額が不正です');
+        return;
+    }
+    if (gamePoints >= amt) gamePoints -= amt;
+    else {
+        points -= (amt - gamePoints);
+        gamePoints = 0;
+    }
+    
+    const mult = stockMultipliers[id] || 1.0;
+    const r = Math.random();
+    incCard('invest');
+    
+    if (id === 'okamoto') {
+        if (r < 0.8) {
+            const badNews = getStockNews('okamoto', 'bad');
+            alert(E.skull + ' 【速報】' + badNews + '\n\n全資産凍結！\n投資額 ' + amt + '🥓 没収...');
+        } else {
+            const w = Math.floor(amt * rate * mult);
+            gamePoints += w;
+            recordInvestment(id, Math.floor(amt * 0.1));
+            const goodNews = getStockNews('okamoto', 'good');
+            alert(E.rocket + ' 【号外】' + goodNews + '\n\nS高達成！\n払い戻し: ' + w + '🥓\n（ニュース連動 x' + mult.toFixed(2) + '）');
+        }
+    } else {
+        if (r < 0.25) {
+            const badNews = getStockNews(id, 'bad');
+            alert('📉 【悲報】' + badNews + '\n\n投資額 ' + amt + '🥓 没収...');
+        } else {
+            const w = Math.floor(amt * (0.95 + Math.random() * 0.6) * mult);
+            gamePoints += w;
+            recordInvestment(id, Math.floor(amt * 0.05));
+            const goodNews = getStockNews(id, 'good');
+            alert('✅ 【IR】' + goodNews + '\n\n利確成功！\n払い戻し: ' + w + '🥓\n（ニュース連動 x' + mult.toFixed(2) + '）');
+        }
+    }
+    
+    localStorage.setItem('kirinji-points', points);
+    updateUI();
+    closeStocks();
+}
+
+function shortSell(id, rate) {
+    const total = points + gamePoints;
+    const max = Math.floor(total / 2);
+    if (max < 100) {
+        alert('空売りには最低200🥓必要です');
+        return;
+    }
+    const amt = parseInt(prompt('空売り額を入力 (100〜' + max + ')\n※暴落を予測して逆張り！'));
+    if (isNaN(amt) || amt < 100 || amt > max) {
+        alert('金額が不正です');
+        return;
+    }
+    if (gamePoints >= amt) gamePoints -= amt;
+    else {
+        points -= (amt - gamePoints);
+        gamePoints = 0;
+    }
+    
+    const mult = stockMultipliers[id] || 1.0;
+    const r = Math.random();
+    const downBoost = mult < 0.8 ? 0.2 : 0;
+    const winChance = (id === 'okamoto') ? 0.8 : 0.35 + downBoost;
+    
+    if (r < winChance) {
+        const w = Math.floor(amt * 1.5);
+        gamePoints += w;
+        const badNews = getStockNews(id, 'bad');
+        alert('✅ 【空売り的中】' + badNews + '\n\n予想通り暴落！\n空売り利益: +' + w + '🥓');
+    } else {
+        const goodNews = getStockNews(id, 'good');
+        alert('💀 【空売り失敗】' + goodNews + '\n\n予想外の株価上昇...\n空売り損失: ' + amt + '🥓');
+    }
+    
+    localStorage.setItem('kirinji-points', points);
+    updateUI();
+    closeStocks();
+}
+
+function recordInvestment(id, amount) {
+    if (!investedStocks[id]) investedStocks[id] = { amount: 0, since: Date.now(), lastDiv: 0 };
+    investedStocks[id].amount += amount;
+    localStorage.setItem('kirinji-invested', JSON.stringify(investedStocks));
+}
+
+function checkDividend() {
+    const now = Date.now();
+    let total = 0;
+    Object.entries(investedStocks).forEach(([id, d]) => {
+        if (d.amount > 0 && now - (d.lastDiv || 0) > 1000 * 60 * 60 * 20) {
+            const div = Math.floor(d.amount * 0.03);
+            if (div > 0) {
+                total += div;
+                investedStocks[id].lastDiv = now;
+            }
+        }
+    });
+    if (total > 0) {
+        gamePoints += total;
+        localStorage.setItem('kirinji-invested', JSON.stringify(investedStocks));
+        showToast('💰 配当入金 +' + total + '🥓！');
+        updateUI();
+    }
+}
+
+// ========================================
+// カードシステム
+// ========================================
+function showCollection() {
+    gameRunning = false;
+    const grid = document.getElementById('cardGrid');
+    grid.innerHTML = MENU_CARDS.map(c => {
+        const ok = unlockedCards.includes(c.id);
+        const prog = cardProgress[c.key] || 0;
+        return `<div class="menu-card ${ok ? 'unlocked' : 'locked'}">
+            <span class="card-icon">${c.icon}</span>
+            <div class="card-name">${c.name}</div>
+            <div class="card-cond">${ok ? '✅解放済' : c.cond + '<br>' + prog + '/' + c.need}</div>
+        </div>`;
+    }).join('');
+    twemoji.parse(grid, { folder: 'svg', ext: '.svg' });
+    document.getElementById('collectionOverlay').classList.remove('hidden');
+    document.getElementById('collectionPanel').classList.remove('hidden');
+}
+
+function closeCollection() {
+    document.getElementById('collectionOverlay').classList.add('hidden');
+    document.getElementById('collectionPanel').classList.add('hidden');
+    gameRunning = true;
+    spawn();
+}
+
+function incCard(key) {
+    cardProgress[key] = (cardProgress[key] || 0) + 1;
+    localStorage.setItem('kirinji-cardprog', JSON.stringify(cardProgress));
+    MENU_CARDS.forEach(c => {
+        if (c.key === key && cardProgress[key] >= c.need && !unlockedCards.includes(c.id)) {
+            unlockedCards.push(c.id);
+            localStorage.setItem('kirinji-cards', JSON.stringify(unlockedCards));
+            showToast('🎴 カード解放！「' + c.name + '」');
+        }
+    });
+    document.getElementById('cardCount').textContent = unlockedCards.length;
+}
+
+// ========================================
+// ランキング
+// ========================================
+function showRank() {
+    gameRunning = false;
+    const sorted = [...rankings].sort((a, b) => b.score - a.score).slice(0, 10);
+    const list = document.getElementById('rankList');
+    if (!sorted.length) {
+        list.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;">まだスコアがありません</div>';
+    } else {
+        list.innerHTML = sorted.map((r, i) => {
+            const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+            return `<div class="rank-row">
+                <div class="rank-num ${cls}">${medal}</div>
+                <div class="rank-name">${r.name}</div>
+                <div class="rank-score">${r.score.toLocaleString()}🥓</div>
+            </div>`;
+        }).join('');
+    }
+    document.getElementById('rankOverlay').classList.remove('hidden');
+    document.getElementById('rankPanel').classList.remove('hidden');
+}
+
+function closeRank() {
+    document.getElementById('rankOverlay').classList.add('hidden');
+    document.getElementById('rankPanel').classList.add('hidden');
+    gameRunning = true;
+    spawn();
+}
+
+function submitScore() {
+    const name = (document.getElementById('rankNameInput').value || '').trim();
+    if (!name) {
+        alert('名前を入力してください');
+        return;
+    }
+    const total = points + gamePoints;
+    const idx = rankings.findIndex(r => r.name === name);
+    if (idx >= 0) {
+        if (total > rankings[idx].score) rankings[idx].score = total;
+    } else {
+        rankings.push({ name, score: total });
+    }
+    rankings.sort((a, b) => b.score - a.score);
+    if (rankings.length > 50) rankings = rankings.slice(0, 50);
+    localStorage.setItem('kirinji-rankings', JSON.stringify(rankings));
+    showToast('🏆 登録完了！');
+    showRank();
+}
+
+// ========================================
+// ソーシャル機能
+// ========================================
+function shareScore() {
+    const total = points + gamePoints;
+    const lv = Math.floor(gamePoints / 50) + 1;
+    const cards = unlockedCards.length;
+    const text = `🥓 あぶらかすキャッチ\n\nLv.${lv} / ${total.toLocaleString()}pt達成！\nカード${cards}/10枚解放！\n\n自家製麺キリンジの味玉目指して奮闘中🍜\n招待コード: ${referralCode}\n\n#あぶらかすキャッチ #自家製麺キリンジ #仙台`;
+    window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+}
+
+function showReferral() {
+    const msg = '招待コード: ' + referralCode + '\n\nこのコードを友人に送って\n友人が入力したら500pt獲得！\n\nコードをコピーしますか？';
+    if (confirm(msg)) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(referralCode).then(() => showToast('✅ コピーしました！'));
+        } else {
+            prompt('コードをコピー：', referralCode);
+        }
+    }
+}
+
+function applyReferral() {
+    if (referralUsed) {
+        alert('招待コードは1回のみ使えます');
+        return;
+    }
+    const code = prompt('招待コードを入力してください:');
+    if (!code) return;
+    if (code.toUpperCase().startsWith('KIRINJI-') && code.toUpperCase() !== referralCode) {
+        gamePoints += 500;
+        referralUsed = true;
+        localStorage.setItem('kirinji-refused', '1');
+        updateUI();
+        showToast('🎁 招待ボーナス +500pt！');
+        document.getElementById('startScreen').classList.add('hidden');
+        gameRunning = true;
+        spawn();
+        startNews();
+    } else {
+        alert('無効なコードです');
+    }
+}
+
+// ========================================
+// 味玉クーポン
+// ========================================
+function handleTamagoClick() {
+    const total = points + gamePoints;
+    if (total < 10000) {
+        alert('味玉無料券は10,000pt必要\n\n現在: ' + total + '\nあと' + (10000 - total));
+        return;
+    }
+    points = 0;
+    gamePoints = 0;
+    localStorage.setItem('kirinji-points', points);
+    incCard('tamago');
+    updateUI();
+    const code = 'TAMAGO-' + Date.now().toString(36).toUpperCase();
+    const now = new Date();
+    const expiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    alert('🎉🥚 味玉無料券発行！\n\nコード: ' + code + '\n\n発行日: ' + now.toLocaleDateString('ja-JP') + '\n有効期限: ' + expiry.toLocaleDateString('ja-JP') + '\n引換: 自家製麺キリンジ\n\nポイントは0にリセットされました。');
+}
+
+// ========================================
+// 初期化
+// ========================================
+twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+</script>
+</body>
+</html>
