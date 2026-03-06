@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麺マッチ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a0e00; --surface: #2a1800; --surface2: #3a2200;
+  --accent: #ff6b00; --accent2: #ffbe00; --text: #fff8f0;
+  --muted: #a07050; --border: #5a3a10; --red: #e03000;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+/* WordPress余白対策 */
+html, body { margin: 0 !important; padding: 0 !important; }
+.entry-content, .wp-block-group, .wp-block-cover, article, main, .site-main { padding: 0 !important; margin: 0 !important; }
+@media (max-width: 768px) {
+  html, body { margin: 0 !important; padding: 0 !important; }
+  .entry-content > *, .wp-block-group__inner-container > * { padding: 0 !important; margin: 0 !important; }
+}
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; margin: 0; padding: 0; }
+#site-header { text-align: center; padding: 0; margin: 0; line-height: 0; }
+h1 { font-size: clamp(1.4rem,4vw,2.2rem); font-weight: 900; background: linear-gradient(135deg,#ffbe00,#ff6b00,#e03000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.tagline { color: #c8905a; font-size: 0.78rem; margin: 0.4rem 0 0; text-align: center; padding: 0 1rem; line-height: 1.4; }
+.container { max-width: 660px; margin: 0 auto; padding: 0.5rem 1rem 4rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.2rem; position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,var(--accent),var(--accent2)); }
+.label { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.7rem; }
+.section-title { font-size: 0.85rem; font-weight: 700; color: var(--accent2); margin-bottom: 1rem; }
+
+/* アンケート */
+.q-block { margin-bottom: 1.2rem; }
+.q-label { font-size: 0.82rem; color: var(--text); font-weight: 700; margin-bottom: 0.5rem; display: block; }
+.q-options { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.q-btn { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 0.8rem; font-family: inherit; font-size: 0.78rem; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.q-btn:hover { border-color: var(--accent); color: var(--accent); }
+.q-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+
+/* 食材入力 */
+.input-row { display: flex; gap: 0.6rem; margin-bottom: 0.8rem; }
+input[type=text] { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 0.7rem 1rem; color: var(--text); font-family: inherit; font-size: 0.92rem; outline: none; }
+input[type=text]:focus { border-color: var(--accent); }
+input::placeholder { color: var(--muted); }
+.btn-add { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 0.7rem 1.2rem; font-family: inherit; font-weight: 700; font-size: 0.92rem; cursor: pointer; }
+.tags { display: flex; flex-wrap: wrap; gap: 0.45rem; min-height: 2rem; margin-bottom: 0.9rem; }
+.tag { display: flex; align-items: center; gap: 0.3rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.84rem; }
+.tag-x { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0; }
+.quick-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.45rem; }
+.quick-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.quick-tag { background: transparent; border: 1px solid var(--border); border-radius: 20px; padding: 0.22rem 0.65rem; font-family: inherit; font-size: 0.75rem; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.quick-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 生成ボタン */
+.btn-gen { width: 100%; background: linear-gradient(135deg,var(--accent),var(--red)); color: #fff; border: none; border-radius: 16px; padding: 1rem 2rem; font-family: inherit; font-size: 1rem; font-weight: 900; cursor: pointer; margin-bottom: 1.2rem; letter-spacing: 0.05em; box-shadow: 0 0 20px rgba(255,107,0,0.35); transition: all 0.2s; }
+.btn-gen:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,107,0,0.5); }
+.btn-gen:disabled { background: var(--surface2); color: var(--border); box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-gen.loading { background: linear-gradient(270deg,#ff6b00,#ffbe00,#e03000,#ff6b00) !important; background-size: 300% 300% !important; animation: btn-wave 1.5s ease infinite !important; cursor: not-allowed; color: #fff !important; opacity: 1 !important; }
+@keyframes btn-wave { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes loading-bar { 0%{width:0%} 50%{width:70%} 100%{width:100%} }
+
+.loading { text-align: center; padding: 1.5rem; color: var(--muted); display: none; }
+.loading.show { display: block; }
+
+/* 結果 */
+.result-card { display: none; }
+.result-card.show { display: block; }
+
+/* シェア */
+.share-bar { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
+.btn-share { flex: 1; border: none; border-radius: 12px; padding: 0.65rem 1rem; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.btn-share-x { background: #000; color: #fff; }
+.btn-share-ig { background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color: #fff; }
+
+/* 壁打ちチャット */
+.chat-section { margin-top: 1.5rem; }
+.chat-title { font-size: 0.8rem; color: var(--accent2); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 0.8rem; }
+.chat-log { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 0.8rem; max-height: 400px; overflow-y: auto; }
+.chat-msg { padding: 0.7rem 1rem; border-radius: 14px; font-size: 0.87rem; line-height: 1.7; max-width: 90%; }
+.chat-msg.ai { background: var(--surface2); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+.chat-msg.user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.chat-input-row { display: flex; gap: 0.5rem; }
+.chat-input { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 0.6rem 0.9rem; color: var(--text); font-family: inherit; font-size: 0.87rem; outline: none; }
+.chat-input:focus { border-color: var(--accent); }
+.chat-send { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 0.6rem 1rem; font-family: inherit; font-weight: 700; font-size: 0.87rem; cursor: pointer; white-space: nowrap; }
+.chat-send:disabled { background: var(--surface2); color: var(--border); cursor: not-allowed; }
+
+.error-box { color: #ff6060; font-size: 0.85rem; padding: 0.8rem; background: rgba(255,0,0,0.08); border-radius: 10px; margin-bottom: 1rem; display: none; }
+.error-box.show { display: block; }
+.hint { text-align: center; color: var(--border); font-size: 0.85rem; padding: 2rem; }
+footer { text-align: center; color: var(--border); font-size: 0.72rem; padding: 2rem; }
+
+
+</style>
+</head>
+<body>
+
+<div id="site-header">
+  <div style="overflow:hidden;line-height:0;"><img src="menmatchi.jpg" alt="麺マッチ" style="width:92%;max-width:560px;display:block;margin:-4% auto 0;height:auto;"></div>
+</div>
+
+<div class="container">
+
+  <!-- アンケートカード -->
+  <div class="card" id="survey-card">
+    <p class="section-title">あなたのラーメンを見つけるために教えてください</p>
+
+    <div class="q-block">
+      <span class="q-label">健康状態・制限はありますか？</span>
+      <div class="q-options" id="q-health">
+        <button class="q-btn" data-val="特になし">特になし</button>
+        <button class="q-btn" data-val="塩分制限あり">塩分制限あり</button>
+        <button class="q-btn" data-val="脂質制限あり">脂質制限あり</button>
+        <button class="q-btn" data-val="アレルギーあり">アレルギーあり</button>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <span class="q-label">味の濃さはどのくらいが好きですか？</span>
+      <div class="q-options" id="q-taste">
+        <button class="q-btn" data-val="薄味・あっさり">薄味・あっさり</button>
+        <button class="q-btn" data-val="中間">中間</button>
+        <button class="q-btn" data-val="濃いめ・こってり">濃いめ・こってり</button>
+        <button class="q-btn" data-val="辛め">辛め</button>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <span class="q-label">好きなスープのベースは？</span>
+      <div class="q-options" id="q-soup">
+        <button class="q-btn" data-val="醤油">醤油</button>
+        <button class="q-btn" data-val="塩">塩</button>
+        <button class="q-btn" data-val="味噌">味噌</button>
+        <button class="q-btn" data-val="豚骨">豚骨</button>
+        <button class="q-btn" data-val="鶏白湯">鶏白湯</button>
+        <button class="q-btn" data-val="魚介">魚介</button>
+        <button class="q-btn" data-val="なんでも">なんでも</button>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <span class="q-label">今日の気分は？</span>
+      <div class="q-options" id="q-mood">
+        <button class="q-btn" data-val="元気を出したい">元気を出したい</button>
+        <button class="q-btn" data-val="体を温めたい">体を温めたい</button>
+        <button class="q-btn" data-val="さっぱりしたい">さっぱりしたい</button>
+        <button class="q-btn" data-val="がっつり食べたい">がっつり食べたい</button>
+        <button class="q-btn" data-val="癒されたい">癒されたい</button>
+      </div>
+    </div>
+
+    <div class="q-block">
+      <span class="q-label">カップ麺のアレンジレシピも提案してほしい？</span>
+      <div class="q-options" id="q-cup">
+        <button class="q-btn" data-val="はい、提案してほしい">はい、ぜひ</button>
+        <button class="q-btn" data-val="いいえ">いいえ、普通のラーメンだけでOK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 食材入力カード -->
+  <div class="card">
+    <p class="label">今ある食材を教えてください（任意）</p>
+    <div class="input-row">
+      <input type="text" id="ing-input" placeholder="例：卵、キャベツ、醤油...">
+      <button class="btn-add" id="btn-add">追加</button>
+    </div>
+    <div class="tags" id="tags"></div>
+    <p class="quick-label">よく使われる食材：</p>
+    <div class="quick-tags" id="quick-tags"></div>
+  </div>
+
+  <button class="btn-gen" id="gen-btn">ラーメンを提案してもらう</button>
+
+  <div id="loading-bar-wrap" style="display:none;height:6px;background:var(--surface2);border-radius:3px;margin-bottom:1.2rem;overflow:hidden;">
+    <div style="height:100%;background:linear-gradient(90deg,#ff6b00,#ffbe00);border-radius:3px;animation:loading-bar 2s ease-in-out infinite;"></div>
+  </div>
+  <div class="loading" id="loading">
+    <p style="font-size:0.9rem">あなたにぴったりのラーメンを考えています...</p>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div class="result-card" id="result-card"></div>
+
+  <!-- 壁打ちチャット -->
+  <div class="card chat-section" id="chat-section" style="display:none">
+    <p class="chat-title">AIラーメンシェフに相談する</p>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.8rem">「もっと辛くしたい」「スープの作り方を教えて」など自由に聞いてください</p>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="chat-input-row">
+      <input type="text" class="chat-input" id="chat-input" placeholder="質問や相談を入力...">
+      <button class="chat-send" id="chat-send">送信</button>
+    </div>
+  </div>
+
+  <div id="share-bar" class="share-bar" style="display:none">
+    <button class="btn-share btn-share-x" id="btn-share-x">X でシェア</button>
+    <button class="btn-share btn-share-ig" id="btn-share-ig">Instagramでシェア</button>
+  </div>
+
+  <div class="hint" id="hint">アンケートに答えてラーメンを提案してもらいましょう</div>
+</div>
+
+<footer>Powered by Claude AI x 自家製麺キリンジ</footer>
+
+<script>
+(function() {
+  var PROXY_URL = 'https://jikaseimenkirinji.com/api-proxy.php';
+  var QUICK_ITEMS = ['キャベツ','卵','もやし','玉ねぎ','ちくわ','カニカマ','えのき','豆腐','ツナ缶','ごま油','牛乳','キムチ','バター','チーズ','長ねぎ','にんにく','生姜','コーン','海苔','メンマ'];
+  var ingredients = [];
+  var survey = { health: '', taste: '', soup: '', mood: '', cup: '' };
+  var chatHistory = [];
+  var lastResult = '';
+
+  // アンケート選択
+  var qMap = { 'q-health': 'health', 'q-taste': 'taste', 'q-soup': 'soup', 'q-mood': 'mood', 'q-cup': 'cup' };
+  Object.keys(qMap).forEach(function(groupId) {
+    var key = qMap[groupId];
+    document.getElementById(groupId).querySelectorAll('.q-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.getElementById(groupId).querySelectorAll('.q-btn').forEach(function(b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        survey[key] = btn.dataset.val;
+      });
+    });
+  });
+
+  // クイックタグ
+  var quickTagsEl = document.getElementById('quick-tags');
+  QUICK_ITEMS.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.className = 'quick-tag';
+    btn.textContent = item;
+    btn.addEventListener('click', function() {
+      var inputEl = document.getElementById('ing-input');
+      var cur = inputEl.value.trim();
+      inputEl.value = cur ? cur + '、' + item : item;
+      inputEl.focus();
+    });
+    quickTagsEl.appendChild(btn);
+  });
+
+  document.getElementById('btn-add').addEventListener('click', addFromInput);
+  document.getElementById('ing-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') addFromInput(); });
+  document.getElementById('gen-btn').addEventListener('click', generate);
+
+  function addFromInput() {
+    var val = document.getElementById('ing-input').value.trim();
+    if (!val) return;
+    val.split('、').concat(val.split(',')).filter(Boolean).forEach(function(v) { addByName(v.trim()); });
+    document.getElementById('ing-input').value = '';
+    document.getElementById('ing-input').focus();
+  }
+
+  function addByName(name) {
+    if (!name || ingredients.includes(name)) return;
+    ingredients.push(name);
+    renderTags();
+  }
+
+  function removeIng(name) {
+    ingredients = ingredients.filter(function(i) { return i !== name; });
+    renderTags();
+  }
+
+  function renderTags() {
+    var el = document.getElementById('tags');
+    el.innerHTML = '';
+    ingredients.forEach(function(name) {
+      var div = document.createElement('div');
+      div.className = 'tag';
+      var span = document.createElement('span');
+      span.textContent = name;
+      var btn = document.createElement('button');
+      btn.className = 'tag-x';
+      btn.textContent = 'x';
+      (function(n) { btn.addEventListener('click', function() { removeIng(n); }); })(name);
+      div.appendChild(span);
+      div.appendChild(btn);
+      el.appendChild(div);
+    });
+  }
+
+  // ===== ラーメン生成 =====
+  async function generate() {
+    var genBtn = document.getElementById('gen-btn');
+    genBtn.disabled = true;
+    genBtn.classList.add('loading');
+    genBtn.textContent = '考えています...';
+    document.getElementById('loading-bar-wrap').style.display = 'block';
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('result-card').classList.remove('show');
+    document.getElementById('result-card').innerHTML = '';
+    document.getElementById('error-box').classList.remove('show');
+    document.getElementById('share-bar').style.display = 'none';
+    document.getElementById('chat-section').style.display = 'none';
+    document.getElementById('hint').style.display = 'none';
+
+    var surveyInfo = [
+      survey.health ? '健康状態: ' + survey.health : '',
+      survey.taste  ? '味の好み: ' + survey.taste  : '',
+      survey.soup   ? 'スープの好み: ' + survey.soup : '',
+      survey.mood   ? '今日の気分: ' + survey.mood  : '',
+    ].filter(Boolean).join('、');
+
+    var ingInfo = ingredients.length > 0 ? '\n使える食材: ' + ingredients.join('、') : '';
+
+    var cupSection = survey.cup === 'はい、提案してほしい' ? '\n\nさらに、同じ条件に合ったカップ麺アレンジレシピを1〜2個、cup_arrangeキーに追加してください。例: "cup_arrange":[{"name":"アレンジ名","base":"ベースにするカップ麺","arrange":"アレンジ方法"}]' : '';
+    var prompt = 'あなたはラーメンシェフです。以下の条件に合ったオリジナルラーメンを3種類提案してください。\n\n条件: ' + (surveyInfo || 'とくになし') + ingInfo + '\n\n以下のJSON形式だけで返答してください。コードブロックや前置きは不要でJSONのみ返してください。\n\n[{"name":"ラーメン名","soup":"スープの説明（1〜2文）","toppings":"トッピングの説明","point":"このラーメンの魅力を一言で","health_note":"健康・栄養面のアドバイスを一言で","upgrades":[{"item":"食材名","reason":"理由1文"},{"item":"食材名","reason":"理由1文"}],"side_dish":{"name":"副菜名","recipe":"調理時間3分以内の簡単レシピ（2〜3文）"}}]' + cupSection + '\n\nラーメン店主らしい熱量のある日本語でお願いします。';
+
+    try {
+      var res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], max_tokens: 4000 })
+      });
+      if (!res.ok) {
+        var errText = await res.text();
+        throw new Error('サーバーエラー ' + res.status + ': api-proxy.php が正常に動作していない可能性があります。\n詳細: ' + errText.slice(0, 200));
+      }
+      var resText = await res.text();
+      if (resText.trim().startsWith('<')) {
+        throw new Error('api-proxy.php がHTMLを返しました。PHPファイルが正しく設置・動作しているか確認してください。\n受信内容: ' + resText.slice(0, 200));
+      }
+      var data;
+      try { data = JSON.parse(resText); } catch(e) { throw new Error('レスポンスのJSONパース失敗: ' + resText.slice(0, 200)); }
+      var raw = (data.content || []).map(function(c) { return c.text || ''; }).join('');
+      var jsonMatch = raw.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error('JSONパース失敗: ' + raw.slice(0, 200));
+      var list = JSON.parse(jsonMatch[0]);
+      lastResult = raw;
+
+      var resultCard = document.getElementById('result-card');
+      resultCard.innerHTML = '';
+
+      list.forEach(function(r, idx) {
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.style.marginBottom = '1.2rem';
+        card.innerHTML =
+          '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff6b00,#ffbe00)"></div>'
+          + '<div style="font-size:0.72rem;color:#ffbe00;font-weight:700;letter-spacing:0.15em;margin-bottom:0.4rem">候補 ' + (idx+1) + '</div>'
+          + '<div style="font-size:clamp(1.1rem,3vw,1.5rem);font-weight:900;color:#ffbe00;margin-bottom:0.5rem;line-height:1.2">' + (r.name||'') + '</div>'
+          + '<span style="color:#ff6b00;font-weight:700;display:block;margin-top:0.6rem;margin-bottom:0.15rem;font-size:0.85rem">スープ</span>'
+          + '<span style="font-size:0.88rem;line-height:1.8">' + (r.soup||'') + '</span>'
+          + '<span style="color:#ff6b00;font-weight:700;display:block;margin-top:0.6rem;margin-bottom:0.15rem;font-size:0.85rem">トッピング</span>'
+          + '<span style="font-size:0.88rem;line-height:1.8">' + (r.toppings||'') + '</span>'
+          + '<span style="color:#ff6b00;font-weight:700;display:block;margin-top:0.6rem;margin-bottom:0.15rem;font-size:0.85rem">ポイント</span>'
+          + '<span style="font-size:0.88rem;line-height:1.8">' + (r.point||'') + '</span>'
+          + (r.health_note ? '<div style="background:rgba(255,190,0,0.07);border:1px solid rgba(255,190,0,0.2);border-radius:10px;padding:0.6rem 0.8rem;margin-top:0.8rem;font-size:0.82rem;color:#c8c060;line-height:1.6">健康メモ: ' + r.health_note + '</div>' : '')
+          + (r.side_dish ? '<div style="background:rgba(100,200,100,0.07);border:1px solid rgba(100,200,100,0.25);border-radius:10px;padding:0.8rem;margin-top:0.8rem;"><div style="font-size:0.72rem;color:#90c060;font-weight:700;margin-bottom:0.3rem">余った食材でもう一品！</div><div style="font-size:0.88rem;font-weight:700;color:#b0e080;margin-bottom:0.3rem">' + r.side_dish.name + '</div><div style="font-size:0.82rem;line-height:1.7;color:var(--text)">' + r.side_dish.recipe + '</div></div>' : '');
+
+        if (r.upgrades && r.upgrades.length) {
+          var advDiv = document.createElement('div');
+          advDiv.style.cssText = 'background:linear-gradient(135deg,rgba(255,190,0,0.05),rgba(255,107,0,0.05));border:1px solid rgba(255,190,0,0.2);border-radius:14px;padding:1rem;margin-top:0.8rem;';
+          advDiv.innerHTML = '<p style="font-size:0.72rem;color:#ffbe00;font-weight:700;margin-bottom:0.6rem">もっと美味しくするヒント</p>';
+          r.upgrades.forEach(function(u, i) {
+            var item = document.createElement('div');
+            item.style.cssText = 'font-size:0.85rem;line-height:1.6;' + (i > 0 ? 'margin-top:0.4rem;padding-top:0.4rem;border-top:1px solid rgba(255,190,0,0.1)' : '');
+            item.innerHTML = '<strong style="color:#ffbe00">' + u.item + '</strong>: ' + u.reason;
+            advDiv.appendChild(item);
+          });
+          card.appendChild(advDiv);
+        }
+        resultCard.appendChild(card);
+      });
+
+      // カップ麺アレンジ表示
+      if (survey.cup === 'はい、提案してほしい') {
+        var cupData = null;
+        try {
+          var cupMatch = raw.match(/"cup_arrange"\s*:\s*(\[[\s\S]*?\])/);
+          if (cupMatch) cupData = JSON.parse(cupMatch[1]);
+        } catch(e) {}
+        if (cupData && cupData.length) {
+          var cupCard = document.createElement('div');
+          cupCard.className = 'card';
+          cupCard.style.marginBottom = '1.2rem';
+          cupCard.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff6b00,#ffbe00)"></div>'
+            + '<div style="font-size:0.72rem;color:#ffbe00;font-weight:700;letter-spacing:0.1em;margin-bottom:0.8rem">カップ麺アレンジレシピ</div>';
+          cupData.forEach(function(c, i) {
+            var div = document.createElement('div');
+            div.style.cssText = i > 0 ? 'margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,190,0,0.1)' : '';
+            div.innerHTML = '<div style="font-size:1rem;font-weight:900;color:#ffbe00;margin-bottom:0.4rem">' + c.name + '</div>'
+              + '<div style="font-size:0.82rem;color:var(--muted);margin-bottom:0.3rem">ベース: ' + c.base + '</div>'
+              + '<div style="font-size:0.87rem;line-height:1.7">' + c.arrange + '</div>';
+            cupCard.appendChild(div);
+          });
+          resultCard.appendChild(cupCard);
+        }
+      }
+
+      resultCard.classList.add('show');
+      document.getElementById('share-bar').style.display = 'flex';
+      document.getElementById('chat-section').style.display = 'block';
+
+      // 壁打ちチャットの初期メッセージ
+      chatHistory = [{ role: 'assistant', content: 'ラーメンの提案はいかがでしたか？スープの作り方、アレンジ方法、栄養バランスなど、なんでも聞いてください！' }];
+      renderChat();
+
+    } catch(e) {
+      var eb = document.getElementById('error-box');
+      eb.textContent = 'エラー: ' + (e.message || String(e));
+      eb.classList.add('show');
+    } finally {
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('loading-bar-wrap').style.display = 'none';
+      genBtn.disabled = false;
+      genBtn.classList.remove('loading');
+      genBtn.textContent = 'ラーメンを提案してもらう';
+    }
+  }
+
+  // ===== 壁打ちチャット =====
+  function renderChat() {
+    var log = document.getElementById('chat-log');
+    log.innerHTML = '';
+    chatHistory.forEach(function(msg) {
+      var div = document.createElement('div');
+      div.className = 'chat-msg ' + (msg.role === 'user' ? 'user' : 'ai');
+      div.textContent = msg.content;
+      log.appendChild(div);
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  document.getElementById('chat-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChat(); });
+  document.getElementById('chat-send').addEventListener('click', sendChat);
+
+  async function sendChat() {
+    var input = document.getElementById('chat-input');
+    var msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    var sendBtn = document.getElementById('chat-send');
+    sendBtn.disabled = true;
+    sendBtn.textContent = '...';
+
+    chatHistory.push({ role: 'user', content: msg });
+    renderChat();
+
+    var systemPrompt = 'あなたはラーメン店主のAIアシスタントです。以下のラーメン提案結果をベースに、ユーザーの質問や相談に答えてください。\n\n提案結果:\n' + lastResult + '\n\n親しみやすく、熱量のある日本語で答えてください。200文字以内で簡潔に。';
+    var messages = [{ role: 'user', content: systemPrompt }];
+    chatHistory.forEach(function(m) { messages.push(m); });
+
+    try {
+      var res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: messages, max_tokens: 400 })
+      });
+      var resText2 = await res.text();
+      if (resText2.trim().startsWith('<')) throw new Error('api-proxy.php がHTMLを返しました');
+      var data = JSON.parse(resText2);
+      var reply = (data.content || []).map(function(c) { return c.text || ''; }).join('');
+      chatHistory.push({ role: 'assistant', content: reply });
+      renderChat();
+    } catch(e) {
+      chatHistory.push({ role: 'assistant', content: 'エラー: ' + e.message });
+      renderChat();
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = '送信';
+    }
+  }
+
+  // ===== SNSシェア =====
+  document.getElementById('btn-share-x').addEventListener('click', function() {
+    var text = '麺マッチで自分にぴったりのラーメンを見つけた！ #麺マッチ #自家製麺キリンジ';
+    var url = 'https://jikaseimenkirinji.com/menmatchi.html';
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+  });
+
+  document.getElementById('btn-share-ig').addEventListener('click', function() {
+    var url = 'https://jikaseimenkirinji.com/menmatchi.html';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() { alert('URLをコピーしました！Instagramに貼り付けてください。'); });
+    } else {
+      alert('URL: ' + url);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
