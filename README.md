@@ -115,6 +115,7 @@ MIT License — 自由に使用・改変・再配布できます。
 あぶらかすラーメン専門店。仙台市青葉区二日町で営業中。
 
 - 🌐 [jikaseimenkirinji.com](https://jikaseimenkirinji.com)
+- Noodle Match (https://jikaseimenkirinji.com/app/)
 - 📍 仙台市青葉区二日町15-15
 - 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
 - 🕐 木曜定休
