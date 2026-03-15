@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EETKYH19J5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-EETKYH19J5');
+</script>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +29,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
   .entry-content > *, .wp-block-group__inner-container > * { padding: 0 !important; margin: 0 !important; }
 }
 body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; margin: 0; padding: 0; }
-#site-header { text-align: center; padding: 0; margin: 0; line-height: 0; }
+#site-header { text-align: center; padding: 0; margin: 0; }
 h1 { font-size: clamp(1.4rem,4vw,2.2rem); font-weight: 900; background: linear-gradient(135deg,#ffbe00,#ff6b00,#e03000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .tagline { color: #c8905a; font-size: 0.78rem; margin: 0.4rem 0 0; text-align: center; padding: 0 1rem; line-height: 1.4; }
 .container { max-width: 660px; margin: 0 auto; padding: 0.5rem 1rem 4rem; }
@@ -97,7 +105,7 @@ footer { text-align: center; color: var(--border); font-size: 0.72rem; padding: 
 <body>
 
 <div id="site-header">
-  <div style="overflow:hidden;line-height:0;"><img src="menmatchi.jpg" alt="麺マッチ" style="width:92%;max-width:560px;display:block;margin:-4% auto 0;height:auto;"></div>
+  <div style="line-height:0;"><img src="menmatchi.jpg" alt="麺マッチ" style="width:100%;max-width:600px;display:block;margin:0 auto;height:auto;"></div>
 </div>
 
 <div class="container">
@@ -203,9 +211,26 @@ footer { text-align: center; color: var(--border); font-size: 0.72rem; padding: 
   <div class="hint" id="hint">アンケートに答えてラーメンを提案してもらいましょう</div>
 </div>
 
-<footer>Powered by Claude AI x 自家製麺キリンジ</footer>
+<footer>Powered by ラーメンジェネレター 自家製麺キリンジ</footer>
 
 <script>
+
+  function renderNutrition(n, advice, title, labels, hi, lo) {
+    if (!n) return '';
+    var colMap = {};
+    colMap[hi] = '#ffbe00';
+    colMap[lo] = '#ff6060';
+    var spans = labels.map(function(pair) {
+      var col = colMap[n[pair[1]]] || '#a0c0a0';
+      return '<span style="font-size:0.75rem;border-radius:6px;padding:0.2rem 0.5rem;background:rgba(255,255,255,0.05);color:'+col+'">'+pair[0]+': '+n[pair[1]]+'</span>';
+    }).join('');
+    return '<div style="background:rgba(60,180,120,0.07);border:1px solid rgba(60,180,120,0.2);border-radius:12px;padding:0.9rem;margin-top:0.8rem;">'
+      + '<div style="font-size:0.72rem;color:#60c090;font-weight:700;margin-bottom:0.5rem">🥗 '+title+'</div>'
+      + '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem">'+spans+'</div>'
+      + (advice ? '<div style="font-size:0.82rem;line-height:1.7;color:#90d0a0;border-top:1px solid rgba(60,180,120,0.15);padding-top:0.5rem;margin-top:0.3rem">💡 '+advice+'</div>' : '')
+      + '</div>';
+  }
+
 (function() {
   var PROXY_URL = 'https://jikaseimenkirinji.com/api-proxy.php';
   var QUICK_ITEMS = ['キャベツ','卵','もやし','玉ねぎ','ちくわ','カニカマ','えのき','豆腐','ツナ缶','ごま油','牛乳','キムチ','バター','チーズ','長ねぎ','にんにく','生姜','コーン','海苔','メンマ'];
@@ -308,7 +333,7 @@ footer { text-align: center; color: var(--border); font-size: 0.72rem; padding: 
     var ingInfo = ingredients.length > 0 ? '\n使える食材: ' + ingredients.join('、') : '';
 
     var cupSection = survey.cup === 'はい、提案してほしい' ? '\n\nさらに、同じ条件に合ったカップ麺アレンジレシピを1〜2個、cup_arrangeキーに追加してください。例: "cup_arrange":[{"name":"アレンジ名","base":"ベースにするカップ麺","arrange":"アレンジ方法"}]' : '';
-    var prompt = 'あなたはラーメンシェフです。以下の条件に合ったオリジナルラーメンを3種類提案してください。\n\n条件: ' + (surveyInfo || 'とくになし') + ingInfo + '\n\n以下のJSON形式だけで返答してください。コードブロックや前置きは不要でJSONのみ返してください。\n\n[{"name":"ラーメン名","soup":"スープの説明（1〜2文）","toppings":"トッピングの説明","point":"このラーメンの魅力を一言で","health_note":"健康・栄養面のアドバイスを一言で","upgrades":[{"item":"食材名","reason":"理由1文"},{"item":"食材名","reason":"理由1文"}],"side_dish":{"name":"副菜名","recipe":"調理時間3分以内の簡単レシピ（2〜3文）"}}]' + cupSection + '\n\nラーメン店主らしい熱量のある日本語でお願いします。';
+    var prompt = 'あなたはラーメンシェフ兼栄養士です。以下の条件に合ったオリジナルラーメンを3種類提案してください。\n\n条件: ' + (surveyInfo || 'とくになし') + ingInfo + '\n\n以下のJSON形式だけで返答してください。コードブロックや前置きは不要でJSONのみ返してください。\n\n[{"name":"ラーメン名","soup":"スープの説明（1〜2文）","toppings":"トッピングの説明","point":"このラーメンの魅力を一言で","health_note":"健康・栄養面のアドバイスを一言で","calories":{"total":600,"breakdown":{"麺":200,"スープ":150,"トッピング":250}},"nutrition":{"protein":"高め","fat":"普通","carb":"高め","salt":"2.5g","fiber":"低め"},"nutrition_advice":"不足している栄養素と補う方法を2〜3文で具体的にアドバイス","upgrades":[{"item":"食材名","reason":"理由1文"},{"item":"食材名","reason":"理由1文"}],"side_dish":{"name":"副菜名","recipe":"調理時間3分以内の簡単レシピ（2〜3文）"}}]' + cupSection + '\n\ncaloriesのtotalは実際の食材から計算した現実的な数値にしてください。ラーメン店主らしい熱量のある日本語でお願いします。';
 
     try {
       var res = await fetch(PROXY_URL, {
@@ -350,7 +375,9 @@ footer { text-align: center; color: var(--border); font-size: 0.72rem; padding: 
           + '<span style="color:#ff6b00;font-weight:700;display:block;margin-top:0.6rem;margin-bottom:0.15rem;font-size:0.85rem">ポイント</span>'
           + '<span style="font-size:0.88rem;line-height:1.8">' + (r.point||'') + '</span>'
           + (r.health_note ? '<div style="background:rgba(255,190,0,0.07);border:1px solid rgba(255,190,0,0.2);border-radius:10px;padding:0.6rem 0.8rem;margin-top:0.8rem;font-size:0.82rem;color:#c8c060;line-height:1.6">健康メモ: ' + r.health_note + '</div>' : '')
-          + (r.side_dish ? '<div style="background:rgba(100,200,100,0.07);border:1px solid rgba(100,200,100,0.25);border-radius:10px;padding:0.8rem;margin-top:0.8rem;"><div style="font-size:0.72rem;color:#90c060;font-weight:700;margin-bottom:0.3rem">余った食材でもう一品！</div><div style="font-size:0.88rem;font-weight:700;color:#b0e080;margin-bottom:0.3rem">' + r.side_dish.name + '</div><div style="font-size:0.82rem;line-height:1.7;color:var(--text)">' + r.side_dish.recipe + '</div></div>' : '');
+          + (r.calories ? '<div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.25);border-radius:12px;padding:0.9rem;margin-top:0.8rem;"><div style="font-size:0.72rem;color:#ff6b00;font-weight:700;margin-bottom:0.5rem">🔥 カロリー計算</div><div style="font-size:1.4rem;font-weight:900;color:#ffbe00;margin-bottom:0.4rem">' + (r.calories.total||0) + ' <span style="font-size:0.85rem;font-weight:400">kcal</span></div>' + (r.calories.breakdown ? '<div style="display:flex;gap:0.5rem;flex-wrap:wrap">' + Object.entries(r.calories.breakdown).map(function(e){return '<span style="font-size:0.75rem;background:rgba(255,255,255,0.06);border-radius:6px;padding:0.2rem 0.5rem;color:var(--muted)">' + e[0] + ' ' + e[1] + 'kcal</span>'}).join('') + '</div>' : '') + '</div>' : '')
+          + renderNutrition(r.nutrition, r.nutrition_advice, '栄養バランス', [["タンパク質", "protein"], ["脂質", "fat"], ["炭水化物", "carb"], ["塩分", "salt"], ["食物繊維", "fiber"]], '高め', '低め')
+                    + (r.side_dish ? '<div style="background:rgba(100,200,100,0.07);border:1px solid rgba(100,200,100,0.25);border-radius:10px;padding:0.8rem;margin-top:0.8rem;"><div style="font-size:0.72rem;color:#90c060;font-weight:700;margin-bottom:0.3rem">余った食材でもう一品！</div><div style="font-size:0.88rem;font-weight:700;color:#b0e080;margin-bottom:0.3rem">' + r.side_dish.name + '</div><div style="font-size:0.82rem;line-height:1.7;color:var(--text)">' + r.side_dish.recipe + '</div></div>' : '');
 
         if (r.upgrades && r.upgrades.length) {
           var advDiv = document.createElement('div');
