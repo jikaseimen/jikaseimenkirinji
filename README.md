@@ -112,7 +112,7 @@ MIT License — 自由に使用・改変・再配布できます。
 
 **カスラーメン自家製麺キリンジ**
 
-あぶらかすラーメン専門店。仙台市青葉区二日町で営業中。
+あぶらかすラーメン専門店。2006年創業。仙台市青葉区二日町で営業中。
 
 - 公式サイト [jikaseimenkirinji.com](https://jikaseimenkirinji.com)
 - Noodle Match (https://jikaseimenkirinji.com/app/)
