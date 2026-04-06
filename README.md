@@ -118,9 +118,10 @@ MIT License — 自由に使用・改変・再配布できます。
 - あぶらかすキャッチ (https://jikaseimenkirinji.com/game.html)
 - 麺マッチ (https://jikaseimenkirinji.com/app/)
 - RAMEN_PROMPT (https://jikaseimenkirinji.com/RAMEN_PROMPT.html)
-- 📍 仙台市青葉区二日町15-15
+- 📍 仙台市青葉区二日町15-15第二石原ビル101
 - 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
 - 🕐 木曜定休
+- contact　jikaseimen@gmail.cpm
 
 ---
 
