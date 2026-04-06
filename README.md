@@ -121,7 +121,7 @@ MIT License — 自由に使用・改変・再配布できます。
 - 📍 仙台市青葉区二日町15-15第二石原ビル101
 - 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
 - 🕐 木曜定休
-- contact　jikaseimen@gmail.cpm
+- contact　jikaseimen@gmail.com
 
 ---
 
