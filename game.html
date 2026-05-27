@@ -819,6 +819,10 @@
     <div class="game-area" id="gameArea">
         <div id="activeItem" class="item" style="display:none;"></div>
         <div id="upHint" class="hint-up" style="display:none;">⬆️ 上スワイプ！</div>
+        <!-- #2 複数同時落下 -->
+        <div id="secondItem" class="item" style="display:none; font-size:44px;"></div>
+        <!-- #9 コンボ破壊トラップ -->
+        <div id="trapItem" class="item" style="display:none; font-size:44px; border:3px solid #ff4444; border-radius:50%; padding:4px; box-shadow:0 0 12px rgba(255,68,68,0.7);"></div>
     </div>
 
     <!-- スコア・ボタンエリア（最下部） -->
@@ -829,6 +833,10 @@
             <div><span class="bIcon"></span><span id="points">0</span></div>
             <div>❌<span id="mistakes">0</span></div>
             <div>🔥<span id="comboCount">0</span></div>
+        </div>
+        <!-- ルール反転・インフレタックス表示行 -->
+        <div id="statusRow" style="display:none; text-align:center; font-size:9px; font-weight:bold; color:#ff4444; margin-bottom:2px; letter-spacing:0.5px;">
+            <span id="reverseStatus"></span>
         </div>
         <!-- ボンビー行（下から3番目） -->
         <div class="bonby-row">
@@ -862,9 +870,12 @@
     <p style="font-size:11px; color:#aaa; margin-bottom:3px;">🥓🍜右スワイプ　🥩⬅️左スワイプ</p>
     <p style="font-size:11px; color:#ffd700; margin-bottom:3px;">🍲 芋煮鍋→スマホを振る！</p>
     <p style="font-size:11px; color:#90caf9; margin-bottom:3px;">🍵 スープ→上にスワイプ！</p>
-    <p style="font-size:11px; color:#ff8a80; margin-bottom:3px;">🥓 長押しあぶらかす→2秒長押し！</p>
+    <p style="font-size:11px; color:#ff8a80; margin-bottom:3px;">🥓 長押しあぶらかす→長押し！(Lvで時間延長)</p>
     <p style="font-size:11px; color:#ff5252; margin-bottom:3px;">🧄🫚 ニンニク・生姜→超速！即スワイプ！</p>
-    <p style="font-size:11px; color:#ce93d8; margin-bottom:12px;">✈️⚔️🥷 ボンビーキャラ→長押し後スワイプ！</p>
+    <p style="font-size:11px; color:#ce93d8; margin-bottom:3px;">✈️⚔️🥷 ボンビーキャラ→長押し後スワイプ！</p>
+    <p style="font-size:10px; color:#ffd700; margin-bottom:3px;">🔄 50pt毎にルール反転あり</p>
+    <p style="font-size:10px; color:#ff4444; margin-bottom:3px;">💀 コンボ5以上でトラップ出現(触るな！)</p>
+    <p style="font-size:10px; color:#aaa; margin-bottom:12px;">💸 3000pt超でインフレ税 / 📈 手数料3%</p>
     <button class="btn" onclick="startGame()">🎮 ゲーム開始</button>
     <button class="btn" style="background:#444; font-size:13px; padding:8px 20px;" onclick="applyReferral()">🎁 招待コード入力 (+500pt)</button>
 </div>
@@ -1490,10 +1501,15 @@ let isGrabbing = false;
 // アイテム状態
 let goldenActive = false;
 
+// ルール反転（#14も使用）
+let reversed = false;
+let doubled = false; // 二重反転中フラグ
+
 // 長押し
 let holdTimer = null;
 let holdAnimFrame = null;
 let holdStartTime = 0;
+let currentHoldDuration = 2000; // #8 長押し時間延長管理用グローバル
 
 // ボンビーキャラ
 let isBonbyHolding = false;
@@ -1507,6 +1523,37 @@ let lastShakeTime = 0;
 let spawnTimer = null;
 let commentInterval = null;
 let angelCooldown = false;
+
+// ========================================
+// 難易度強化システム変数
+// ========================================
+// #1 落下速度乱数化 - spawnのtimeoutに適用
+// #2 複数同時落下 - secondItemが画面に出ることも
+let secondItemActive = false;
+let secondItemTimer = null;
+
+// #9 コンボ破壊トラップ - 特定アイテムは「見逃す」必要あり
+let trapActive = false;
+
+// #14 二重反転
+let doubleReverseActive = false;
+let doubleReverseTimer = null;
+
+// #33 インフレタックス
+let taxInterval = null;
+
+// #41 株式連鎖暴落
+// applyNewsToStocks内で処理
+
+// #43 投資ロックアップ
+let investLocked = false;
+let investLockTimer = null;
+
+// #44 インサイダー判定タイムスタンプ
+let lastNewsTime = 0;
+
+// #49 ニュース遮蔽延長フラグ
+let newsBlockCount = 0;
 
 // データ永続化
 let stockMultipliers = JSON.parse(localStorage.getItem('kirinji-mult') || '{}');
@@ -1567,6 +1614,15 @@ function startGame() {
     mistakes = 0;
     combo = 0;
     gameRunning = true;
+    reversed = false;
+    doubled = false;
+    doubleReverseActive = false;
+    investLocked = false;
+    secondItemActive = false;
+    trapActive = false;
+    if (taxInterval) { clearInterval(taxInterval); taxInterval = null; }
+    newsBlockCount = 0;
+    lastNewsTime = 0;
     
     checkDividend();
     scheduleAngel();
@@ -1603,7 +1659,18 @@ function startNews() {
             tagEl.style.display = 'none';
         }
         
-        setTimeout(showNext, 6000);
+        // #49 ランダムに長め表示（newsBlockCountで管理）
+        newsBlockCount++;
+        const isLong = (newsBlockCount % 4 === 0); // 4回に1回延長
+        const displayTime = isLong ? 8000 : 6000;
+        lastNewsTime = Date.now(); // #44 インサイダー判定用
+        if (isLong) {
+            banner.style.paddingBottom = '14px';
+            showToast('📰 速報延長中...');
+        } else {
+            banner.style.paddingBottom = '';
+        }
+        setTimeout(showNext, displayTime);
     }
     
     textEl.textContent = NEWS_DATA[0];
@@ -1617,14 +1684,25 @@ function applyNewsToStocks(newsText) {
     if (!isUp && !isDown) return null;
     
     let affected = null;
+    let primaryId = null;
     Object.entries(STOCK_NEWS_MAP).forEach(([id, keywords]) => {
         if (keywords.some(k => newsText.includes(k))) {
             const cur = stockMultipliers[id] || 1.0;
             if (isUp) stockMultipliers[id] = Math.min(2.5, cur + 0.25);
             if (isDown) stockMultipliers[id] = Math.max(0.2, cur - 0.25);
             affected = { id, up: isUp };
+            primaryId = id;
         }
     });
+    
+    // #41 株式連鎖暴落: 暴落時に関連銘柄も巻き込む（30%の確率）
+    if (isDown && primaryId && Math.random() < 0.3) {
+        const others = Object.keys(STOCK_NEWS_MAP).filter(id => id !== primaryId);
+        const victim = others[Math.floor(Math.random() * others.length)];
+        stockMultipliers[victim] = Math.max(0.2, (stockMultipliers[victim] || 1.0) - 0.1);
+        setTimeout(() => showToast('📉 連鎖暴落！' + (STOCKS.find(s=>s.id===victim)?.name || victim) + 'も下落'), 1500);
+    }
+    
     localStorage.setItem('kirinji-mult', JSON.stringify(stockMultipliers));
     return affected;
 }
@@ -1635,6 +1713,7 @@ function applyNewsToStocks(newsText) {
 function spawn() {
     if (!gameRunning) return;
     clearTimeout(spawnTimer);
+    clearTimeout(secondItemTimer);
     
     const ai = document.getElementById('activeItem');
     const upHint = document.getElementById('upHint');
@@ -1645,6 +1724,11 @@ function spawn() {
     bonbyHoldDone = false;
     isBonbyHolding = false;
     currentBonbyWho = null;
+    
+    // #9 コンボ破壊トラップを非表示
+    const trapEl = document.getElementById('trapItem');
+    trapEl.style.display = 'none';
+    trapActive = false;
     
     // 黄金あぶらかす（Lv5以上、1/40）
     const lv = Math.floor(gamePoints / 50) + 1;
@@ -1684,12 +1768,31 @@ function spawn() {
     const area = document.getElementById('gameArea');
     ai.style.left = Math.random() * (area.clientWidth - 100) + 'px';
     ai.style.top = Math.random() * (area.clientHeight - 160) + 'px';
+    
+    // #4 アイテムサイズ縮小（レベル連動）
+    const sizeReduction = Math.min(lv * 2, 30); // 最大30px縮小
+    const itemSize = Math.max(50, 80 - sizeReduction);
+    ai.style.fontSize = itemSize + 'px';
+    const imgs = ai.querySelectorAll('img.emoji');
+    imgs.forEach(img => { img.style.width = itemSize + 'px'; img.style.height = itemSize + 'px'; });
+    
     ai.style.display = 'block';
     twemoji.parse(ai, { folder: 'svg', ext: '.svg' });
+    // twemoji後もサイズ適用
+    setTimeout(() => {
+        ai.querySelectorAll('img.emoji').forEach(img => {
+            img.style.width = itemSize + 'px';
+            img.style.height = itemSize + 'px';
+        });
+    }, 50);
     
-    // タイムアウト設定
     const type = ai.dataset.type;
-    const timeout = type === 'speedy' ? 800 : type === 'bonby' ? 6000 : 2500;
+    
+    // #1 落下速度乱数化: baseTimeoutに±30%のランダム変動
+    const baseTimeout = type === 'speedy' ? 800 : type === 'bonby' ? 6000 : 2500;
+    const randomFactor = 0.7 + Math.random() * 0.6; // 0.7〜1.3
+    const timeout = Math.floor(baseTimeout * randomFactor);
+    
     spawnTimer = setTimeout(() => {
         if (gameRunning && ai.style.display !== 'none') {
             if ((type === 'bonby' && (isBonbyHolding || bonbyHoldDone)) || (type === 'hold' && isGrabbing)) {
@@ -1706,9 +1809,136 @@ function spawn() {
             upHint.style.display = 'none';
             holdHint.style.display = 'none';
             stopHoldRing();
+            trapEl.style.display = 'none';
             setTimeout(spawn, 250);
         }
     }, timeout);
+    
+    // #2 複数同時落下（Lv8以上、25%の確率）
+    if (lv >= 8 && Math.random() < 0.25 && type !== 'bonby' && type !== 'hold') {
+        secondItemTimer = setTimeout(() => spawnSecondItem(area, lv), 400 + Math.random() * 600);
+    }
+    
+    // #9 コンボ破壊トラップ（combo5以上、20%の確率）
+    if (combo >= 5 && Math.random() < 0.2 && type !== 'bonby') {
+        setTimeout(() => spawnTrap(area), 300);
+    }
+    
+    // #14 二重反転（Lv10以上、20%の確率）
+    if (lv >= 10 && reversed && Math.random() < 0.2 && !doubleReverseActive) {
+        doubleReverseActive = true;
+        showToast('⚡ さらに反転！');
+        // 一時的に正方向に戻す（二重反転で混乱させる）
+        doubled = true;
+        clearTimeout(doubleReverseTimer);
+        doubleReverseTimer = setTimeout(() => {
+            doubled = false;
+            doubleReverseActive = false;
+        }, 3000 + Math.random() * 2000);
+    }
+}
+
+// ========================================
+// #2 複数同時落下 - セカンドアイテム
+// ========================================
+function spawnSecondItem(area, lv) {
+    if (!gameRunning) return;
+    const si = document.getElementById('secondItem');
+    const simpleItems = ITEMS.filter(i => i.type === 'normal' || i.type === 'speedy');
+    const item = simpleItems[Math.floor(Math.random() * simpleItems.length)];
+    si.textContent = item.emoji;
+    si.dataset.action = item.action;
+    si.dataset.pts = item.points;
+    si.style.left = Math.random() * (area.clientWidth - 80) + 'px';
+    si.style.top = Math.random() * (area.clientHeight - 140) + 'px';
+    si.style.fontSize = '50px';
+    si.style.display = 'block';
+    secondItemActive = true;
+    twemoji.parse(si, { folder: 'svg', ext: '.svg' });
+    showToast('⚡ 複数出現！');
+    
+    // タッチ処理（touchstartで開始座標を保存）
+    let siTouchStartX = 0, siTouchStartY = 0;
+    si.ontouchstart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        siTouchStartX = e.touches[0].clientX;
+        siTouchStartY = e.touches[0].clientY;
+    };
+    si.ontouchend = (e) => {
+        if (!secondItemActive) return;
+        si.style.display = 'none';
+        secondItemActive = false;
+        const dx = e.changedTouches[0].clientX - siTouchStartX;
+        const dy = e.changedTouches[0].clientY - siTouchStartY;
+        let dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : 'up';
+        
+        // 反転適用
+        if (reversed && !doubled && (dir === 'left' || dir === 'right')) {
+            dir = dir === 'left' ? 'right' : 'left';
+        }
+        
+        if (dir === si.dataset.action) {
+            gamePoints += parseInt(si.dataset.pts || 5);
+            combo++;
+            showCombo();
+            showToast('✅ ダブルキャッチ！+' + si.dataset.pts + 'pt');
+        } else {
+            combo = 0;
+            mistakes++;
+            checkBonby();
+        }
+        updateUI();
+    };
+    
+    // 2秒で消滅（ミス）
+    setTimeout(() => {
+        if (secondItemActive) {
+            si.style.display = 'none';
+            secondItemActive = false;
+            mistakes++;
+            combo = 0;
+            checkBonby();
+            updateUI();
+        }
+    }, 2000);
+}
+
+// ========================================
+// #9 コンボ破壊トラップ
+// ========================================
+function spawnTrap(area) {
+    if (!gameRunning || trapActive) return;
+    const trapEl = document.getElementById('trapItem');
+    trapEl.textContent = '💀';
+    trapEl.style.left = Math.random() * (area.clientWidth - 80) + 'px';
+    trapEl.style.top = Math.random() * (area.clientHeight - 140) + 'px';
+    trapEl.style.display = 'block';
+    trapActive = true;
+    showToast('⚠️ 触るな！コンボ破壊！');
+    twemoji.parse(trapEl, { folder: 'svg', ext: '.svg' });
+    
+    trapEl.ontouchstart = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!trapActive) return;
+        trapEl.style.display = 'none';
+        trapActive = false;
+        // コンボ破壊！
+        const lost = combo;
+        combo = 0;
+        mistakes++;
+        checkBonby();
+        updateUI();
+        showToast('💀 コンボ' + lost + '連破壊！');
+    };
+    
+    // 3秒で消滅（触らなければOK）
+    setTimeout(() => {
+        if (trapActive) {
+            trapEl.style.display = 'none';
+            trapActive = false;
+        }
+    }, 3000);
 }
 
 // ========================================
@@ -1719,10 +1949,24 @@ function handleSwipe(dir) {
     const correct = ai.dataset.action;
     const type = ai.dataset.type;
     
+    // #9 コンボ破壊トラップが表示中の場合、触らないのが正解
+    const trapEl = document.getElementById('trapItem');
+    if (trapEl.style.display !== 'none' && trapActive) {
+        trapEl.style.display = 'none';
+        trapActive = false;
+    }
+    
     ai.style.display = 'none';
     document.getElementById('upHint').style.display = 'none';
     
-    if (dir === correct) {
+    // #14 二重反転: reversed=true かつ doubled=true の場合はleft/rightを元に戻す
+    let effectiveDir = dir;
+    if (reversed && !doubled && (dir === 'left' || dir === 'right')) {
+        effectiveDir = dir === 'left' ? 'right' : 'left';
+    }
+    // doubled(二重反転)の場合は反転しない（見た目上は元に戻る）
+    
+    if (effectiveDir === correct) {
         const pts = parseInt(ai.dataset.points);
         gamePoints += pts;
         combo++;
@@ -1847,6 +2091,41 @@ function updateUI() {
     }
     
     document.getElementById('tamagoBtn').classList.toggle('disabled', total < 10000);
+    
+    // ルール反転（50pt毎）
+    const prevReversed = reversed;
+    reversed = (Math.floor(gamePoints / 50) % 2 === 1);
+    if (reversed !== prevReversed) {
+        showToast(reversed ? '🔄 ルール反転！' : '🔄 ルール戻った！');
+    }
+    
+    // ルール反転・二重反転のHUD表示
+    const statusRow = document.getElementById('statusRow');
+    const reverseStatus = document.getElementById('reverseStatus');
+    if (reversed || doubled || (points + gamePoints >= 3000)) {
+        statusRow.style.display = 'block';
+        let statusParts = [];
+        if (doubled) statusParts.push('⚡二重反転中！');
+        else if (reversed) statusParts.push('🔄反転中');
+        if (points + gamePoints >= 3000) statusParts.push('💸税-0.5%/5秒');
+        reverseStatus.textContent = statusParts.join('　');
+    } else {
+        statusRow.style.display = 'none';
+    }
+    
+    // #33 インフレタックス（総pt 3000以上で開始）
+    if (total >= 3000 && !taxInterval) {
+        taxInterval = setInterval(() => {
+            if (!gameRunning) return;
+            const cur = points + gamePoints;
+            if (cur < 3000) { clearInterval(taxInterval); taxInterval = null; return; }
+            const tax = Math.floor(cur * 0.005); // 0.5%
+            if (gamePoints >= tax) gamePoints -= tax;
+            else { points -= (tax - gamePoints); gamePoints = 0; }
+            localStorage.setItem('kirinji-points', points);
+            updateUI();
+        }, 5000);
+    }
 }
 
 // ========================================
@@ -1864,6 +2143,10 @@ activeItem.addEventListener('touchstart', e => {
     if (type === 'hold') {
         holdStartTime = Date.now();
         startHoldRing(e.touches[0].clientX, e.touches[0].clientY);
+        // #8 長押し時間延長: レベルに応じて延長（最大4秒）
+        const lv = Math.floor(gamePoints / 50) + 1;
+        const holdDuration = Math.min(2000 + lv * 100, 4000);
+        currentHoldDuration = holdDuration; // グローバルに保存
         holdTimer = setTimeout(() => {
             if (isGrabbing) {
                 stopHoldRing();
@@ -1878,7 +2161,7 @@ activeItem.addEventListener('touchstart', e => {
                 setTimeout(spawn, 300);
                 isGrabbing = false;
             }
-        }, 2000);
+        }, holdDuration);
     } else if (type === 'bonby') {
         holdStartTime = Date.now();
         isBonbyHolding = true;
@@ -1910,7 +2193,7 @@ activeItem.addEventListener('touchend', e => {
     
     if (type === 'hold') {
         const held = Date.now() - holdStartTime;
-        if (held < 1800) {
+        if (held < currentHoldDuration * 0.9) {
             activeItem.style.display = 'none';
             mistakes++;
             combo = 0;
@@ -1981,7 +2264,7 @@ function startHoldRing(x, y, color) {
     label.style.top = (y + 50) + 'px';
     label.style.display = 'block';
     
-    const duration = (activeItem.dataset.type === 'bonby') ? 1500 : 2000;
+    const duration = (activeItem.dataset.type === 'bonby') ? 1500 : currentHoldDuration;
     const start = Date.now();
     
     function animate() {
@@ -2182,12 +2465,24 @@ function getStockNews(stockId, type) {
 }
 
 function invest(id, rate) {
+    // #43 投資ロックアップ確認
+    if (investLocked) {
+        alert('🔒 投資ロックアップ中です！\n前回の大型投資から24時間は取引できません。\nゲーム中は一定時間経過後に解除されます。');
+        return;
+    }
+    
     const total = points + gamePoints;
-    const amt = parseInt(prompt('投資額を入力 (100〜' + total + ')'));
+    // #45 取引手数料3%の告知
+    const amt = parseInt(prompt('投資額を入力 (100〜' + total + ')\n※取引手数料3%が差し引かれます'));
     if (isNaN(amt) || amt < 100 || amt > total) {
         alert('金額が不正です');
         return;
     }
+    
+    // #45 手数料3%差し引き
+    const fee = Math.floor(amt * 0.03);
+    const netAmt = amt - fee;
+    
     if (gamePoints >= amt) gamePoints -= amt;
     else {
         points -= (amt - gamePoints);
@@ -2195,31 +2490,51 @@ function invest(id, rate) {
     }
     
     const mult = stockMultipliers[id] || 1.0;
-    const r = Math.random();
+    let r = Math.random();
     incCard('invest');
     
+    // #44 インサイダー逆噴射: 速報から30秒以内の売買はpt没収確率+20%
+    const timeSinceNews = (Date.now() - lastNewsTime) / 1000;
+    let insiderPenalty = 0;
+    if (timeSinceNews < 30) {
+        insiderPenalty = 0.2;
+        showToast('⚠️ 速報直後！インサイダー当局チェック中...');
+    }
+    
     if (id === 'okamoto') {
-        if (r < 0.8) {
+        if (r < 0.8 + insiderPenalty) {
             const badNews = getStockNews('okamoto', 'bad');
-            alert(E.skull + ' 【速報】' + badNews + '\n\n全資産凍結！\n投資額 ' + amt + '🥓 没収...');
+            alert(E.skull + ' 【速報】' + badNews + '\n\n全資産凍結！\n投資額 ' + amt + '🥓 没収...\n（手数料 ' + fee + '🥓 含む）');
         } else {
-            const w = Math.floor(amt * rate * mult);
+            const w = Math.floor(netAmt * rate * mult);
             gamePoints += w;
-            recordInvestment(id, Math.floor(amt * 0.1));
+            recordInvestment(id, Math.floor(netAmt * 0.1));
             const goodNews = getStockNews('okamoto', 'good');
-            alert(E.rocket + ' 【号外】' + goodNews + '\n\nS高達成！\n払い戻し: ' + w + '🥓\n（ニュース連動 x' + mult.toFixed(2) + '）');
+            alert(E.rocket + ' 【号外】' + goodNews + '\n\nS高達成！\n払い戻し: ' + w + '🥓\n（手数料 ' + fee + '🥓 差引済・ニュース連動 x' + mult.toFixed(2) + '）');
         }
     } else {
-        if (r < 0.25) {
+        if (r < 0.25 + insiderPenalty) {
             const badNews = getStockNews(id, 'bad');
-            alert('📉 【悲報】' + badNews + '\n\n投資額 ' + amt + '🥓 没収...');
+            alert('📉 【悲報】' + badNews + '\n\n投資額 ' + amt + '🥓 没収...\n（手数料 ' + fee + '🥓 含む）');
         } else {
-            const w = Math.floor(amt * (0.95 + Math.random() * 0.6) * mult);
+            const w = Math.floor(netAmt * (0.95 + Math.random() * 0.6) * mult);
             gamePoints += w;
-            recordInvestment(id, Math.floor(amt * 0.05));
+            recordInvestment(id, Math.floor(netAmt * 0.05));
             const goodNews = getStockNews(id, 'good');
-            alert('✅ 【IR】' + goodNews + '\n\n利確成功！\n払い戻し: ' + w + '🥓\n（ニュース連動 x' + mult.toFixed(2) + '）');
+            alert('✅ 【IR】' + goodNews + '\n\n利確成功！\n払い戻し: ' + w + '🥓\n（手数料 ' + fee + '🥓 差引済・ニュース連動 x' + mult.toFixed(2) + '）');
         }
+    }
+    
+    // #43 大型投資（500以上）でロックアップ発動
+    if (amt >= 500) {
+        investLocked = true;
+        clearTimeout(investLockTimer);
+        const lockSec = 30 + Math.floor(Math.random() * 30); // 30〜60秒
+        showToast('🔒 大型投資ロックアップ ' + lockSec + '秒');
+        investLockTimer = setTimeout(() => {
+            investLocked = false;
+            showToast('🔓 ロックアップ解除！');
+        }, lockSec * 1000);
     }
     
     localStorage.setItem('kirinji-points', points);
@@ -2228,17 +2543,28 @@ function invest(id, rate) {
 }
 
 function shortSell(id, rate) {
+    // #43 投資ロックアップ確認
+    if (investLocked) {
+        alert('🔒 ロックアップ中！取引できません。');
+        return;
+    }
+    
     const total = points + gamePoints;
     const max = Math.floor(total / 2);
     if (max < 100) {
         alert('空売りには最低200🥓必要です');
         return;
     }
-    const amt = parseInt(prompt('空売り額を入力 (100〜' + max + ')\n※暴落を予測して逆張り！'));
+    // #45 手数料3%の告知
+    const amt = parseInt(prompt('空売り額を入力 (100〜' + max + ')\n※暴落を予測して逆張り！\n※取引手数料3%差し引き'));
     if (isNaN(amt) || amt < 100 || amt > max) {
         alert('金額が不正です');
         return;
     }
+    
+    // #45 手数料
+    const fee = Math.floor(amt * 0.03);
+    
     if (gamePoints >= amt) gamePoints -= amt;
     else {
         points -= (amt - gamePoints);
@@ -2248,16 +2574,21 @@ function shortSell(id, rate) {
     const mult = stockMultipliers[id] || 1.0;
     const r = Math.random();
     const downBoost = mult < 0.8 ? 0.2 : 0;
-    const winChance = (id === 'okamoto') ? 0.8 : 0.35 + downBoost;
+    // #42 空売り成功率を25%に引き下げ（旧35%）
+    const winChance = (id === 'okamoto') ? 0.8 : 0.25 + downBoost;
     
-    if (r < winChance) {
-        const w = Math.floor(amt * 1.5);
+    // #44 インサイダー逆噴射
+    const timeSinceNews = (Date.now() - lastNewsTime) / 1000;
+    const adjustedWinChance = timeSinceNews < 30 ? winChance - 0.1 : winChance;
+    
+    if (r < adjustedWinChance) {
+        const w = Math.floor((amt - fee) * 1.5);
         gamePoints += w;
         const badNews = getStockNews(id, 'bad');
-        alert('✅ 【空売り的中】' + badNews + '\n\n予想通り暴落！\n空売り利益: +' + w + '🥓');
+        alert('✅ 【空売り的中】' + badNews + '\n\n予想通り暴落！\n空売り利益: +' + w + '🥓\n（手数料 ' + fee + '🥓 差引済）');
     } else {
         const goodNews = getStockNews(id, 'good');
-        alert('💀 【空売り失敗】' + goodNews + '\n\n予想外の株価上昇...\n空売り損失: ' + amt + '🥓');
+        alert('💀 【空売り失敗】' + goodNews + '\n\n予想外の株価上昇...\n空売り損失: ' + amt + '🥓（手数料込）');
     }
     
     localStorage.setItem('kirinji-points', points);
