@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hands-Free Kitchen Timer – Free Voice-Controlled Multi Timer for Cooking</title>
+<meta name="description" content="Hands-Free Kitchen Timer is a free voice-controlled kitchen timer. Say a name and a time to start a timer, ask how much time is left, or stop every alarm at once — no touching your screen with messy hands. Unlimited timers, no install, works in any browser.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hands-Free Kitchen Timer – Free Voice-Controlled Multi Timer for Cooking">
+<meta property="og:description" content="A free kitchen timer you control with your voice. Start, stop, and check timers hands-free — built for real cooking, not just recipes.">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp.html">
+<meta property="og:site_name" content="Hands-Free Kitchen Timer">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hands-Free Kitchen Timer – Free Voice-Controlled Kitchen Timer">
+<meta name="twitter:description" content="Start, stop, and check multiple kitchen timers by voice. Free, no install, works in any browser.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Hands-Free Kitchen Timer",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web (any modern browser)",
+  "description": "A free, voice-controlled multi-timer for the kitchen. Start timers by voice, add several at once, ask how much time is left, and stop every alarm with a single command — all without touching the screen. Includes custom voice alerts per timer and one-tap favorites for frequently used settings.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "creator": { "@type": "Organization", "name": "Jikaseimen Kirinji", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "Voice control with a spoken wake word",
+    "Start multiple timers at once with a single sentence",
+    "Ask the timer how much time is left and get a spoken answer",
+    "Stop every ringing alarm with one voice command",
+    "Custom spoken alert text per timer",
+    "One-tap favorites for frequently used name/time combinations",
+    "Unlimited simultaneous timers",
+    "Landscape tablet layout built for kitchen counters"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is Hands-Free Kitchen Timer free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. It's free to use, with no account and no install — it runs in your browser." } },
+    { "@type": "Question", "name": "What makes it a hands-free kitchen timer?",
+      "acceptedAnswer": { "@type": "Answer", "text": "You can start, stop, and check timers entirely by voice, so you never have to touch a screen with wet or messy hands." } },
+    { "@type": "Question", "name": "Can I run more than one timer at the same time?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can add as many timers as you need, and even start several at once with a single spoken sentence." } },
+    { "@type": "Question", "name": "Can I ask how much time is left?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Ask for a timer by name and it answers out loud with the remaining time." } },
+    { "@type": "Question", "name": "Can I reuse the same timer settings without retyping them?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Star any timer to save it as a favorite, then start the same name and duration again with one tap." } },
+    { "@type": "Question", "name": "Does the alarm just beep, or can it say something specific?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Each timer can have its own spoken message, so it announces exactly what's ready instead of a generic beep." } },
+    { "@type": "Question", "name": "What voice language does it support?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Voice commands currently use Japanese speech recognition, so you speak the wake word and commands in Japanese. Timer names themselves can be anything you like." } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9; --danger:#ff3b30;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.7; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.04em;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.1em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(26px,4.4vw,42px); font-weight:900; margin:0 0 18px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:400px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+  .bubble .gloss{display:block; font-size:11px; color:var(--text-dim); margin-top:3px; font-style:italic;}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.01em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:14px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge); vertical-align:top;}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.03em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700; white-space:nowrap;}
+  .cmdTable .gloss{display:block; color:var(--text-dim); font-weight:400; font-style:italic; font-size:11px; margin-top:3px; white-space:normal;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.03em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+  .langNote{font-size:12px; color:var(--text-dim); margin:0 0 28px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.08em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:var(--danger);}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:var(--danger);}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">Hands-Free Kitchen Timer</span>
+    </div>
+    <a class="topLink" href="timer-en.html">Open the app</a>
+    <a class="topLink" href="timer-lp.html" style="margin-left:8px;">日本語</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Free · No install · No account</span>
+    <h1>A Kitchen Timer You<br>Never Have to <span class="accent">Touch</span>.</h1>
+    <p class="lead">
+      Hands-Free Kitchen Timer is a free, voice-controlled multi-timer built for real cooking —
+      wet hands, full hands, and more than one pot going at once.
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">YOU SAY</div>「タイマー、パスタ<b>5分</b>、ラーメン<b>10分</b>」<span class="gloss">"Timer, pasta 5 minutes, ramen 10 minutes"</span></div>
+      <div class="bubble app"><div class="who">TIMER</div>Starts a 5-minute "pasta" timer and a 10-minute "ramen" timer at once.</div>
+      <div class="bubble user"><div class="who">YOU SAY</div>「タイマー、ラーメン<b>あと何分</b>？」<span class="gloss">"Timer, how much time is left on ramen?"</span></div>
+      <div class="bubble app"><div class="who">TIMER</div>Speaks back: "Ramen, 7 minutes 30 seconds left."</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer-en.html">Use it free</a>
+      <a class="btn ghost" href="#commands">See voice commands</a>
+    </div>
+    <p class="note">No download. Open it on any tablet or phone browser and start cooking.</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>Why a hands-free kitchen timer?</h2>
+    <p class="sectionLead">A regular phone timer works fine for one pot, at a desk, with dry hands. A real kitchen isn't that.</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>Your hands are wet, floury, or covered in oil — the last thing you want to touch is a screen.</p></div>
+      <div class="painCard"><div class="icon">🍳</div><p>Several things are cooking at once, and a single built-in timer can't keep up.</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>You keep walking over just to check "how much longer" on something that's still running.</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>You set the same times over and over — 3 minutes for this, 8 for that — every single day.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>Voice commands, not button-tapping</h2>
+    <p class="sectionLead">Every command starts with a spoken wake word so it won't trigger by accident over kitchen noise.</p>
+    <table class="cmdTable">
+      <tr><th>Say this</th><th>What happens</th></tr>
+      <tr>
+        <td class="say"><span class="tag">NEW</span><br>「タイマー、パスタ5分、ラーメン10分」<span class="gloss">Timer, pasta 5 min, ramen 10 min</span></td>
+        <td class="desc">Adds two or more timers at once and starts them together</td>
+      </tr>
+      <tr>
+        <td class="say"><span class="tag">NEW</span><br>「タイマー、ラーメンあと何分？」<span class="gloss">Timer, how much time on ramen?</span></td>
+        <td class="desc">Speaks back the exact time remaining on that timer</td>
+      </tr>
+      <tr>
+        <td class="say">「タイマー、そば、5分」<span class="gloss">Timer, soba, 5 minutes</span></td>
+        <td class="desc">Adds one new timer and starts it immediately</td>
+      </tr>
+      <tr>
+        <td class="say">「タイマー、ストップ」<span class="gloss">Timer, stop</span></td>
+        <td class="desc">Silences every alarm that's currently ringing, all at once</td>
+      </tr>
+      <tr>
+        <td class="say">「タイマー、うどん、ポーズ」<span class="gloss">Timer, udon, pause</span></td>
+        <td class="desc">Pauses one specific timer by name</td>
+      </tr>
+      <tr>
+        <td class="say">「タイマー、素麺、リセット」<span class="gloss">Timer, somen, reset</span></td>
+        <td class="desc">Resets one specific timer back to its original time</td>
+      </tr>
+    </table>
+    <p class="langNote">Voice commands run on Japanese speech recognition — you speak the wake word and commands in Japanese, but timer names can be absolutely anything: pasta, udon, dumplings, toast, whatever's on your stove.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>What makes it different from a normal timer app</h2>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>Add several timers with one sentence</h3>
+        <p>Name and time, side by side, in a single breath — every timer starts together.</p>
+        <div class="ex">"Timer, dumplings 3 min, pork 8 min"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>Ask how much time is left</h3>
+        <p>No walking over to check the screen — just ask, and it answers out loud.</p>
+        <div class="ex">"Ramen, 7 minutes 30 seconds left"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>One-tap favorites</h3>
+        <p>Star a name-and-time combination once, then call it back with a single tap next time.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>Stop every alarm with one word</h3>
+        <p>When several timers ring together, one command silences all of them at once.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>Custom spoken alerts, per timer</h3>
+        <p>Instead of a generic beep, each timer can announce exactly what it's for.</p>
+        <div class="ex">"The dumplings are ready!"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>Unlimited timers, landscape layout</h3>
+        <p>Add as many as your stovetop needs, laid out for a tablet propped up on the counter.</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">Favorites bar</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>Ramen <span class="t">3 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Ajitama egg <span class="t">6 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Tsukemen <span class="t">5 min</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>How it works</h2>
+    <p class="sectionLead">Tap it, or just say it — both work the same way.</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>Starting a timer</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>1. Tap "Add Timer"</h4><p>A new card appears, ready to configure.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>2. Tap a name and a preset</h4>
+              <p>Pick a menu name and a preset like "5 min" to set the duration.</p>
+              <span class="voiceBubble">🎙 or just say "Timer, pasta 5 minutes"</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>3. Tap "Start"</h4><p>The countdown begins. Voice-added timers start automatically.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>Ending a timer</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>1. The alarm speaks up at zero</h4><p>It announces the timer by name — not just a beep.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>2. Tap "Stop" on the card</h4>
+              <p>The alarm silences and the card returns to standby.</p>
+              <span class="voiceBubble">🎙 or say "Timer, stop" to silence every ringing timer</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>3. Done</h4><p>Hit "Reset" to run the same timer again from the top.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>Made by a working kitchen</h2>
+      <p><strong>Jikaseimen Kirinji</strong> is a ramen restaurant in Sendai, Japan, specializing in aburakasu (fried beef offal) ramen — the only shop of its kind in the Tohoku region, running for about 20 years.</p>
+      <p>Hands-Free Kitchen Timer was built to solve a problem this kitchen actually had, then made free for anyone else who needs it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>FAQ</h2>
+    <dl class="faq">
+      <dt>Is Hands-Free Kitchen Timer free?</dt>
+      <dd>Yes. It's free to use, with no account and no install — it runs in your browser.</dd>
+      <dt>What makes it a "hands-free" kitchen timer?</dt>
+      <dd>You can start, stop, and check timers entirely by voice, so you never have to touch a screen with wet or messy hands.</dd>
+      <dt>Can I run more than one timer at the same time?</dt>
+      <dd>Yes. Add as many as you need, and start several at once with a single spoken sentence.</dd>
+      <dt>Can I ask how much time is left?</dt>
+      <dd>Yes. Ask for a timer by name and it answers out loud with the remaining time.</dd>
+      <dt>Can I reuse the same settings without retyping them?</dt>
+      <dd>Yes. Star any timer to save it as a favorite, then start the same name and duration again with one tap.</dd>
+      <dt>Does the alarm just beep, or can it say something specific?</dt>
+      <dd>Each timer can have its own spoken message, so it announces exactly what's ready instead of a generic beep.</dd>
+      <dt>What voice language does it support?</dt>
+      <dd>Voice commands currently use Japanese speech recognition — the wake word and commands are spoken in Japanese, though timer names themselves can be anything.</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>Try it in your kitchen</h2>
+      <p>Open it on a tablet, prop it up, and start talking to your timers.</p>
+      <a class="btn primary" href="timer-en.html">Open Hands-Free Kitchen Timer</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Hands-Free Kitchen Timer — built by Jikaseimen Kirinji, a ramen restaurant in Sendai, Japan ／ <a href="timer-lp.html">日本語</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

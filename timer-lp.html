@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hands-Free Kitchen Timer | 声だけで操作できる無料の音声キッチンタイマー</title>
+<meta name="description" content="Hands-Free Kitchen Timerは、声だけで操作できる無料のキッチンタイマーです。「タイマー、パスタ5分、ラーメン10分」で複数タイマーを一括追加、「あと何分？」で残り時間を音声で回答。手が濡れていても、両手がふさがっていても使えます。タブレット横画面専用。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hands-Free Kitchen Timer | 声だけで操作できる無料の音声キッチンタイマー">
+<meta property="og:description" content="Hands-Free Kitchen Timerは声だけで操作できる無料のキッチンタイマーです。複数タイマーの一括追加、残り時間の音声回答にも対応。手が濡れていても使えます。">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp.html">
+<meta property="og:site_name" content="自家製麺キリンジ">
+<meta property="og:locale" content="ja_JP">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hands-Free Kitchen Timer | 音声操作の無料キッチンタイマー">
+<meta name="twitter:description" content="声だけで操作できる無料のキッチンタイマー。手が濡れていても、両手がふさがっていても使えます。">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Hands-Free Kitchen Timer",
+  "alternateName": ["ラーメンタイマーズ", "音声操作キッチンタイマー"],
+  "keywords": "キッチンタイマー 音声操作, ハンズフリー タイマー, 厨房 タイマー アプリ, 音声認識 タイマー, 複数タイマー 無料",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web（タブレットブラウザ）",
+  "description": "Hands-Free Kitchen Timerは、厨房向けの無料の音声操作キッチンタイマーです。ひとつの発話で複数タイマーを一括追加、残り時間を聞けば音声で回答、タイマーごとのカスタム読み上げ、よく使う設定のお気に入り登録に対応。ラーメン店の実際の厨房で使うために作られました。",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+  "creator": { "@type": "Organization", "name": "自家製麺キリンジ", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "ウェイクワード「タイマー」による音声操作",
+    "「パスタ5分、ラーメン10分」のような一文での複数タイマー一括追加",
+    "「あと何分？」で残り時間を音声回答",
+    "「タイマー、ストップ」で鳴っているアラームを一括停止",
+    "名前を指定した個別タイマーの一時停止・リセット",
+    "メニュー連動のカスタム音声通知",
+    "よく使う設定をワンタップで呼び出せるお気に入り登録",
+    "タイマー名は自由入力（候補リストは制限ではなくショートカット）",
+    "無限タイマー・タブレット横画面専用UI"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Hands-Free Kitchen Timerは無料ですか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "無料です。会員登録・アプリインストール不要。ブラウザで開くだけで使えます。" } },
+    { "@type": "Question", "name": "複数のタイマーを一度に追加できますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "できます。「タイマー、パスタ5分、ラーメン10分」のように話すと、2つのタイマーを同時に追加してスタートします。" } },
+    { "@type": "Question", "name": "残り時間はどうやって確認しますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "「タイマー、ラーメンあと何分？」と話しかけると、そのタイマーの残り時間を音声で答えます。" } },
+    { "@type": "Question", "name": "よく使う時間設定を毎回入力しなくても済みますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "済みます。カードの☆ボタンでお気に入り登録すると、ワンタップで同じ名前・時間のタイマーを呼び出せます。" } },
+    { "@type": "Question", "name": "手が濡れていても操作できますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "できます。追加・確認・停止のすべてを声だけで行えるため、両手がふさがっていても操作できます。" } },
+    { "@type": "Question", "name": "アラームの読み上げ内容は変更できますか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "変更できます。タイマーごとにメッセージを設定でき、メニュー名を読み上げるカスタム通知にできます。" } },
+    { "@type": "Question", "name": "メニュー名は決まったものしか使えませんか？",
+      "acceptedAnswer": { "@type": "Answer", "text": "いいえ、日本語ならどんな名前でも自由に入力できます。よく使う名前は候補からタップで呼び出せますが、あくまでショートカットです。" } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9;
+    --mono:'DIN','Bahnschrift','Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.75; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0; gap:10px;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.08em;}
+  .topLinks{display:flex; gap:8px; flex:0 0 auto;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+  .topLink.primary{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.14em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(24px,4.2vw,40px); font-weight:900; margin:0 0 18px; letter-spacing:0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:380px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.02em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:8px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge);}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.04em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.04em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.1em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:#ff3b30;}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:#ff3b30;}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">Hands-Free Kitchen Timer</span>
+      <span class="sub">自家製麺キリンジ</span>
+    </div>
+    <div class="topLinks">
+      <a class="topLink" href="timer-lp-en.html">English</a>
+      <a class="topLink primary" href="timer.html">アプリを開く</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">無料・登録不要・声だけで操作</span>
+    <h1>厨房を、<br><span class="accent">声</span>で動かす。</h1>
+    <p class="lead">
+      Hands-Free Kitchen Timerは、声だけで操作できる無料のキッチンタイマーです。<br>
+      「タイマー、つけ麺5分、カスラーメン10分」と話せば2つ同時にスタート。<br>
+      「タイマー、カスラーメンあと何分？」と聞けば、声で答えます。
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">YOU</div>「タイマー、つけ麺<b>5分</b>、カスラーメン<b>10分</b>」</div>
+      <div class="bubble app"><div class="who">Hands-Free Kitchen Timer</div>つけ麺 5分、カスラーメン 10分をスタートしました</div>
+      <div class="bubble user"><div class="who">YOU</div>「タイマー、カスラーメン<b>あと何分</b>？」</div>
+      <div class="bubble app"><div class="who">Hands-Free Kitchen Timer</div>カスラーメン、残り<b>7分30秒</b>です</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer.html">無料でアプリを使う</a>
+      <a class="btn ghost" href="#commands">音声コマンドを見る</a>
+    </div>
+    <p class="note">インストール不要。タブレットのブラウザですぐに使えます。</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>厨房で、こんなことに困っていませんか</h2>
+    <p class="sectionLead">複数のメニューを同時に仕込む厨房では、タイマーの取りこぼしがそのまま品質のブレになります。</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>手が生地や湯気で濡れていて、タイマーのボタンを押しに行けない。</p></div>
+      <div class="painCard"><div class="icon">🍜</div><p>複数メニューを一気に仕込むとき、ひとつずつ手入力するのが面倒。</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>「あとどのくらいだっけ」と、画面を確認しに行く手間が発生する。</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>毎回同じ時間設定（大盛り3分など）を入力し直すのが地味に手間。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>話しかけるだけの音声コマンド</h2>
+    <p class="sectionLead">すべてのコマンドは「タイマー」から始まります。厨房の騒音による誤作動を防ぐためのウェイクワードです。</p>
+    <table class="cmdTable">
+      <tr><th>話しかける</th><th>動作</th></tr>
+      <tr><td class="say"><span class="tag">NEW</span><br>「タイマー、つけ麺5分、カスラーメン10分」</td><td class="desc">2つ以上のタイマーをまとめて追加し、同時にスタート</td></tr>
+      <tr><td class="say"><span class="tag">NEW</span><br>「タイマー、カスラーメンあと何分？」</td><td class="desc">「カスラーメン」タイマーの残り時間を音声で回答</td></tr>
+      <tr><td class="say">「タイマー、そば、5分」</td><td class="desc">「そば」タイマーを新規追加し、即スタート</td></tr>
+      <tr><td class="say">「タイマー、ストップ」</td><td class="desc">現在鳴っているアラームをすべて同時に停止</td></tr>
+      <tr><td class="say">「タイマー、うどん、ポーズ」</td><td class="desc">「うどん」タイマーを一時停止</td></tr>
+      <tr><td class="say">「タイマー、素麺、リセット」</td><td class="desc">「素麺」タイマーを初期時間にリセット</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>できること</h2>
+    <p class="sectionLead">実際の厨房で使いながら磨いてきた機能です。</p>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>音声での複数タイマー一括追加</h3>
+        <p>名前と時間を並べて話すだけで、複数のタイマーを一度に追加してスタートできます。</p>
+        <div class="ex">「タイマー、餃子3分、チャーシュー8分」</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>残り時間の音声回答</h3>
+        <p>画面を見に行かなくても、話しかけるだけで残り時間を答えてくれます。</p>
+        <div class="ex">「カスラーメン、残り7分30秒です」</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>お気に入りのワンタップ呼び出し</h3>
+        <p>よく使う名前・時間の組み合わせを☆で登録しておけば、次回からワンタップで同じ設定を再現できます。</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>アラームを声で一括停止</h3>
+        <p>複数のタイマーが同時に鳴っても、「タイマー、ストップ」のひと声ですべて止められます。</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>メニュー連動カスタム音声通知</h3>
+        <p>タイマーごとに読み上げメッセージを設定でき、鳴った瞬間に何の作業かが分かります。</p>
+        <div class="ex">「餃子が焼き上がりました！」</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>メニュー名は日本語なら何でも</h3>
+        <p>パスタ・ラーメン・カスラーメン・つけ麺・味玉・そば・うどん・汁無し・太麺・細麺・素麺・トースト・カップラーメン・グラタンなど、よく使う名前は候補からタップで呼び出せます。ただしリストは制限ではなくショートカット — 載っていない名前も自由に入力できます。</p>
+      </div>
+      <div class="featCard">
+        <div class="n">07</div>
+        <h3>無限タイマー・タブレット横画面UI</h3>
+        <p>鍋の数に合わせてタイマーを上限なく並べられ、厨房のタブレット設置を想定した横向き専用レイアウトです。</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">お気に入りバーのイメージ</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>つけ麺 <span class="t">5分</span></div>
+      <div class="favChipMock"><span class="star">★</span>カスラーメン <span class="t">3分</span></div>
+      <div class="favChipMock"><span class="star">★</span>味玉 <span class="t">6分</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>使い方</h2>
+    <p class="sectionLead">タップでも、声だけでも。どちらでも同じように使えます。</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>タイマーの始め方</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>①「＋タイマー追加」をタップ</h4><p>新しいカードが1枚追加されます。</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>②名前とプリセットをタップ</h4>
+              <p>メニュー名を選び、「5分」などのプリセットをタップして時間を決めます。</p>
+              <span class="voiceBubble">🎙「タイマー、パスタ5分」でも同じことができます</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>③「開始」をタップ</h4><p>カウントダウンが始まります。音声で追加した場合は自動でスタート済みです。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>タイマーの終わらせ方</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>①ゼロになるとアラームが鳴る</h4><p>「〇〇が茹で上がりました！」のように、メニュー名を読み上げて知らせます。</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>②カードの「停止」をタップ</h4>
+              <p>鳴っているアラームが止まり、カードは待機状態に戻ります。</p>
+              <span class="voiceBubble">🎙「タイマー、ストップ」で全件まとめて止まります</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>③完了</h4><p>そのまま「リセット」で同じ時間からやり直すこともできます。</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>開発：自家製麺キリンジ</h2>
+      <p><strong>自家製麺キリンジ</strong>は、仙台であぶらかすラーメンを提供する、東北で唯一のあぶらかす専門店です。2006年の創業から約20年、麺・しいたけ・生姜まで自家製にこだわってきました。</p>
+      <p>Hands-Free Kitchen Timerは、この厨房で実際に発生していた課題をもとに、自店のために開発したツールです。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>よくある質問</h2>
+    <dl class="faq">
+      <dt>Hands-Free Kitchen Timerは無料ですか</dt>
+      <dd>無料で利用できます。会員登録・アプリインストールは不要です。</dd>
+      <dt>複数のタイマーを一度に追加できますか</dt>
+      <dd>できます。「タイマー、パスタ5分、ラーメン10分」のように話すと、2つのタイマーを同時に追加してスタートします。</dd>
+      <dt>残り時間はどうやって確認しますか</dt>
+      <dd>「タイマー、ラーメンあと何分？」と話しかけると、そのタイマーの残り時間を音声で答えます。</dd>
+      <dt>よく使う時間設定を毎回入力しなくても済みますか</dt>
+      <dd>済みます。カードの☆ボタンでお気に入り登録すると、ワンタップで同じ名前・時間のタイマーを呼び出せます。</dd>
+      <dt>手が濡れていても操作できますか</dt>
+      <dd>できます。声だけで追加・確認・停止ができるため、両手がふさがっていても操作できます。</dd>
+      <dt>アラームの読み上げ内容は変更できますか</dt>
+      <dd>変更できます。タイマーごとにメッセージを設定でき、メニュー名を読み上げるカスタム通知にできます。</dd>
+      <dt>メニュー名は決まったものしか使えませんか</dt>
+      <dd>いいえ、日本語ならどんな名前でも自由に入力できます。よく使う名前は候補からタップで呼び出せますが、あくまでショートカットです。</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>今すぐ厨房で試す</h2>
+      <p>タブレットを横向きにして、そのままアクセスするだけです。</p>
+      <a class="btn primary" href="timer.html">Hands-Free Kitchen Timerを開く</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>カスラーメン 自家製麺キリンジ  ／ <a href="timer-lp-en.html">English</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

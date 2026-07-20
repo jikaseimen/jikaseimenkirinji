@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>免提厨房计时器 – 免费语音控制多重计时器</title>
+<meta name="description" content="免提厨房计时器是一款免费的语音控制厨房计时器。说出名称和时间即可启动计时器，可以询问还剩多少时间，也能一句话停止所有响铃——不用脏手碰屏幕。计时器数量不限，无需安装，任何浏览器都能使用。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp-zh.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="免提厨房计时器 – 免费语音控制多重计时器">
+<meta property="og:description" content="用声音操控的免费厨房计时器。无需动手即可启动、停止和查看计时器——专为真实的烹饪场景而设计。">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp-zh.html">
+<meta property="og:site_name" content="免提厨房计时器">
+<meta property="og:locale" content="zh_CN">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="免提厨房计时器 – 免费语音控制厨房计时器">
+<meta name="twitter:description" content="用语音启动、停止和查看多个厨房计时器。免费，无需安装，任何浏览器都能使用。">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "免提厨房计时器",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web (any modern browser)",
+  "description": "一款为厨房打造的免费语音控制多重计时器。用声音启动计时器，一次添加多个，询问还剩多少时间，一句话停止所有响铃——全程无需触碰屏幕。支持每个计时器自定义语音提示，以及常用设置的一键收藏。",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+  "creator": { "@type": "Organization", "name": "Jikaseimen Kirinji", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "通过语音唤醒词进行控制",
+    "一句话同时启动多个计时器",
+    "询问计时器还剩多少时间，获得语音回答",
+    "一句语音命令停止所有正在响铃的计时器",
+    "每个计时器可自定义语音提示文字",
+    "常用名称/时间组合一键收藏",
+    "计时器数量不限，可同时使用",
+    "专为厨房台面设计的横屏平板布局"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "免提厨房计时器是免费的吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "是的。无需注册账号，无需安装，免费使用——在浏览器中即可运行。" } },
+    { "@type": "Question", "name": "什么是'免提'厨房计时器？",
+      "acceptedAnswer": { "@type": "Answer", "text": "你可以完全用语音来启动、停止和查看计时器，不必用湿手或脏手碰屏幕。" } },
+    { "@type": "Question", "name": "可以同时运行多个计时器吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "可以。你可以按需添加任意数量的计时器，甚至用一句话同时启动多个。" } },
+    { "@type": "Question", "name": "可以询问还剩多少时间吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "可以。说出计时器的名称，它会用语音告诉你剩余时间。" } },
+    { "@type": "Question", "name": "可以不用重新输入就复用相同设置吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "可以。将任意计时器加入收藏，下次只需点一下即可用相同的名称和时长重新启动。" } },
+    { "@type": "Question", "name": "闹铃只是普通提示音，还是能说出具体内容？",
+      "acceptedAnswer": { "@type": "Answer", "text": "每个计时器都可以设置专属语音提示，准确播报完成的是什么，而不只是普通提示音。" } },
+    { "@type": "Question", "name": "支持哪种语音语言？",
+      "acceptedAnswer": { "@type": "Answer", "text": "语音命令目前使用中文语音识别，唤醒词和命令都用中文说出即可。计时器的名称本身可以随意设置。" } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9; --danger:#ff3b30;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.7; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.04em;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.1em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(26px,4.4vw,42px); font-weight:900; margin:0 0 18px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:400px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+  .bubble .gloss{display:block; font-size:11px; color:var(--text-dim); margin-top:3px; font-style:italic;}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.01em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:14px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge); vertical-align:top;}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.03em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700; white-space:nowrap;}
+  .cmdTable .gloss{display:block; color:var(--text-dim); font-weight:400; font-style:italic; font-size:11px; margin-top:3px; white-space:normal;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.03em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+  .langNote{font-size:12px; color:var(--text-dim); margin:0 0 28px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.08em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:var(--danger);}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:var(--danger);}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">免提厨房计时器</span>
+    </div>
+    <a class="topLink" href="timer-zh.html">打开应用</a>
+    <a class="topLink" href="timer-lp.html" style="margin-left:8px;">日本語</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">免费 · 无需安装 · 无需账号</span>
+    <h1>不用动手的<br>厨房计时器，<span class="accent">用声音</span>操控。</h1>
+    <p class="lead">
+      免提厨房计时器是为真实烹饪场景打造的免费语音控制多重计时器——
+      湿手、忙碌的双手、多个锅同时开火，统统不是问题。
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">你说</div>"定时器，意大利面 <b>5分钟</b>，拉面 <b>10分钟</b>"</div>
+      <div class="bubble app"><div class="who">计时器</div>同时启动一个5分钟的"意大利面"计时器和一个10分钟的"拉面"计时器。</div>
+      <div class="bubble user"><div class="who">你说</div>"定时器，拉面<b>还剩多少时间</b>？"</div>
+      <div class="bubble app"><div class="who">计时器</div>语音回答："拉面，还剩7分30秒。"</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer-zh.html">免费使用</a>
+      <a class="btn ghost" href="#commands">查看语音命令</a>
+    </div>
+    <p class="note">无需下载。在任意平板或手机浏览器中打开，立即开始烹饪。</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>为什么需要免提厨房计时器？</h2>
+    <p class="sectionLead">普通手机计时器坐在桌前、干手操作、只看一个锅时确实够用。但真实的厨房不是这样。</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>手上沾满水、面粉或油——最不想做的事就是去碰屏幕。</p></div>
+      <div class="painCard"><div class="icon">🍳</div><p>好几样东西同时在煮，手机自带的单个计时器根本不够用。</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>为了看看还剩多久，总要跑过去看一眼还在运行的计时器。</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>每天都在重复设置同样的时间——这个3分钟，那个8分钟。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>用语音说，不用按按钮</h2>
+    <p class="sectionLead">每个命令都以唤醒词开头，避免在嘈杂的厨房中被意外触发。</p>
+    <table class="cmdTable">
+      <tr><th>这样说</th><th>会发生什么</th></tr>
+      <tr>
+        <td class="say"><span class="tag">NEW</span><br>"定时器，意大利面5分钟，拉面10分钟"</td>
+        <td class="desc">一次添加两个或更多计时器，并同时启动</td>
+      </tr>
+      <tr>
+        <td class="say"><span class="tag">NEW</span><br>"定时器，拉面还剩多少时间？"</td>
+        <td class="desc">用语音准确播报该计时器的剩余时间</td>
+      </tr>
+      <tr>
+        <td class="say">"定时器，荞麦面，5分钟"</td>
+        <td class="desc">添加一个新计时器并立即启动</td>
+      </tr>
+      <tr>
+        <td class="say">"定时器，停止"</td>
+        <td class="desc">一次性关闭所有正在响铃的闹钟</td>
+      </tr>
+      <tr>
+        <td class="say">"定时器，乌冬面，暂停"</td>
+        <td class="desc">按名称暂停某一个计时器</td>
+      </tr>
+      <tr>
+        <td class="say">"定时器，素面，重置"</td>
+        <td class="desc">将某一个计时器重置回原始时长</td>
+      </tr>
+    </table>
+    <p class="langNote">语音命令使用中文语音识别——唤醒词和命令请用中文说出，但计时器名称可以随意设置：意大利面、乌冬面、饺子、吐司，煮什么都可以。</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>与普通计时器应用的不同之处</h2>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>一句话添加多个计时器</h3>
+        <p>名称和时间一口气说完，所有计时器同时启动。</p>
+        <div class="ex">"定时器，饺子3分钟，猪肉8分钟"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>询问还剩多少时间</h3>
+        <p>不用跑去看屏幕——直接问，它会用语音回答。</p>
+        <div class="ex">"拉面，还剩7分30秒"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>一键收藏</h3>
+        <p>把常用的名称和时间组合收藏一次，下次点一下就能再次调用。</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>一句话停止所有闹钟</h3>
+        <p>当多个计时器同时响铃时，一句命令就能全部停止。</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>每个计时器可自定义语音提示</h3>
+        <p>不是千篇一律的提示音，每个计时器都能准确播报是什么完成了。</p>
+        <div class="ex">"饺子好了！"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>数量不限，横屏布局</h3>
+        <p>根据灶台需要添加任意数量的计时器，专为立在台面上的平板设计。</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">收藏栏</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>拉面 <span class="t">3分钟</span></div>
+      <div class="favChipMock"><span class="star">★</span>溏心蛋 <span class="t">6分钟</span></div>
+      <div class="favChipMock"><span class="star">★</span>蘸面 <span class="t">5分钟</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>使用方法</h2>
+    <p class="sectionLead">点一下，或者直接说出来——两种方式效果一样。</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>启动计时器</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>1. 点击"添加计时器"</h4><p>出现一张新卡片，可以进行设置。</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>2. 点选名称和预设时长</h4>
+              <p>选择一个菜单名称，再点选"5分"之类的预设来设定时长。</p>
+              <span class="voiceBubble">🎙 或者直接说"定时器，意大利面5分钟"</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>3. 点击"开始"</h4><p>倒计时开始。语音添加的计时器会自动启动。</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>结束计时器</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>1. 时间到时闹铃会说话</h4><p>它会报出计时器的名称——而不只是滴滴声。</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>2. 点击卡片上的"停止"</h4>
+              <p>闹铃停止，卡片回到待命状态。</p>
+              <span class="voiceBubble">🎙 或者说"定时器，停止"来关闭所有正在响铃的计时器</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>3. 完成</h4><p>点击"重置"即可从头再次运行同一个计时器。</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>由一家真实营业的厨房打造</h2>
+      <p><strong>自家制面 KIRINJI（自家製麺キリンジ）</strong>是位于日本仙台的一家拉面店，专营炸牛杂（あぶらかす）拉面——东北地区唯一一家专营此类拉面的店铺，已经营约20年。</p>
+      <p>免提厨房计时器最初是为了解决这家厨房实际遇到的问题而开发，之后免费公开给有同样需求的人使用。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>常见问题</h2>
+    <dl class="faq">
+      <dt>免提厨房计时器是免费的吗？</dt>
+      <dd>是的。无需账号，无需安装，免费使用——在浏览器中直接运行。</dd>
+      <dt>什么是"免提"厨房计时器？</dt>
+      <dd>你可以完全用语音启动、停止和查看计时器，不必用湿手或脏手碰屏幕。</dd>
+      <dt>可以同时运行多个计时器吗？</dt>
+      <dd>可以。按需添加任意数量的计时器，还能用一句话同时启动多个。</dd>
+      <dt>可以询问还剩多少时间吗？</dt>
+      <dd>可以。说出计时器名称，它会用语音告诉你剩余时间。</dd>
+      <dt>可以不重新输入就复用相同设置吗？</dt>
+      <dd>可以。把任意计时器加入收藏，下次只需点一下即可用相同的名称和时长重新启动。</dd>
+      <dt>闹铃只是普通提示音，还是能说出具体内容？</dt>
+      <dd>每个计时器都可以设置专属语音消息，准确播报完成的是什么，而不只是普通提示音。</dd>
+      <dt>支持哪种语音语言？</dt>
+      <dd>语音命令目前使用中文语音识别——唤醒词和命令请用中文说出，计时器名称本身可以随意设置。</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>在你的厨房里试试看</h2>
+      <p>在平板电脑上打开，立起来放好，开始和你的计时器对话吧。</p>
+      <a class="btn primary" href="timer-zh.html">打开免提厨房计时器</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>免提厨房计时器 — 由日本仙台拉面店自家制面 KIRINJI（自家製麺キリンジ）打造 ／ <a href="timer-lp.html">日本語</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

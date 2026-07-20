@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timer da Cucina a Mani Libere – Multi Timer Vocale Gratuito</title>
+<meta name="description" content="Timer da Cucina a Mani Libere è un timer da cucina gratuito controllato dalla voce. Di' un nome e un tempo per avviare un timer, chiedi quanto tempo manca, oppure ferma tutte le sveglie in una volta — senza toccare lo schermo con le mani sporche. Timer illimitati, nessuna installazione, funziona su qualsiasi browser.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp-it.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Timer da Cucina a Mani Libere – Multi Timer Vocale Gratuito">
+<meta property="og:description" content="Un timer da cucina gratuito controllato dalla tua voce. Avvia, ferma e controlla i timer a mani libere — pensato per cucinare davvero.">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp-it.html">
+<meta property="og:site_name" content="Timer da Cucina a Mani Libere">
+<meta property="og:locale" content="it_IT">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Timer da Cucina a Mani Libere – Timer da Cucina Vocale Gratuito">
+<meta name="twitter:description" content="Avvia, ferma e controlla più timer da cucina con la voce. Gratuito, nessuna installazione, funziona su qualsiasi browser.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Timer da Cucina a Mani Libere",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web (any modern browser)",
+  "description": "Un multi-timer gratuito e controllato dalla voce per la cucina. Avvia i timer parlando, aggiungine diversi in una volta, chiedi quanto tempo manca e ferma tutte le sveglie con un solo comando — tutto senza toccare lo schermo. Include avvisi vocali personalizzati per ogni timer e preferiti a un tocco per le impostazioni usate spesso.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "creator": { "@type": "Organization", "name": "Jikaseimen Kirinji", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "Controllo vocale con parola d'attivazione",
+    "Avvia più timer insieme con una sola frase",
+    "Chiedi al timer quanto tempo manca e ricevi una risposta vocale",
+    "Ferma tutte le sveglie che suonano con un solo comando vocale",
+    "Testo di avviso vocale personalizzato per ogni timer",
+    "Preferiti a un tocco per combinazioni nome/tempo usate spesso",
+    "Timer simultanei illimitati",
+    "Layout per tablet orizzontale pensato per il piano cucina"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Timer da Cucina a Mani Libere è gratuito?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sì. È gratuito, senza account e senza installazione — funziona direttamente nel browser." } },
+    { "@type": "Question", "name": "Cosa lo rende un timer da cucina 'a mani libere'?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Puoi avviare, fermare e controllare i timer interamente con la voce, così non devi mai toccare lo schermo con le mani bagnate o sporche." } },
+    { "@type": "Question", "name": "Posso far girare più di un timer alla volta?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sì. Puoi aggiungere tutti i timer che ti servono, e persino avviarne diversi insieme con una sola frase pronunciata." } },
+    { "@type": "Question", "name": "Posso chiedere quanto tempo manca?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sì. Chiedi un timer per nome e ti risponde a voce con il tempo rimanente." } },
+    { "@type": "Question", "name": "Posso riusare le stesse impostazioni senza doverle riscrivere?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sì. Metti una stella su un timer per salvarlo come preferito, poi riavvialo con lo stesso nome e la stessa durata con un solo tocco." } },
+    { "@type": "Question", "name": "La sveglia fa solo bip, o può dire qualcosa di specifico?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Ogni timer può avere un proprio messaggio vocale, così annuncia esattamente cosa è pronto invece di un bip generico." } },
+    { "@type": "Question", "name": "Quale lingua vocale supporta?",
+      "acceptedAnswer": { "@type": "Answer", "text": "I comandi vocali usano attualmente il riconoscimento vocale in italiano, quindi pronunci la parola d'attivazione e i comandi in italiano. I nomi dei timer possono invece essere quelli che preferisci." } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9; --danger:#ff3b30;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.7; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.04em;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.1em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(26px,4.4vw,42px); font-weight:900; margin:0 0 18px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:400px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+  .bubble .gloss{display:block; font-size:11px; color:var(--text-dim); margin-top:3px; font-style:italic;}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.01em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:14px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge); vertical-align:top;}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.03em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700; white-space:nowrap;}
+  .cmdTable .gloss{display:block; color:var(--text-dim); font-weight:400; font-style:italic; font-size:11px; margin-top:3px; white-space:normal;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.03em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+  .langNote{font-size:12px; color:var(--text-dim); margin:0 0 28px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.08em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:var(--danger);}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:var(--danger);}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">Timer da Cucina a Mani Libere</span>
+    </div>
+    <a class="topLink" href="timer-it.html">Apri l'app</a>
+    <a class="topLink" href="timer-lp.html" style="margin-left:8px;">日本語</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Gratuito · Nessuna installazione · Nessun account</span>
+    <h1>Un Timer da Cucina che<br>Non Devi Mai <span class="accent">Toccare</span>.</h1>
+    <p class="lead">
+      Timer da Cucina a Mani Libere è un multi-timer gratuito e controllato dalla voce, pensato per cucinare davvero —
+      mani bagnate, mani occupate, e più di una pentola sul fuoco contemporaneamente.
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">TU DICI</div>"Timer, pasta <b>5 minuti</b>, ramen <b>10 minuti</b>"</div>
+      <div class="bubble app"><div class="who">TIMER</div>Avvia insieme un timer "pasta" da 5 minuti e un timer "ramen" da 10 minuti.</div>
+      <div class="bubble user"><div class="who">TU DICI</div>"Timer, ramen, <b>quanto tempo manca</b>?"</div>
+      <div class="bubble app"><div class="who">TIMER</div>Risponde a voce: "Ramen, mancano 7 minuti e 30 secondi."</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer-it.html">Usalo gratis</a>
+      <a class="btn ghost" href="#commands">Vedi i comandi vocali</a>
+    </div>
+    <p class="note">Nessun download. Aprilo su qualsiasi tablet o browser del telefono e inizia a cucinare.</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>Perché un timer da cucina a mani libere?</h2>
+    <p class="sectionLead">Un normale timer del telefono funziona bene per una pentola, alla scrivania, con le mani asciutte. Una cucina vera non è così.</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>Hai le mani bagnate, infarinate o unte — l'ultima cosa che vuoi toccare è uno schermo.</p></div>
+      <div class="painCard"><div class="icon">🍳</div><p>Diverse cose cuociono insieme, e un solo timer integrato non riesce a starci dietro.</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>Continui ad andare a controllare "quanto manca" su qualcosa che sta ancora andando.</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>Imposti gli stessi tempi ancora e ancora — 3 minuti per questo, 8 per quello — ogni singolo giorno.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>Comandi vocali, non tocchi sui pulsanti</h2>
+    <p class="sectionLead">Ogni comando inizia con una parola d'attivazione pronunciata, così non si attiva per sbaglio nel rumore della cucina.</p>
+    <table class="cmdTable">
+      <tr><th>Dì questo</th><th>Cosa succede</th></tr>
+      <tr>
+        <td class="say"><span class="tag">NUOVO</span><br>"Timer, pasta 5 minuti, ramen 10 minuti"</td>
+        <td class="desc">Aggiunge due o più timer insieme e li avvia contemporaneamente</td>
+      </tr>
+      <tr>
+        <td class="say"><span class="tag">NUOVO</span><br>"Timer, ramen, quanto tempo manca?"</td>
+        <td class="desc">Risponde a voce con il tempo esatto rimasto su quel timer</td>
+      </tr>
+      <tr>
+        <td class="say">"Timer, soba, 5 minuti"</td>
+        <td class="desc">Aggiunge un nuovo timer e lo avvia subito</td>
+      </tr>
+      <tr>
+        <td class="say">"Timer, stop"</td>
+        <td class="desc">Silenzia tutte le sveglie che stanno suonando in una volta sola</td>
+      </tr>
+      <tr>
+        <td class="say">"Timer, udon, pausa"</td>
+        <td class="desc">Mette in pausa un timer specifico per nome</td>
+      </tr>
+      <tr>
+        <td class="say">"Timer, somen, reset"</td>
+        <td class="desc">Riporta un timer specifico al suo tempo originale</td>
+      </tr>
+    </table>
+    <p class="langNote">I comandi vocali funzionano con il riconoscimento vocale in italiano — pronuncia la parola d'attivazione e i comandi in italiano, ma i nomi dei timer possono essere qualsiasi cosa: pasta, udon, ravioli, toast, qualunque cosa tu stia cucinando.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>Cosa lo rende diverso da un'app timer normale</h2>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>Aggiungi più timer con una frase</h3>
+        <p>Nome e tempo, uno dopo l'altro, in un solo respiro — tutti i timer partono insieme.</p>
+        <div class="ex">"Timer, ravioli 3 min, maiale 8 min"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>Chiedi quanto tempo manca</h3>
+        <p>Niente andare a controllare lo schermo — chiedi soltanto, e risponde a voce.</p>
+        <div class="ex">"Ramen, mancano 7 minuti e 30 secondi"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>Preferiti a un tocco</h3>
+        <p>Metti una stella su una combinazione nome-e-tempo una volta, poi richiamala con un solo tocco la volta successiva.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>Ferma tutte le sveglie con una parola</h3>
+        <p>Quando più timer suonano insieme, un solo comando li silenzia tutti in una volta.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>Avvisi vocali personalizzati per ogni timer</h3>
+        <p>Invece di un bip generico, ogni timer può annunciare esattamente a cosa serve.</p>
+        <div class="ex">"I ravioli sono pronti!"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>Timer illimitati, layout orizzontale</h3>
+        <p>Aggiungine quanti ne servono ai tuoi fornelli, in un layout pensato per un tablet appoggiato sul piano cucina.</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">Barra dei preferiti</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>Ramen <span class="t">3 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Uovo Ajitama <span class="t">6 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Tsukemen <span class="t">5 min</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>Come funziona</h2>
+    <p class="sectionLead">Toccalo, oppure dillo semplicemente — funzionano allo stesso modo.</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>Avviare un timer</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>1. Tocca "Aggiungi Timer"</h4><p>Appare una nuova scheda, pronta per essere configurata.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>2. Tocca un nome e un preset</h4>
+              <p>Scegli un nome dal menu e un preset come "5 min" per impostare la durata.</p>
+              <span class="voiceBubble">🎙 oppure di' semplicemente "Timer, pasta 5 minuti"</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>3. Tocca "Avvia"</h4><p>Il conto alla rovescia parte. I timer aggiunti a voce partono automaticamente.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>Terminare un timer</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>1. La sveglia parla allo scadere del tempo</h4><p>Annuncia il timer per nome — non solo un bip.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>2. Tocca "Stop" sulla scheda</h4>
+              <p>La sveglia si silenzia e la scheda torna in standby.</p>
+              <span class="voiceBubble">🎙 oppure di' "Timer, stop" per silenziare tutti i timer che suonano</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>3. Fatto</h4><p>Premi "Reset" per far ripartire lo stesso timer dall'inizio.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>Creato da una cucina vera</h2>
+      <p><strong>Jikaseimen Kirinji (自家製麺キリンジ)</strong> è un ristorante di ramen a Sendai, in Giappone, specializzato in ramen aburakasu (frattaglie di manzo fritte) — l'unico locale del suo genere nella regione del Tohoku, attivo da circa 20 anni.</p>
+      <p>Timer da Cucina a Mani Libere è stato creato per risolvere un problema reale di questa cucina, e poi reso gratuito per chiunque altro ne avesse bisogno.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>Domande Frequenti</h2>
+    <dl class="faq">
+      <dt>Timer da Cucina a Mani Libere è gratuito?</dt>
+      <dd>Sì. È gratuito, senza account e senza installazione — funziona direttamente nel browser.</dd>
+      <dt>Cosa lo rende un timer da cucina "a mani libere"?</dt>
+      <dd>Puoi avviare, fermare e controllare i timer interamente con la voce, così non devi mai toccare lo schermo con le mani bagnate o sporche.</dd>
+      <dt>Posso far girare più di un timer alla volta?</dt>
+      <dd>Sì. Aggiungine quanti ne servono, e avviane diversi insieme con una sola frase pronunciata.</dd>
+      <dt>Posso chiedere quanto tempo manca?</dt>
+      <dd>Sì. Chiedi un timer per nome e ti risponde a voce con il tempo rimanente.</dd>
+      <dt>Posso riusare le stesse impostazioni senza doverle riscrivere?</dt>
+      <dd>Sì. Metti una stella su un timer per salvarlo come preferito, poi riavvialo con lo stesso nome e la stessa durata con un solo tocco.</dd>
+      <dt>La sveglia fa solo bip, o può dire qualcosa di specifico?</dt>
+      <dd>Ogni timer può avere un proprio messaggio vocale, così annuncia esattamente cosa è pronto invece di un bip generico.</dd>
+      <dt>Quale lingua vocale supporta?</dt>
+      <dd>I comandi vocali usano attualmente il riconoscimento vocale in italiano — la parola d'attivazione e i comandi si pronunciano in italiano, mentre i nomi dei timer possono essere qualsiasi cosa.</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>Provalo nella tua cucina</h2>
+      <p>Aprilo su un tablet, appoggialo, e inizia a parlare con i tuoi timer.</p>
+      <a class="btn primary" href="timer-it.html">Apri Timer da Cucina a Mani Libere</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Timer da Cucina a Mani Libere — creato da Jikaseimen Kirinji (自家製麺キリンジ), ristorante di ramen a Sendai, Giappone ／ <a href="timer-lp.html">日本語</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
