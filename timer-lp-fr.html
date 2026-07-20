@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minuteur de Cuisine Mains Libres – Multi Minuteur Vocal Gratuit</title>
+<meta name="description" content="Minuteur de Cuisine Mains Libres est un minuteur de cuisine gratuit contrôlé par la voix. Dites un nom et une durée pour démarrer un minuteur, demandez combien de temps il reste, ou arrêtez toutes les alarmes d'un coup — sans toucher l'écran avec des mains sales. Minuteurs illimités, sans installation, fonctionne sur n'importe quel navigateur.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp-fr.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Minuteur de Cuisine Mains Libres – Multi Minuteur Vocal Gratuit">
+<meta property="og:description" content="Un minuteur de cuisine gratuit que vous contrôlez avec votre voix. Démarrez, arrêtez et vérifiez vos minuteurs sans les mains — conçu pour cuisiner pour de vrai.">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp-fr.html">
+<meta property="og:site_name" content="Minuteur de Cuisine Mains Libres">
+<meta property="og:locale" content="fr_FR">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Minuteur de Cuisine Mains Libres – Minuteur de Cuisine Vocal Gratuit">
+<meta name="twitter:description" content="Démarrez, arrêtez et vérifiez plusieurs minuteurs de cuisine à la voix. Gratuit, sans installation, fonctionne sur n'importe quel navigateur.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Minuteur de Cuisine Mains Libres",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web (any modern browser)",
+  "description": "Un multi-minuteur gratuit et contrôlé par la voix pour la cuisine. Démarrez des minuteurs en parlant, ajoutez-en plusieurs à la fois, demandez combien de temps il reste, et arrêtez toutes les alarmes avec une seule commande — tout sans toucher l'écran. Comprend des alertes vocales personnalisées par minuteur et des favoris en un geste pour les réglages fréquemment utilisés.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "creator": { "@type": "Organization", "name": "Jikaseimen Kirinji", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "Commande vocale avec un mot d'activation",
+    "Démarrez plusieurs minuteurs à la fois avec une seule phrase",
+    "Demandez au minuteur combien de temps il reste et obtenez une réponse vocale",
+    "Arrêtez toutes les alarmes qui sonnent avec une seule commande vocale",
+    "Texte d'alerte vocal personnalisé par minuteur",
+    "Favoris en un geste pour les combinaisons nom/temps fréquemment utilisées",
+    "Minuteurs simultanés illimités",
+    "Disposition pour tablette en mode paysage pensée pour le plan de travail"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Minuteur de Cuisine Mains Libres est-il gratuit ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Oui. Il est gratuit, sans compte et sans installation — il fonctionne directement dans votre navigateur." } },
+    { "@type": "Question", "name": "Qu'est-ce qui en fait un minuteur de cuisine 'mains libres' ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Vous pouvez démarrer, arrêter et vérifier les minuteurs entièrement à la voix, donc vous n'avez jamais besoin de toucher un écran avec des mains mouillées ou sales." } },
+    { "@type": "Question", "name": "Puis-je faire tourner plus d'un minuteur à la fois ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Oui. Vous pouvez ajouter autant de minuteurs que nécessaire, et même en démarrer plusieurs d'un coup avec une seule phrase parlée." } },
+    { "@type": "Question", "name": "Puis-je demander combien de temps il reste ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Oui. Demandez un minuteur par son nom et il répond à voix haute avec le temps restant." } },
+    { "@type": "Question", "name": "Puis-je réutiliser les mêmes réglages sans les retaper ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Oui. Marquez n'importe quel minuteur d'une étoile pour le sauvegarder comme favori, puis redémarrez-le avec le même nom et la même durée en un seul geste." } },
+    { "@type": "Question", "name": "L'alarme fait-elle juste bip, ou peut-elle dire quelque chose de précis ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Chaque minuteur peut avoir son propre message vocal, il annonce donc exactement ce qui est prêt plutôt qu'un bip générique." } },
+    { "@type": "Question", "name": "Quelle langue vocale prend-il en charge ?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Les commandes vocales utilisent actuellement la reconnaissance vocale en français, donc vous prononcez le mot d'activation et les commandes en français. Les noms des minuteurs, eux, peuvent être ce que vous voulez." } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9; --danger:#ff3b30;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.7; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.04em;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.1em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(26px,4.4vw,42px); font-weight:900; margin:0 0 18px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:400px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+  .bubble .gloss{display:block; font-size:11px; color:var(--text-dim); margin-top:3px; font-style:italic;}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.01em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:14px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge); vertical-align:top;}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.03em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700; white-space:nowrap;}
+  .cmdTable .gloss{display:block; color:var(--text-dim); font-weight:400; font-style:italic; font-size:11px; margin-top:3px; white-space:normal;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.03em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+  .langNote{font-size:12px; color:var(--text-dim); margin:0 0 28px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.08em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:var(--danger);}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:var(--danger);}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">Minuteur de Cuisine Mains Libres</span>
+    </div>
+    <a class="topLink" href="timer-fr.html">Ouvrir l'application</a>
+    <a class="topLink" href="timer-lp.html" style="margin-left:8px;">日本語</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Gratuit · Sans installation · Sans compte</span>
+    <h1>Un Minuteur de Cuisine que<br>Vous N'avez Jamais Besoin de <span class="accent">Toucher</span>.</h1>
+    <p class="lead">
+      Minuteur de Cuisine Mains Libres est un multi-minuteur gratuit et contrôlé par la voix, conçu pour cuisiner pour de vrai —
+      mains mouillées, mains occupées, et plus d'une casserole sur le feu à la fois.
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">VOUS DITES</div>"Minuteur, pâtes <b>5 minutes</b>, ramen <b>10 minutes</b>"</div>
+      <div class="bubble app"><div class="who">MINUTEUR</div>Démarre en même temps un minuteur "pâtes" de 5 minutes et un minuteur "ramen" de 10 minutes.</div>
+      <div class="bubble user"><div class="who">VOUS DITES</div>"Minuteur, ramen, <b>combien de temps il reste</b> ?"</div>
+      <div class="bubble app"><div class="who">MINUTEUR</div>Répond à voix haute : "Il reste 7 minutes 30 secondes pour ramen."</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer-fr.html">Utilisez-le gratuitement</a>
+      <a class="btn ghost" href="#commands">Voir les commandes vocales</a>
+    </div>
+    <p class="note">Aucun téléchargement. Ouvrez-le sur n'importe quelle tablette ou navigateur de téléphone et commencez à cuisiner.</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>Pourquoi un minuteur de cuisine mains libres ?</h2>
+    <p class="sectionLead">Un minuteur de téléphone ordinaire fonctionne bien pour une casserole, à un bureau, avec des mains sèches. Une vraie cuisine n'est pas comme ça.</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>Vos mains sont mouillées, farineuses ou couvertes d'huile — la dernière chose que vous voulez toucher, c'est un écran.</p></div>
+      <div class="painCard"><div class="icon">🍳</div><p>Plusieurs choses cuisent en même temps, et un seul minuteur intégré ne suffit pas.</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>Vous n'arrêtez pas d'aller vérifier "combien de temps il reste" sur quelque chose qui tourne encore.</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>Vous réglez les mêmes durées encore et encore — 3 minutes pour ceci, 8 pour cela — tous les jours.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>Des commandes vocales, pas des boutons à toucher</h2>
+    <p class="sectionLead">Chaque commande commence par un mot d'activation parlé, pour qu'elle ne se déclenche pas par accident dans le bruit de la cuisine.</p>
+    <table class="cmdTable">
+      <tr><th>Dites ceci</th><th>Ce qui se passe</th></tr>
+      <tr>
+        <td class="say"><span class="tag">NOUVEAU</span><br>"Minuteur, pâtes 5 minutes, ramen 10 minutes"</td>
+        <td class="desc">Ajoute deux minuteurs ou plus à la fois et les démarre ensemble</td>
+      </tr>
+      <tr>
+        <td class="say"><span class="tag">NOUVEAU</span><br>"Minuteur, ramen, combien de temps il reste ?"</td>
+        <td class="desc">Répond à voix haute avec le temps exact restant sur ce minuteur</td>
+      </tr>
+      <tr>
+        <td class="say">"Minuteur, soba, 5 minutes"</td>
+        <td class="desc">Ajoute un nouveau minuteur et le démarre immédiatement</td>
+      </tr>
+      <tr>
+        <td class="say">"Minuteur, arrêter"</td>
+        <td class="desc">Fait taire toutes les alarmes qui sonnent en ce moment, d'un coup</td>
+      </tr>
+      <tr>
+        <td class="say">"Minuteur, udon, pause"</td>
+        <td class="desc">Met en pause un minuteur spécifique par son nom</td>
+      </tr>
+      <tr>
+        <td class="say">"Minuteur, somen, réinitialiser"</td>
+        <td class="desc">Remet un minuteur spécifique à son temps d'origine</td>
+      </tr>
+    </table>
+    <p class="langNote">Les commandes vocales fonctionnent avec la reconnaissance vocale en français — dites le mot d'activation et les commandes en français, mais les noms des minuteurs peuvent être n'importe quoi : pâtes, udon, raviolis, toast, tout ce qui est sur votre feu.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>Ce qui le rend différent d'une app de minuteur classique</h2>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>Ajoutez plusieurs minuteurs en une phrase</h3>
+        <p>Nom et durée, côte à côte, en une seule phrase — tous les minuteurs démarrent ensemble.</p>
+        <div class="ex">"Minuteur, raviolis 3 min, porc 8 min"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>Demandez combien de temps il reste</h3>
+        <p>Pas besoin d'aller vérifier l'écran — demandez simplement, et il répond à voix haute.</p>
+        <div class="ex">"Il reste 7 minutes 30 secondes pour ramen"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>Favoris en un geste</h3>
+        <p>Marquez une combinaison nom-et-durée d'une étoile une fois, puis rappelez-la en un seul geste la prochaine fois.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>Arrêtez toutes les alarmes avec un mot</h3>
+        <p>Quand plusieurs minuteurs sonnent ensemble, une commande les fait tous taire d'un coup.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>Alertes vocales personnalisées, par minuteur</h3>
+        <p>Au lieu d'un bip générique, chaque minuteur peut annoncer exactement ce qu'il concerne.</p>
+        <div class="ex">"Les raviolis sont prêts !"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>Minuteurs illimités, disposition paysage</h3>
+        <p>Ajoutez-en autant que vos plaques de cuisson le demandent, dans une mise en page pensée pour une tablette posée sur le plan de travail.</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">Barre de favoris</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>Ramen <span class="t">3 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Œuf Ajitama <span class="t">6 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Tsukemen <span class="t">5 min</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>Comment ça marche</h2>
+    <p class="sectionLead">Touchez, ou dites-le simplement — les deux fonctionnent de la même façon.</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>Démarrer un minuteur</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>1. Touchez "Ajouter un Minuteur"</h4><p>Une nouvelle carte apparaît, prête à être configurée.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>2. Touchez un nom et un préréglage</h4>
+              <p>Choisissez un nom dans le menu et un préréglage comme "5 min" pour fixer la durée.</p>
+              <span class="voiceBubble">🎙 ou dites simplement "Minuteur, pâtes 5 minutes"</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>3. Touchez "Démarrer"</h4><p>Le compte à rebours commence. Les minuteurs ajoutés à la voix démarrent automatiquement.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>Terminer un minuteur</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>1. L'alarme parle quand le temps est écoulé</h4><p>Elle annonce le minuteur par son nom — pas juste un bip.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>2. Touchez "Arrêter" sur la carte</h4>
+              <p>L'alarme se tait et la carte revient en attente.</p>
+              <span class="voiceBubble">🎙 ou dites "Minuteur, arrêter" pour faire taire tous les minuteurs qui sonnent</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>3. Terminé</h4><p>Appuyez sur "Réinitialiser" pour relancer le même minuteur depuis le début.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>Créé par une vraie cuisine en activité</h2>
+      <p><strong>Jikaseimen Kirinji (自家製麺キリンジ)</strong> est un restaurant de ramen à Sendai, au Japon, spécialisé dans le ramen aburakasu (abats de bœuf frits) — le seul établissement de ce genre dans la région du Tohoku, en activité depuis environ 20 ans.</p>
+      <p>Minuteur de Cuisine Mains Libres a été créé pour résoudre un problème bien réel de cette cuisine, puis rendu gratuit pour toute autre personne en ayant besoin.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>Foire Aux Questions</h2>
+    <dl class="faq">
+      <dt>Minuteur de Cuisine Mains Libres est-il gratuit ?</dt>
+      <dd>Oui. Il est gratuit, sans compte et sans installation — il fonctionne directement dans votre navigateur.</dd>
+      <dt>Qu'est-ce qui en fait un minuteur de cuisine "mains libres" ?</dt>
+      <dd>Vous pouvez démarrer, arrêter et vérifier les minuteurs entièrement à la voix, donc vous n'avez jamais besoin de toucher un écran avec des mains mouillées ou sales.</dd>
+      <dt>Puis-je faire tourner plus d'un minuteur à la fois ?</dt>
+      <dd>Oui. Ajoutez-en autant que nécessaire, et démarrez-en plusieurs d'un coup avec une seule phrase parlée.</dd>
+      <dt>Puis-je demander combien de temps il reste ?</dt>
+      <dd>Oui. Demandez un minuteur par son nom et il répond à voix haute avec le temps restant.</dd>
+      <dt>Puis-je réutiliser les mêmes réglages sans les retaper ?</dt>
+      <dd>Oui. Marquez n'importe quel minuteur d'une étoile pour le sauvegarder comme favori, puis redémarrez-le avec le même nom et la même durée en un seul geste.</dd>
+      <dt>L'alarme fait-elle juste bip, ou peut-elle dire quelque chose de précis ?</dt>
+      <dd>Chaque minuteur peut avoir son propre message vocal, il annonce donc exactement ce qui est prêt plutôt qu'un bip générique.</dd>
+      <dt>Quelle langue vocale prend-il en charge ?</dt>
+      <dd>Les commandes vocales utilisent actuellement la reconnaissance vocale en français — le mot d'activation et les commandes se disent en français, tandis que les noms des minuteurs peuvent être n'importe quoi.</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>Essayez-le dans votre cuisine</h2>
+      <p>Ouvrez-le sur une tablette, posez-la, et commencez à parler à vos minuteurs.</p>
+      <a class="btn primary" href="timer-fr.html">Ouvrir Minuteur de Cuisine Mains Libres</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Minuteur de Cuisine Mains Libres — créé par Jikaseimen Kirinji (自家製麺キリンジ), un restaurant de ramen à Sendai, au Japon ／ <a href="timer-lp.html">日本語</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

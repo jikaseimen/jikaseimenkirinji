@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temporizador de Cozinha Sem as Mãos – Multi Temporizador por Voz Grátis</title>
+<meta name="description" content="Temporizador de Cozinha Sem as Mãos é um temporizador de cozinha gratuito controlado por voz. Diga um nome e um tempo para iniciar um temporizador, pergunte quanto tempo falta, ou pare todos os alarmes de uma vez — sem tocar na tela com as mãos sujas. Temporizadores ilimitados, sem instalação, funciona em qualquer navegador.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jikaseimenkirinji.com/timer-lp-pt.html">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Temporizador de Cozinha Sem as Mãos – Multi Temporizador por Voz Grátis">
+<meta property="og:description" content="Um temporizador de cozinha gratuito que você controla com a voz. Inicie, pare e verifique temporizadores sem usar as mãos — feito para cozinhar de verdade.">
+<meta property="og:url" content="https://jikaseimenkirinji.com/timer-lp-pt.html">
+<meta property="og:site_name" content="Temporizador de Cozinha Sem as Mãos">
+<meta property="og:locale" content="pt_BR">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Temporizador de Cozinha Sem as Mãos – Temporizador de Cozinha por Voz Grátis">
+<meta name="twitter:description" content="Inicie, pare e verifique vários temporizadores de cozinha por voz. Grátis, sem instalação, funciona em qualquer navegador.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Temporizador de Cozinha Sem as Mãos",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web (any modern browser)",
+  "description": "Um multi-temporizador gratuito e controlado por voz para a cozinha. Inicie temporizadores falando, adicione vários de uma vez, pergunte quanto tempo falta e pare todos os alarmes com um único comando — tudo sem tocar na tela. Inclui avisos de voz personalizados por temporizador e favoritos com um toque para configurações usadas com frequência.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
+  "creator": { "@type": "Organization", "name": "Jikaseimen Kirinji", "url": "https://jikaseimenkirinji.com/" },
+  "featureList": [
+    "Controle por voz com palavra de ativação",
+    "Inicie vários temporizadores de uma vez com uma única frase",
+    "Pergunte ao temporizador quanto tempo falta e receba uma resposta falada",
+    "Pare todos os alarmes tocando com um único comando de voz",
+    "Texto de aviso falado personalizado por temporizador",
+    "Favoritos com um toque para combinações de nome/tempo usadas com frequência",
+    "Temporizadores simultâneos ilimitados",
+    "Layout para tablet em modo paisagem, pensado para a bancada da cozinha"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "O Temporizador de Cozinha Sem as Mãos é gratuito?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sim. É gratuito, sem conta e sem instalação — funciona direto no navegador." } },
+    { "@type": "Question", "name": "O que torna um temporizador de cozinha 'sem as mãos'?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Você pode iniciar, parar e verificar temporizadores inteiramente por voz, então nunca precisa tocar na tela com as mãos molhadas ou sujas." } },
+    { "@type": "Question", "name": "Posso rodar mais de um temporizador ao mesmo tempo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sim. Você pode adicionar quantos temporizadores precisar, e até iniciar vários de uma vez com uma única frase falada." } },
+    { "@type": "Question", "name": "Posso perguntar quanto tempo falta?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sim. Peça um temporizador pelo nome e ele responde em voz alta com o tempo restante." } },
+    { "@type": "Question", "name": "Posso reutilizar as mesmas configurações sem digitá-las de novo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sim. Marque qualquer temporizador com estrela para salvá-lo como favorito, e depois inicie de novo com o mesmo nome e duração com um único toque." } },
+    { "@type": "Question", "name": "O alarme só apita, ou pode dizer algo específico?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Cada temporizador pode ter sua própria mensagem falada, então anuncia exatamente o que está pronto em vez de um bipe genérico." } },
+    { "@type": "Question", "name": "Qual idioma de voz ele suporta?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Os comandos de voz atualmente usam reconhecimento de voz em português, então você fala a palavra de ativação e os comandos em português. Os nomes dos temporizadores podem ser o que você quiser." } }
+  ]
+}
+</script>
+
+<style>
+  :root{
+    --bg:#161412; --panel:#211d19; --panel-edge:#332c25;
+    --ember:#ff6a2b; --ember-dim:#7a3616; --broth:#e8c468;
+    --text:#f2ece1; --text-dim:#948a7b; --green:#3fae5a; --blue:#2456c9; --danger:#ff3b30;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--mono); line-height:1.7; -webkit-font-smoothing:antialiased;}
+  a{color:var(--ember);}
+  .wrap{max-width:900px; margin:0 auto; padding:0 20px;}
+  section{padding:56px 0; border-bottom:1px solid var(--panel-edge);}
+
+  header.top{border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));}
+  .topRow{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.03em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.04em;}
+  .topLink{font-size:13px; font-weight:700; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); padding:8px 14px; border-radius:8px;}
+  .topLink:hover{color:var(--text); border-color:var(--ember-dim);}
+
+  .hero{padding:64px 0 48px; text-align:center;}
+  .eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.1em; color:var(--broth); background:rgba(232,196,104,0.08); border:1px solid rgba(232,196,104,0.25); border-radius:999px; padding:6px 16px; margin-bottom:20px;}
+  h1{font-size:clamp(26px,4.4vw,42px); font-weight:900; margin:0 0 18px; letter-spacing:-0.01em;}
+  h1 .accent{color:var(--ember);}
+  .lead{font-size:16px; color:var(--text-dim); max-width:620px; margin:0 auto 34px;}
+
+  .chatMock{max-width:400px; margin:0 auto 34px; text-align:left;}
+  .bubble{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:12px 16px; margin-bottom:10px; font-size:13px;}
+  .bubble.user{border-color:var(--ember-dim);}
+  .bubble .who{font-size:10px; font-weight:800; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:4px;}
+  .bubble.user .who{color:var(--ember);}
+  .bubble.app .who{color:var(--blue);}
+  .bubble b{color:var(--broth);}
+  .bubble .gloss{display:block; font-size:11px; color:var(--text-dim); margin-top:3px; font-style:italic;}
+
+  .ctaRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-block; font-family:inherit; font-weight:800; font-size:15px; letter-spacing:0.01em; padding:15px 30px; border-radius:10px; text-decoration:none; cursor:pointer; border:none;}
+  .btn.primary{background:var(--ember); color:#1a1108;}
+  .btn.primary:hover{background:#e35a1f;}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--panel-edge);}
+  .btn.ghost:hover{border-color:var(--ember-dim);}
+  .note{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  h2{font-size:24px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em;}
+  h2 .num{color:var(--ember); margin-right:8px;}
+  .sectionLead{color:var(--text-dim); font-size:14px; margin:0 0 32px;}
+
+  .painGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px;}
+  .painCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; padding:20px;}
+  .painCard .icon{font-size:22px; margin-bottom:8px;}
+  .painCard p{font-size:14px; color:var(--text-dim); margin:0;}
+
+  .cmdTable{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--panel-edge); border-radius:12px; overflow:hidden; margin-bottom:14px;}
+  .cmdTable th,.cmdTable td{text-align:left; padding:14px 16px; font-size:13px; border-bottom:1px solid var(--panel-edge); vertical-align:top;}
+  .cmdTable th{color:var(--text-dim); font-weight:700; font-size:12px; letter-spacing:0.03em;}
+  .cmdTable tr:last-child td{border-bottom:none;}
+  .cmdTable .say{color:var(--broth); font-weight:700; white-space:nowrap;}
+  .cmdTable .gloss{display:block; color:var(--text-dim); font-weight:400; font-style:italic; font-size:11px; margin-top:3px; white-space:normal;}
+  .cmdTable .desc{color:var(--text-dim);}
+  .cmdTable .tag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:0.03em; color:var(--ember); border:1px solid var(--ember-dim); border-radius:5px; padding:1px 6px; margin-bottom:4px;}
+  .langNote{font-size:12px; color:var(--text-dim); margin:0 0 28px;}
+
+  .featGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+  .featCard{background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px; padding:24px;}
+  .featCard .n{font-size:12px; font-weight:800; color:var(--ember); letter-spacing:0.08em; margin-bottom:10px;}
+  .featCard h3{font-size:17px; font-weight:800; margin:0 0 8px;}
+  .featCard p{font-size:14px; color:var(--text-dim); margin:0;}
+  .featCard .ex{margin-top:12px; font-size:12px; background:#181513; border:1px solid var(--panel-edge); border-radius:8px; padding:10px 12px; color:var(--broth);}
+
+  .favMock{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .favChipMock{display:flex; align-items:center; gap:6px; background:#181513; border:1px solid var(--panel-edge); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700;}
+  .favChipMock .t{color:var(--broth);}
+  .favChipMock .star{color:var(--broth);}
+
+  .flowGrid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .flowGrid{grid-template-columns:1fr;} }
+  .flowLane{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:22px 22px 6px;}
+  .flowLane h3{display:flex; align-items:center; gap:9px; font-size:15px; font-weight:800; margin:0 0 18px;}
+  .flowDot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .flowDot.start{background:var(--green);}
+  .flowDot.end{background:var(--danger);}
+  .flowStep{display:flex; gap:14px; align-items:flex-start; position:relative; padding-bottom:26px;}
+  .flowStep:last-child{padding-bottom:16px;}
+  .flowStep::before{content:''; position:absolute; left:19px; top:40px; bottom:0; width:2px; background:var(--panel-edge);}
+  .flowStep:last-child::before{display:none;}
+  .flowIcon{flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:#181513; border:1px solid var(--panel-edge); display:flex; align-items:center; justify-content:center; color:var(--ember); z-index:1;}
+  .flowLane.end .flowIcon{color:var(--danger);}
+  .flowIcon svg{width:18px; height:18px;}
+  .flowText{padding-top:6px;}
+  .flowText h4{margin:0 0 4px; font-size:14px; font-weight:800; color:var(--text);}
+  .flowText p{margin:0; font-size:12.5px; color:var(--text-dim);}
+  .voiceBubble{display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--broth); background:#181513; border:1px solid var(--panel-edge); border-radius:6px; padding:5px 9px;}
+
+  .about{background:var(--panel); border:1px solid var(--panel-edge); border-radius:16px; padding:30px;}
+  .about p{font-size:14px; color:var(--text-dim); margin:0 0 10px;}
+  .about p:last-child{margin-bottom:0;}
+  .about strong{color:var(--text);}
+
+  .faq dt{font-size:15px; font-weight:800; margin-top:20px;}
+  .faq dt::before{content:"Q. "; color:var(--ember);}
+  .faq dd{margin:6px 0 0; font-size:14px; color:var(--text-dim);}
+  .faq dd::before{content:"A. "; color:var(--broth); font-weight:800;}
+
+  .ctaFinal{text-align:center; background:linear-gradient(180deg,#1c1916,var(--panel)); border:1px solid var(--panel-edge); border-radius:18px; padding:48px 24px;}
+  .ctaFinal h2{margin-bottom:12px;}
+  .ctaFinal p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+
+  footer{padding:30px 0 50px; text-align:center; font-size:12px; color:var(--text-dim);}
+  footer a{color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topRow">
+    <div class="brand">
+      <span class="mark">Temporizador de Cozinha Sem as Mãos</span>
+    </div>
+    <a class="topLink" href="timer-pt.html">Abrir o app</a>
+    <a class="topLink" href="timer-lp.html" style="margin-left:8px;">日本語</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Grátis · Sem instalação · Sem conta</span>
+    <h1>Um Temporizador de Cozinha que<br>Você Nunca Precisa <span class="accent">Tocar</span>.</h1>
+    <p class="lead">
+      Temporizador de Cozinha Sem as Mãos é um multi-temporizador gratuito e controlado por voz, feito para cozinhar de verdade —
+      mãos molhadas, mãos ocupadas, e mais de uma panela no fogo ao mesmo tempo.
+    </p>
+
+    <div class="chatMock">
+      <div class="bubble user"><div class="who">VOCÊ DIZ</div>"Temporizador, macarrão <b>5 minutos</b>, ramen <b>10 minutos</b>"</div>
+      <div class="bubble app"><div class="who">TEMPORIZADOR</div>Inicia ao mesmo tempo um temporizador de "macarrão" de 5 minutos e um de "ramen" de 10 minutos.</div>
+      <div class="bubble user"><div class="who">VOCÊ DIZ</div>"Temporizador, ramen, <b>quanto tempo falta</b>?"</div>
+      <div class="bubble app"><div class="who">TEMPORIZADOR</div>Responde em voz alta: "Faltam 7 minutos e 30 segundos para o ramen."</div>
+    </div>
+
+    <div class="ctaRow">
+      <a class="btn primary" href="timer-pt.html">Use grátis</a>
+      <a class="btn ghost" href="#commands">Ver comandos de voz</a>
+    </div>
+    <p class="note">Sem downloads. Abra em qualquer tablet ou navegador de celular e comece a cozinhar.</p>
+  </div>
+</section>
+
+<section id="pain">
+  <div class="wrap">
+    <h2><span class="num">01</span>Por que um temporizador de cozinha sem as mãos?</h2>
+    <p class="sectionLead">Um temporizador comum do celular funciona bem para uma panela, na mesa, com as mãos secas. Uma cozinha de verdade não é assim.</p>
+    <div class="painGrid">
+      <div class="painCard"><div class="icon">💧</div><p>Suas mãos estão molhadas, cheias de farinha ou de óleo — a última coisa que você quer tocar é uma tela.</p></div>
+      <div class="painCard"><div class="icon">🍳</div><p>Várias coisas estão no fogo ao mesmo tempo, e um único temporizador embutido não dá conta.</p></div>
+      <div class="painCard"><div class="icon">⏳</div><p>Você fica indo até lá só para conferir "quanto falta" em algo que ainda está rodando.</p></div>
+      <div class="painCard"><div class="icon">🔁</div><p>Você configura os mesmos tempos de novo e de novo — 3 minutos para isso, 8 para aquilo — todos os dias.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="commands">
+  <div class="wrap">
+    <h2><span class="num">02</span>Comandos de voz, não toques em botões</h2>
+    <p class="sectionLead">Cada comando começa com uma palavra de ativação falada, então não é acionado por acidente com o barulho da cozinha.</p>
+    <table class="cmdTable">
+      <tr><th>Diga isto</th><th>O que acontece</th></tr>
+      <tr>
+        <td class="say"><span class="tag">NOVO</span><br>"Temporizador, macarrão 5 minutos, ramen 10 minutos"</td>
+        <td class="desc">Adiciona dois ou mais temporizadores de uma vez e os inicia juntos</td>
+      </tr>
+      <tr>
+        <td class="say"><span class="tag">NOVO</span><br>"Temporizador, ramen, quanto tempo falta?"</td>
+        <td class="desc">Responde em voz alta com o tempo exato restante daquele temporizador</td>
+      </tr>
+      <tr>
+        <td class="say">"Temporizador, soba, 5 minutos"</td>
+        <td class="desc">Adiciona um novo temporizador e o inicia imediatamente</td>
+      </tr>
+      <tr>
+        <td class="say">"Temporizador, parar"</td>
+        <td class="desc">Silencia todos os alarmes que estão tocando de uma vez</td>
+      </tr>
+      <tr>
+        <td class="say">"Temporizador, udon, pausar"</td>
+        <td class="desc">Pausa um temporizador específico pelo nome</td>
+      </tr>
+      <tr>
+        <td class="say">"Temporizador, somen, reiniciar"</td>
+        <td class="desc">Reinicia um temporizador específico para o tempo original</td>
+      </tr>
+    </table>
+    <p class="langNote">Os comandos de voz funcionam com reconhecimento de voz em português — diga a palavra de ativação e os comandos em português, mas os nomes dos temporizadores podem ser qualquer coisa: macarrão, udon, pastel, torrada, o que estiver no seu fogão.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="num">03</span>O que o torna diferente de um app de temporizador normal</h2>
+    <div class="featGrid">
+      <div class="featCard">
+        <div class="n">01</div>
+        <h3>Adicione vários temporizadores com uma frase</h3>
+        <p>Nome e tempo, lado a lado, em um único fôlego — todos os temporizadores começam juntos.</p>
+        <div class="ex">"Temporizador, pastel 3 min, porco 8 min"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">02</div>
+        <h3>Pergunte quanto tempo falta</h3>
+        <p>Sem precisar ir até a tela para conferir — apenas pergunte, e ele responde em voz alta.</p>
+        <div class="ex">"Faltam 7 minutos e 30 segundos para o ramen"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">03</div>
+        <h3>Favoritos com um toque</h3>
+        <p>Marque uma combinação de nome e tempo com estrela uma vez, e depois chame de volta com um único toque na próxima vez.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">04</div>
+        <h3>Pare todos os alarmes com uma palavra</h3>
+        <p>Quando vários temporizadores tocam juntos, um comando silencia todos de uma vez.</p>
+      </div>
+      <div class="featCard">
+        <div class="n">05</div>
+        <h3>Avisos de voz personalizados por temporizador</h3>
+        <p>Em vez de um bipe genérico, cada temporizador pode anunciar exatamente para que ele serve.</p>
+        <div class="ex">"O pastel está pronto!"</div>
+      </div>
+      <div class="featCard">
+        <div class="n">06</div>
+        <h3>Temporizadores ilimitados, layout paisagem</h3>
+        <p>Adicione quantos seu fogão precisar, em um layout pensado para um tablet apoiado na bancada.</p>
+      </div>
+    </div>
+
+    <h2 style="font-size:17px; margin-top:36px;">Barra de favoritos</h2>
+    <div class="favMock">
+      <div class="favChipMock"><span class="star">★</span>Ramen <span class="t">3 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Ovo Ajitama <span class="t">6 min</span></div>
+      <div class="favChipMock"><span class="star">★</span>Tsukemen <span class="t">5 min</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="howto">
+  <div class="wrap">
+    <h2><span class="num">04</span>Como funciona</h2>
+    <p class="sectionLead">Toque, ou simplesmente diga — os dois funcionam da mesma forma.</p>
+
+    <div class="flowGrid">
+      <div class="flowLane start">
+        <h3><span class="flowDot start"></span>Iniciando um temporizador</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg></div>
+            <div class="flowText"><h4>1. Toque em "Adicionar Temporizador"</h4><p>Um novo cartão aparece, pronto para configurar.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><circle cx="10" cy="10" r="7.5" opacity="0.4"/></svg></div>
+            <div class="flowText">
+              <h4>2. Toque em um nome e um predefinido</h4>
+              <p>Escolha um nome do menu e um predefinido como "5 min" para definir a duração.</p>
+              <span class="voiceBubble">🎙 ou simplesmente diga "Temporizador, macarrão 5 minutos"</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6z"/></svg></div>
+            <div class="flowText"><h4>3. Toque em "Iniciar"</h4><p>A contagem regressiva começa. Temporizadores adicionados por voz iniciam automaticamente.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flowLane end">
+        <h3><span class="flowDot end"></span>Encerrando um temporizador</h3>
+        <div class="flowSteps">
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a5.5 5.5 0 0 1 5.5 5.5c0 3.5 1.5 4.5 1.5 4.5H3s1.5-1 1.5-4.5A5.5 5.5 0 0 1 10 3z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg></div>
+            <div class="flowText"><h4>1. O alarme fala quando o tempo acaba</h4><p>Ele anuncia o temporizador pelo nome — não apenas um bipe.</p></div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg></div>
+            <div class="flowText">
+              <h4>2. Toque em "Parar" no cartão</h4>
+              <p>O alarme silencia e o cartão volta ao estado de espera.</p>
+              <span class="voiceBubble">🎙 ou diga "Temporizador, parar" para silenciar todos os temporizadores tocando</span>
+            </div>
+          </div>
+          <div class="flowStep">
+            <div class="flowIcon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></div>
+            <div class="flowText"><h4>3. Pronto</h4><p>Aperte "Reiniciar" para rodar o mesmo temporizador de novo, desde o início.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="about">
+      <h2>Feito por uma cozinha de verdade</h2>
+      <p><strong>Jikaseimen Kirinji (自家製麺キリンジ)</strong> é um restaurante de ramen em Sendai, Japão, especializado em ramen aburakasu (miúdos de boi fritos) — o único do gênero na região de Tohoku, funcionando há cerca de 20 anos.</p>
+      <p>O Temporizador de Cozinha Sem as Mãos foi criado para resolver um problema real dessa cozinha, e depois disponibilizado gratuitamente para quem mais precisar.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>Perguntas Frequentes</h2>
+    <dl class="faq">
+      <dt>O Temporizador de Cozinha Sem as Mãos é gratuito?</dt>
+      <dd>Sim. É gratuito, sem conta e sem instalação — funciona direto no navegador.</dd>
+      <dt>O que torna um temporizador de cozinha "sem as mãos"?</dt>
+      <dd>Você pode iniciar, parar e verificar temporizadores inteiramente por voz, então nunca precisa tocar na tela com as mãos molhadas ou sujas.</dd>
+      <dt>Posso rodar mais de um temporizador ao mesmo tempo?</dt>
+      <dd>Sim. Adicione quantos precisar, e inicie vários de uma vez com uma única frase falada.</dd>
+      <dt>Posso perguntar quanto tempo falta?</dt>
+      <dd>Sim. Peça um temporizador pelo nome e ele responde em voz alta com o tempo restante.</dd>
+      <dt>Posso reutilizar as mesmas configurações sem digitá-las de novo?</dt>
+      <dd>Sim. Marque qualquer temporizador com estrela para salvá-lo como favorito, e depois inicie de novo com o mesmo nome e duração com um único toque.</dd>
+      <dt>O alarme só apita, ou pode dizer algo específico?</dt>
+      <dd>Cada temporizador pode ter sua própria mensagem falada, então anuncia exatamente o que está pronto em vez de um bipe genérico.</dd>
+      <dt>Qual idioma de voz ele suporta?</dt>
+      <dd>Os comandos de voz atualmente usam reconhecimento de voz em português — a palavra de ativação e os comandos são falados em português, embora os nomes dos temporizadores possam ser o que você quiser.</dd>
+    </dl>
+  </div>
+</section>
+
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="ctaFinal">
+      <h2>Experimente na sua cozinha</h2>
+      <p>Abra em um tablet, apoie-o, e comece a falar com seus temporizadores.</p>
+      <a class="btn primary" href="timer-pt.html">Abrir Temporizador de Cozinha Sem as Mãos</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Temporizador de Cozinha Sem as Mãos — criado por Jikaseimen Kirinji (自家製麺キリンジ), um restaurante de ramen em Sendai, Japão ／ <a href="timer-lp.html">日本語</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
