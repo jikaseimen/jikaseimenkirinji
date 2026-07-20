@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>हैंड्स-फ्री किचन टाइमर</title>
+<style>
+  :root{
+    --bg:#161412;
+    --panel:#211d19;
+    --panel-edge:#332c25;
+    --ember:#ff6a2b;
+    --ember-dim:#7a3616;
+    --broth:#e8c468;
+    --text:#f2ece1;
+    --text-dim:#948a7b;
+    --danger:#ff3b30;
+    --green:#3fae5a;
+    --blue:#2456c9;
+    --mono:'DIN','Bahnschrift','Segoe UI','Helvetica Neue', Arial, sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:var(--mono); overflow:hidden;}
+
+  /* ---- rotate gate (landscape tablet only) ---- */
+  #rotateGate{
+    display:none; position:fixed; inset:0; background:var(--bg); z-index:100;
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;
+  }
+  #rotateGate .rotateIcon{
+    width:64px; height:64px; margin-bottom:20px; border:3px solid var(--ember);
+    border-radius:8px; position:relative; animation:rotateHint 2s ease-in-out infinite;
+  }
+  #rotateGate h1{font-size:18px; margin:0 0 8px;}
+  #rotateGate p{font-size:13px; color:var(--text-dim); margin:0;}
+  @keyframes rotateHint{0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);}}
+  @media (orientation:portrait){
+    #rotateGate{display:flex;}
+    #app{display:none !important;}
+  }
+
+  #app{display:flex; flex-direction:column; height:100vh;}
+
+  header{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:9px 18px; border-bottom:1px solid var(--panel-edge); background:linear-gradient(180deg,#1c1916,var(--bg));
+  }
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{font-size:16px; font-weight:800; letter-spacing:0.06em; color:var(--ember);}
+  .brand .sub{font-size:11px; color:var(--text-dim); letter-spacing:0.08em;}
+  .headerRight{display:flex; align-items:center; gap:10px;}
+  #clock{font-size:14px; font-weight:700; color:var(--text-dim); letter-spacing:0.03em; min-width:72px; text-align:right;}
+  #addBtn{
+    background:var(--ember); color:#1a1108; border:none; border-radius:8px;
+    font-family:inherit; font-weight:800; font-size:14px; padding:9px 15px; cursor:pointer;
+  }
+  #addBtn:active{background:#e35a1f;}
+  .langSelect{background:#2c2621; color:var(--text-dim); border:1px solid var(--panel-edge); border-radius:6px; font-family:inherit; font-size:11px; font-weight:700; padding:5px 6px; cursor:pointer;}
+
+  /* ---- favorites bar ---- */
+  .favBar{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:6px 16px;
+    border-bottom:1px solid var(--panel-edge); overflow-x:auto; background:#1a1714;
+  }
+  .favBar.empty{display:none;}
+  .favBar .favLabel{font-size:11px; color:var(--text-dim); font-weight:700; letter-spacing:0.05em; flex:0 0 auto;}
+  .favChip{
+    flex:0 0 auto; display:flex; align-items:center; gap:6px; background:var(--panel);
+    border:1px solid var(--panel-edge); border-radius:999px; padding:6px 8px 6px 14px;
+    font-size:13px; font-weight:700; color:var(--text); cursor:pointer;
+  }
+  .favChip:active{border-color:var(--ember);}
+  .favChip .favTime{color:var(--broth); font-weight:700;}
+  .favChip .favRemove{background:none; border:none; color:var(--text-dim); font-size:14px; line-height:1; padding:4px 6px; cursor:pointer;}
+  .favChip .favRemove:active{color:var(--danger);}
+
+  /* ---- mic indicator button ---- */
+  #micBtn{
+    background:#2c2621; color:var(--text); border:1px solid var(--panel-edge);
+    border-radius:8px; font-size:13px; font-weight:800; padding:10px 14px;
+    letter-spacing:0.02em; cursor:pointer; display:flex; align-items:center; gap:7px;
+    transition:background 0.2s, border-color 0.2s, color 0.2s; font-family:inherit;
+  }
+  #micBtn .dot{width:8px; height:8px; border-radius:50%; background:var(--text-dim); flex:0 0 auto;}
+  #micBtn.state-off .dot{background:#6b6357;}
+  #micBtn.state-ready{border-color:var(--green);}
+  #micBtn.state-ready .dot{background:var(--green); animation:pulse 1.6s ease-in-out infinite;}
+  #micBtn.state-hearing{background:var(--ember-dim); border-color:var(--ember);}
+  #micBtn.state-hearing .dot{background:var(--ember); animation:pulse 0.6s ease-in-out infinite;}
+  #micBtn.state-success{background:var(--blue); border-color:var(--blue); color:#fff;}
+  #micBtn.state-success .dot{background:#fff;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.25;}}
+
+  #voiceToast{
+    position:fixed; left:50%; bottom:24px; transform:translate(-50%, 12px);
+    background:#211d19; border:1px solid var(--panel-edge); border-radius:10px;
+    padding:12px 20px; color:var(--text); font-size:14px; font-weight:700;
+    letter-spacing:0.02em; z-index:50; opacity:0; pointer-events:none;
+    transition:opacity 0.25s, transform 0.25s; text-align:center; max-width:80%;
+  }
+  #voiceToast.show{opacity:1; transform:translate(-50%, 0);}
+  #voiceToast .sub{display:block; font-size:11px; font-weight:600; color:var(--text-dim); margin-top:3px;}
+
+  /* ---- main / cards ---- */
+  main{flex:1 1 auto; min-height:0; overflow-x:auto; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; align-items:flex-start; padding:12px 16px; gap:12px;}
+  main::-webkit-scrollbar{height:8px; width:8px;}
+  main::-webkit-scrollbar-thumb{background:var(--panel-edge); border-radius:4px;}
+
+  .empty{flex:1 1 auto; text-align:center; color:var(--text-dim);}
+  .empty .big{font-size:18px; font-weight:800; color:var(--text); margin-bottom:6px;}
+
+  .card{
+    flex:0 0 auto; width:214px; background:var(--panel); border:1px solid var(--panel-edge);
+    border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:5px;
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .card.alarm{border-color:var(--ember); box-shadow:0 0 0 2px var(--ember-dim), 0 0 24px rgba(255,106,43,0.35); animation:alarmPulse 1s ease-in-out infinite;}
+  @keyframes alarmPulse{0%,100%{box-shadow:0 0 0 2px var(--ember-dim), 0 0 24px rgba(255,106,43,0.35);} 50%{box-shadow:0 0 0 2px var(--ember), 0 0 36px rgba(255,106,43,0.6);}}
+
+  .cardTop{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+  .nameField{
+    flex:1 1 auto; min-width:0; background:transparent; border:none; color:var(--text);
+    font-family:inherit; font-size:14px; font-weight:800; padding:2px 0; border-bottom:1px solid transparent;
+  }
+  .nameField:focus{outline:none; border-bottom:1px solid var(--ember-dim);}
+  .starBtn{background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; line-height:1; padding:2px 3px; flex:0 0 auto;}
+  .starBtn.saved{color:var(--broth);}
+  .starBtn.pulse{animation:starPulse 0.4s ease-out;}
+  @keyframes starPulse{0%{transform:scale(1);} 50%{transform:scale(1.4);} 100%{transform:scale(1);}}
+  .closeBtn{background:none; border:none; color:var(--text-dim); font-size:15px; cursor:pointer; line-height:1; padding:2px 3px; flex:0 0 auto;}
+  .closeBtn:active{color:var(--danger);}
+
+  .messageField{
+    background:transparent; border:none; color:var(--text-dim); font-family:inherit;
+    font-size:10.5px; font-weight:600; letter-spacing:0.01em; padding:1px 0 4px;
+    width:100%; border-bottom:1px solid transparent;
+  }
+  .messageField:focus{outline:none; border-bottom:1px solid var(--ember-dim); color:var(--text);}
+  .messageField::placeholder{color:#5c5347;}
+
+  .presetRow{display:flex; gap:4px; margin-bottom:0; flex:0 0 auto;}
+  .presetRow.presetRowMinus{margin-top:4px;}
+  .presetBtn{
+    flex:1 1 auto; background:#181513; border:1px solid var(--panel-edge); color:var(--text-dim);
+    border-radius:6px; font-family:inherit; font-size:10.5px; font-weight:700; padding:5px 0; cursor:pointer;
+  }
+  .presetBtn:active{border-color:var(--ember-dim); color:var(--text);}
+  .presetBtn.minus{color:#a08a7e; border-color:#3a2a24;}
+  .presetBtn.minus:active{border-color:var(--danger); color:var(--text);}
+
+  .ringWrap{display:flex; justify-content:center; margin:0;}
+  .ringWrap svg{width:92px; height:92px; transform:rotate(-90deg);}
+  .ringTrack{fill:none; stroke:var(--panel-edge); stroke-width:8;}
+  .ringProgress{fill:none; stroke:var(--ember); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.2s linear;}
+  .card.alarm .ringProgress{stroke:var(--danger);}
+  .timeText{
+    text-align:center; margin-top:-64px; margin-bottom:42px; font-size:21px; font-weight:800; letter-spacing:0.02em;
+  }
+
+  .btnRow{display:flex; gap:7px;}
+  .goBtn,.resetBtn{
+    flex:1 1 auto; border:none; border-radius:8px; font-family:inherit; font-weight:800;
+    font-size:12.5px; padding:8px 0; cursor:pointer;
+  }
+  .goBtn{background:var(--ember); color:#1a1108;}
+  .goBtn.running{background:#3a322a; color:var(--text);}
+  .card.alarm .goBtn{background:var(--danger); color:#fff;}
+  .resetBtn{background:#181513; color:var(--text-dim); border:1px solid var(--panel-edge);}
+  .resetBtn:active{border-color:var(--ember-dim);}
+</style>
+</head>
+<body>
+
+<div id="rotateGate">
+  <div class="rotateIcon"></div>
+  <h1>कृपया अपना टैबलेट घुमाएँ</h1>
+  <p>यह टाइमर केवल लैंडस्केप मोड के लिए बनाया गया है</p>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <span class="mark">हैंड्स-फ्री किचन टाइमर</span>
+      <a href="timer-lp-hi.html" style="font-size:11px; color:var(--text-dim); text-decoration:none; border:1px solid var(--panel-edge); border-radius:6px; padding:4px 8px; margin-left:4px;">यह कैसे काम करता है</a>
+      <select class="langSelect" onchange="if(this.value) location.href=this.value;"><option value="timer.html">日本語</option><option value="timer-en.html">English</option><option value="timer-es.html">Español</option><option value="timer-pt.html">Português</option><option value="timer-fr.html">Français</option><option value="timer-de.html">Deutsch</option><option value="timer-it.html">Italiano</option><option value="timer-id.html">Indonesia</option><option value="timer-zh.html">中文</option><option value="timer-ko.html">한국어</option><option value="timer-hi.html" selected>हिन्दी</option></select>
+    </div>
+    <div class="headerRight">
+      <div id="clock">--:--:--</div>
+      <button id="micBtn" class="state-off"><span class="dot"></span><span class="micLabel">वॉइस बंद</span></button>
+      <button id="addBtn">＋ टाइमर जोड़ें</button>
+    </div>
+  </header>
+
+  <div id="favBar" class="favBar empty">
+    <span class="favLabel">पसंदीदा</span>
+  </div>
+
+  <main id="main">
+    <div class="empty" id="emptyState">
+      <p class="big">अभी कोई टाइमर नहीं है</p>
+      <p>शुरू करने के लिए "+ टाइमर जोड़ें" दबाएँ</p>
+    </div>
+  </main>
+</div>
+
+<div id="voiceToast"></div>
+
+<datalist id="menuNames">
+  <option value="पास्ता">
+  <option value="रामेन">
+  <option value="कासु रामेन">
+  <option value="त्सुकेमेन">
+  <option value="उबला अंडा">
+  <option value="सोबा">
+  <option value="उदोन">
+  <option value="मज़ेमेन">
+  <option value="मोटे नूडल्स">
+  <option value="पतले नूडल्स">
+  <option value="सोमेन">
+  <option value="टोस्ट">
+  <option value="कप नूडल्स">
+  <option value="ग्रेटन">
+</datalist>
+
+<script>
+  // =====================================================================
+  // Basic utilities
+  // =====================================================================
+  const CIRC = 2 * Math.PI * 58; // ring circumference for r=58 (used for stroke-dasharray)
+
+  function fmt(ms){
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function fmtMinSec(totalSec){
+    const m = Math.floor(totalSec / 60), s = totalSec % 60;
+    return m > 0 ? (m + ' मिनट' + (s ? ' ' + s + ' सेकंड' : '')) : (s + ' सेकंड');
+  }
+
+  let audioUnlocked = false;
+  function ensureAudio(){
+    if(audioUnlocked) return;
+    audioUnlocked = true;
+    try{
+      if('speechSynthesis' in window){
+        const warm = new SpeechSynthesisUtterance('');
+        warm.volume = 0;
+        window.speechSynthesis.speak(warm);
+      }
+    }catch(e){ /* ignore */ }
+  }
+
+  function speakText(text){
+    try{
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'hi-IN';
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
+      window.speechSynthesis.speak(utter);
+    }catch(e){ /* speech unavailable, timer still visually alarms */ }
+  }
+  function speakDone(t){
+    const text = (t && t.message) ? t.message : `${(t ? t.name : 'टाइमर')} तैयार है!`;
+    speakText(text);
+  }
+
+  const alarmIntervals = new Map();
+  function startAlarmSound(t){
+    stopAlarmSound(t.id);
+    speakDone(t);
+    const iv = setInterval(() => speakDone(t), 3200);
+    alarmIntervals.set(t.id, iv);
+  }
+  function stopAlarmSound(id){
+    if(alarmIntervals.has(id)){
+      clearInterval(alarmIntervals.get(id));
+      alarmIntervals.delete(id);
+    }
+  }
+
+  // =====================================================================
+  // Timer state management
+  // =====================================================================
+  let timers = []; // {id, name, message, totalSec, remainingMs, running, alarm, lastTs, els}
+  let idSeq = 1;
+  const mainEl = document.getElementById('main');
+  const emptyState = document.getElementById('emptyState');
+
+  function updateEmptyState(){
+    emptyState.style.display = timers.length === 0 ? '' : 'none';
+  }
+
+  function createTimer(initialSec, name){
+    const id = idSeq++;
+    const t = {
+      id,
+      name: name || ('टाइमर ' + id),
+      message: '',
+      totalSec: initialSec || 180,
+      remainingMs: (initialSec || 180) * 1000,
+      running: false,
+      alarm: false,
+      lastTs: null,
+    };
+    timers.push(t);
+    renderCard(t);
+    updateEmptyState();
+    updateRing(t);
+    return t;
+  }
+
+  function renderCard(t){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="cardTop">
+        <input class="nameField" list="menuNames" value="${t.name}" maxlength="14">
+        <button class="starBtn" aria-label="पसंदीदा में जोड़ें">☆</button>
+        <button class="closeBtn" aria-label="हटाएँ">✕</button>
+      </div>
+      <input class="messageField" value="" maxlength="40" placeholder="कस्टम अनाउंसमेंट (वैकल्पिक)">
+      <div class="presetRow">
+        <button class="presetBtn" data-sec="30">30से</button>
+        <button class="presetBtn" data-sec="60">1मि</button>
+        <button class="presetBtn" data-sec="180">3मि</button>
+        <button class="presetBtn" data-sec="300">5मि</button>
+      </div>
+      <div class="presetRow presetRowMinus">
+        <button class="presetBtn minus" data-sec="-30">−30से</button>
+        <button class="presetBtn minus" data-sec="-60">−1मि</button>
+        <button class="presetBtn minus" data-sec="-180">−3मि</button>
+        <button class="presetBtn minus" data-sec="-300">−5मि</button>
+      </div>
+      <div class="ringWrap">
+        <svg viewBox="0 0 130 130">
+          <circle class="ringTrack" cx="65" cy="65" r="58"></circle>
+          <circle class="ringProgress" cx="65" cy="65" r="58" stroke-dasharray="${CIRC}" stroke-dashoffset="0"></circle>
+        </svg>
+      </div>
+      <div class="timeText">${fmt(t.remainingMs)}</div>
+      <div class="btnRow">
+        <button class="goBtn">शुरू करें</button>
+        <button class="resetBtn">रीसेट</button>
+      </div>
+    `;
+    mainEl.appendChild(card);
+
+    t.els = {
+      card,
+      nameField: card.querySelector('.nameField'),
+      messageField: card.querySelector('.messageField'),
+      timeText: card.querySelector('.timeText'),
+      progress: card.querySelector('.ringProgress'),
+      goBtn: card.querySelector('.goBtn'),
+    };
+
+    t.els.nameField.addEventListener('change', () => {
+      t.name = t.els.nameField.value.trim() || ('टाइमर ' + t.id);
+      t.els.nameField.value = t.name;
+    });
+
+    t.els.messageField.addEventListener('change', () => {
+      t.message = t.els.messageField.value.trim();
+    });
+
+    card.querySelectorAll('.presetBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addDuration(t, parseInt(btn.dataset.sec, 10));
+      });
+    });
+
+    t.els.goBtn.addEventListener('click', () => {
+      ensureAudio();
+      if(t.alarm){ clearAlarm(t); return; }
+      toggleRunning(t);
+    });
+
+    card.querySelector('.resetBtn').addEventListener('click', () => resetTimer(t));
+    card.querySelector('.closeBtn').addEventListener('click', () => removeTimer(t));
+
+    const starBtn = card.querySelector('.starBtn');
+    starBtn.addEventListener('click', () => {
+      addFavorite(t.name, t.totalSec, t.message);
+      starBtn.classList.add('saved', 'pulse');
+      setTimeout(() => starBtn.classList.remove('pulse'), 400);
+      showToast(`${t.name} पसंदीदा में जोड़ा गया`);
+    });
+  }
+
+  function addDuration(t, sec){
+    if(t.alarm){
+      clearAlarm(t);
+      t.totalSec = 0;
+      t.remainingMs = 0;
+    }
+    t.totalSec = Math.max(0, t.totalSec + sec);
+    t.remainingMs = Math.max(0, t.remainingMs + sec * 1000);
+    t.els.timeText.textContent = fmt(t.remainingMs);
+    updateRing(t);
+  }
+
+  function toggleRunning(t){
+    if(t.alarm) clearAlarm(t);
+    t.running = !t.running;
+    t.lastTs = performance.now();
+    t.els.goBtn.textContent = t.running ? 'पॉज़' : 'शुरू करें';
+    t.els.goBtn.classList.toggle('running', t.running);
+  }
+
+  function resetTimer(t){
+    t.running = false;
+    clearAlarm(t);
+    t.remainingMs = t.totalSec * 1000;
+    t.els.goBtn.textContent = 'शुरू करें';
+    t.els.goBtn.classList.remove('running');
+    t.els.timeText.textContent = fmt(t.remainingMs);
+    updateRing(t);
+  }
+
+  function clearAlarm(t){
+    if(!t.alarm) return;
+    t.alarm = false;
+    t.els.card.classList.remove('alarm');
+    t.els.goBtn.textContent = 'शुरू करें';
+    t.els.goBtn.classList.remove('running');
+    stopAlarmSound(t.id);
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  function removeTimer(t){
+    stopAlarmSound(t.id);
+    t.els.card.remove();
+    timers = timers.filter(x => x.id !== t.id);
+    updateEmptyState();
+  }
+
+  function updateRing(t){
+    const frac = t.totalSec > 0 ? Math.max(0, t.remainingMs / (t.totalSec * 1000)) : 0;
+    t.els.progress.style.strokeDashoffset = CIRC * (1 - frac);
+  }
+
+  function tickLoop(now){
+    for(const t of timers){
+      if(!t.running) continue;
+      const dt = now - (t.lastTs || now);
+      t.lastTs = now;
+      t.remainingMs -= dt;
+      if(t.remainingMs <= 0){
+        t.remainingMs = 0;
+        t.running = false;
+        t.alarm = true;
+        t.els.card.classList.add('alarm');
+        startAlarmSound(t);
+      }
+      t.els.timeText.textContent = fmt(t.remainingMs);
+      updateRing(t);
+    }
+    requestAnimationFrame(tickLoop);
+  }
+  requestAnimationFrame(tickLoop);
+
+  // =====================================================================
+  // Clock
+  // =====================================================================
+  const clockEl = document.getElementById('clock');
+  function updateClock(){
+    const d = new Date();
+    clockEl.textContent = String(d.getHours()).padStart(2,'0') + ':' +
+      String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // =====================================================================
+  // Toast
+  // =====================================================================
+  const voiceToast = document.getElementById('voiceToast');
+  let toastTimer = null;
+  function showToast(main, sub){
+    voiceToast.innerHTML = main + (sub ? `<span class="sub">${sub}</span>` : '');
+    voiceToast.classList.add('show');
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => voiceToast.classList.remove('show'), 3000);
+  }
+
+  // =====================================================================
+  // Favorites (one-tap save/recall, stored in localStorage)
+  // =====================================================================
+  const FAV_KEY = 'handsFreeKitchenTimerFavoritesHI';
+  const favBar = document.getElementById('favBar');
+  let favorites = [];
+
+  function loadFavorites(){
+    try{
+      const raw = localStorage.getItem(FAV_KEY);
+      favorites = raw ? JSON.parse(raw) : [];
+    }catch(e){ favorites = []; }
+  }
+  function saveFavorites(){
+    try{ localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); }catch(e){ /* storage unavailable */ }
+  }
+  function addFavorite(name, totalSec, message){
+    favorites = favorites.filter(f => !(f.name === name && f.totalSec === totalSec));
+    favorites.unshift({ name, totalSec, message: message || '' });
+    favorites = favorites.slice(0, 8);
+    saveFavorites();
+    renderFavBar();
+  }
+  function removeFavorite(index){
+    favorites.splice(index, 1);
+    saveFavorites();
+    renderFavBar();
+  }
+  function renderFavBar(){
+    favBar.querySelectorAll('.favChip').forEach(el => el.remove());
+    favBar.classList.toggle('empty', favorites.length === 0);
+    favorites.forEach((f, i) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'favChip';
+      chip.innerHTML = `${f.name} <span class="favTime">${fmtMinSec(f.totalSec)}</span> <span class="favRemove" aria-label="हटाएँ">✕</span>`;
+      chip.addEventListener('click', (e) => {
+        if(e.target.classList.contains('favRemove')){
+          removeFavorite(i);
+          return;
+        }
+        ensureAudio();
+        const t = createTimer(f.totalSec, f.name);
+        if(f.message){ t.message = f.message; t.els.messageField.value = f.message; }
+        toggleRunning(t);
+        showToast(`${f.name} टाइमर ${fmtMinSec(f.totalSec)} के लिए शुरू`);
+      });
+      favBar.appendChild(chip);
+    });
+  }
+
+  // =====================================================================
+  // Voice control (wake word: "Timer")
+  // =====================================================================
+  const micBtn = document.getElementById('micBtn');
+  const micLabel = micBtn.querySelector('.micLabel');
+
+  const MIC_LABELS = {
+    off: 'वॉइस बंद',
+    ready: 'तैयार',
+    hearing: 'सुन रहा है…',
+    success: 'समझ गया!',
+  };
+  let micState = 'off';
+  let listening = false;
+  let micSuccessTimer = null;
+  function setMicState(state){
+    micState = state;
+    micBtn.classList.remove('state-off','state-ready','state-hearing','state-success');
+    micBtn.classList.add('state-' + state);
+    micLabel.textContent = MIC_LABELS[state];
+    if(micSuccessTimer){ clearTimeout(micSuccessTimer); micSuccessTimer = null; }
+    if(state === 'success'){
+      micSuccessTimer = setTimeout(() => { if(listening) setMicState('ready'); }, 1000);
+    }
+  }
+
+  const WAKE_WORD = 'टाइमर';
+  const GLOBAL_STOP_WORDS = ['स्टॉप', 'रोको'];
+  const QUERY_PATTERN = /^(.*?)(?:,\s*|\s+)?(?:कितना समय बचा|कितना बचा है|कितनी देर बचा)/;
+
+  function stripWakeWord(text){
+    const t = text.trim();
+    const m = t.match(/^टाइमर[,]?\s*/);
+    if(!m) return null;
+    return t.slice(m[0].length);
+  }
+  function cleanName(s){
+    let out = s.replace(/^[,\s]+/, '').replace(/[,\s?!.]+$/, '').trim();
+    return out;
+  }
+
+  // Extracts "[name] [duration]" from one segment (used for both single and bulk add)
+  function extractDuration(text){
+    const minMatch = text.match(/(\d+)\s*मिनट/);
+    const secMatch = text.match(/(\d+)\s*सेकंड/);
+    const min = minMatch ? parseInt(minMatch[1], 10) : 0;
+    const sec = secMatch ? parseInt(secMatch[1], 10) : 0;
+    const hasDuration = !!minMatch || !!secMatch;
+    const totalSec = hasDuration ? min * 60 + sec : null;
+    let name = text;
+    if(minMatch) name = name.replace(minMatch[0], '');
+    if(secMatch) name = name.replace(secMatch[0], '');
+    return { hasDuration, totalSec, name: cleanName(name) };
+  }
+
+  // "pasta 5 minutes, ramen 10 minutes" style comma-separated bulk add.
+  // Bails out unless every segment has an explicit duration.
+  function tryParseBulk(body){
+    const segments = body.split(',').map(s => s.trim()).filter(Boolean);
+    if(segments.length < 2) return null;
+    const items = [];
+    for(const seg of segments){
+      const { hasDuration, totalSec, name } = extractDuration(seg);
+      if(!hasDuration) return null;
+      items.push({ name: name || undefined, totalSec });
+    }
+    return { recognized: true, action: 'bulk-add', items };
+  }
+
+  function parseVoiceCommand(rawText){
+    const body = stripWakeWord(rawText);
+    if(body === null) return { recognized: false };
+    if(body.trim() === '') return { recognized: false, wakeOnly: true };
+
+    // ① "stop" → stop every currently ringing alarm
+    if(GLOBAL_STOP_WORDS.some(w => body.trim().toLowerCase() === w || body.trim().toLowerCase().startsWith(w))){
+      return { recognized: true, action: 'stop-all' };
+    }
+
+    // ② "[name], how much time left?" → speak the remaining time
+    const queryMatch = body.match(QUERY_PATTERN);
+    if(queryMatch){
+      return { recognized: true, action: 'query-remaining', name: cleanName(queryMatch[1]) };
+    }
+
+    // ③ "pasta 5 minutes, ramen 10 minutes" → add several timers at once
+    const bulk = tryParseBulk(body);
+    if(bulk) return bulk;
+
+    const { hasDuration, totalSec, name: nameNoDuration } = extractDuration(body);
+    let name = nameNoDuration;
+
+    // ④ "[name], pause / reset" → control an existing timer
+    const pauseMatch = name.match(/पॉज़/);
+    const resetMatch = name.match(/रीसेट/);
+    if(pauseMatch || resetMatch){
+      const idx = (pauseMatch || resetMatch).index;
+      name = cleanName(name.slice(0, idx));
+      return { recognized: true, action: pauseMatch ? 'pause' : 'reset', name };
+    }
+
+    // ⑤ "[name], [duration]" → add a new timer and start it immediately
+    if(hasDuration){
+      return { recognized: true, action: 'add-start', name, totalSec };
+    }
+
+    return { recognized: false };
+  }
+
+  // If several timers share a name, prefer the one that's currently ringing
+  function findTimerByName(name){
+    if(!name) return null;
+    const lower = name.toLowerCase();
+    const candidates = timers.filter(x => x.name.toLowerCase() === lower)
+      .concat(timers.filter(x => x.name.toLowerCase() !== lower &&
+        (x.name.toLowerCase().includes(lower) || lower.includes(x.name.toLowerCase()))));
+    if(candidates.length === 0) return null;
+    return candidates.find(x => x.alarm) || candidates[0];
+  }
+
+  function handleVoiceCommand(transcript){
+    const cmd = parseVoiceCommand(transcript);
+    if(!cmd.recognized) return; // no wake word / unrecognized command — ignore quietly
+
+    if(cmd.action === 'stop-all'){
+      const alarming = timers.filter(x => x.alarm);
+      if(alarming.length === 0){
+        showToast('कोई टाइमर नहीं बज रहा है', transcript);
+        return;
+      }
+      alarming.forEach(t => clearAlarm(t));
+      setMicState('success');
+      showToast(`${alarming.length} टाइमर बंद किए गए`, transcript);
+      return;
+    }
+
+    if(cmd.action === 'query-remaining'){
+      const target = cmd.name
+        ? findTimerByName(cmd.name)
+        : (timers.find(x => x.alarm) || timers.find(x => x.running) || (timers.length === 1 ? timers[0] : null));
+      if(!target){
+        showToast("वह टाइमर नहीं मिला", transcript);
+        return;
+      }
+      let text;
+      if(target.alarm || target.remainingMs <= 0){
+        text = `${target.name} तैयार है!`;
+      }else{
+        const remSec = Math.ceil(target.remainingMs / 1000);
+        const m = Math.floor(remSec/60), s = remSec%60;
+        text = `${target.name} में ${m > 0 ? m + ' मिनट ' : ''}${s} सेकंड बचे हैं`;
+      }
+      speakText(text);
+      setMicState('success');
+      showToast(text, transcript);
+      return;
+    }
+
+    if(cmd.action === 'bulk-add'){
+      ensureAudio();
+      const created = cmd.items.map(item => {
+        const target = createTimer(item.totalSec, item.name);
+        toggleRunning(target);
+        return target;
+      });
+      setMicState('success');
+      const summary = created.map(t => `${t.name} ${fmtMinSec(t.totalSec)}`).join(' / ');
+      showToast(`${created.length} टाइमर शुरू किए गए`, summary);
+      return;
+    }
+
+    if(cmd.action === 'add-start'){
+      ensureAudio();
+      const target = createTimer(cmd.totalSec, cmd.name || undefined);
+      toggleRunning(target);
+      setMicState('success');
+      showToast(`${target.name} टाइमर ${fmtMinSec(cmd.totalSec)} के लिए शुरू`, transcript);
+      return;
+    }
+
+    if(cmd.action === 'pause'){
+      const target = findTimerByName(cmd.name);
+      if(!target){
+        showToast("वह टाइमर नहीं मिला", transcript);
+        return;
+      }
+      if(target.alarm) clearAlarm(target);
+      else if(target.running) toggleRunning(target);
+      setMicState('success');
+      showToast(`${target.name} पॉज़ किया गया`, transcript);
+      return;
+    }
+
+    if(cmd.action === 'reset'){
+      const target = findTimerByName(cmd.name);
+      if(!target){
+        showToast("वह टाइमर नहीं मिला", transcript);
+        return;
+      }
+      resetTimer(target);
+      setMicState('success');
+      showToast(`${target.name} रीसेट किया गया`, transcript);
+      return;
+    }
+  }
+
+  // The Web Speech API only runs continuously over HTTPS (or localhost)
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+
+  if(SpeechRecognitionCtor){
+    recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'hi-IN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (e) => {
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const res = e.results[i];
+        const transcript = res[0].transcript;
+        if(res.isFinal){
+          handleVoiceCommand(transcript);
+          if(listening && micState === 'hearing') setMicState('ready');
+        }else if(transcript.toLowerCase().includes(WAKE_WORD)){
+          setMicState('hearing');
+        }
+      }
+    };
+    recognition.onerror = (e) => {
+      if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        listening = false;
+        setMicState('off');
+        showToast('माइक्रोफ़ोन एक्सेस अस्वीकृत किया गया');
+      }
+      // 'no-speech' and similar are handled by the onend auto-restart below (browser timeout quirk)
+    };
+    recognition.onend = () => {
+      if(listening){
+        try{ recognition.start(); }catch(e){ /* already starting */ }
+      }
+    };
+
+    micBtn.addEventListener('click', () => {
+      listening = !listening;
+      if(listening){
+        ensureAudio();
+        try{ recognition.start(); }catch(e){ /* already started */ }
+        setMicState('ready');
+        showToast('वॉइस कंट्रोल चालू', '"टाइमर, पास्ता, 5 मिनट" या "टाइमर, स्टॉप" कहकर देखें');
+      }else{
+        recognition.stop();
+        setMicState('off');
+        showToast('वॉइस कंट्रोल बंद');
+      }
+    });
+  }else{
+    micBtn.addEventListener('click', () => {
+      showToast('इस ब्राउज़र में वॉइस कंट्रोल समर्थित नहीं है');
+    });
+  }
+
+  // =====================================================================
+  // Init
+  // =====================================================================
+  document.getElementById('addBtn').addEventListener('click', () => {
+    ensureAudio();
+    createTimer(180);
+  });
+
+  loadFavorites();
+  renderFavBar();
+
+  // default: one ramen-ready timer to start with
+  createTimer(180, 'रामेन');
+</script>
+</body>
+</html>
