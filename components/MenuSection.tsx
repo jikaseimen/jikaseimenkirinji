@@ -8,6 +8,8 @@ export default function MenuSection() {
   const [activeTab, setActiveTab] = useState(0);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  let buttonNumber = 0;
+
   const handleTabClick = (idx: number) => {
     setActiveTab(idx);
     sectionRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -57,14 +59,18 @@ export default function MenuSection() {
 
             {/* Items grid */}
             <div className="flex flex-col gap-2">
-              {cat.items.map((item) => (
-                <MenuCard
-                  key={item.name}
-                  name={item.name}
-                  price={item.price}
-                  category={cat.category}
-                />
-              ))}
+              {cat.items.map((item) => {
+                buttonNumber += 1;
+                return (
+                  <MenuCard
+                    key={item.name}
+                    number={buttonNumber}
+                    name={item.name}
+                    price={item.price}
+                    category={cat.category}
+                  />
+                );
+              })}
             </div>
           </div>
         ))}

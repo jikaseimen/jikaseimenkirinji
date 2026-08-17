@@ -23,7 +23,7 @@ export default function OrderApp() {
             ))}
           </div>
           <p className="text-kirinji-black font-black text-xs tracking-widest uppercase flex-1 text-center">
-            Mobile Order — カスラーメン自家製麺キリンジ
+            仮想券売機 — カスラーメン自家製麺キリンジ
           </p>
           <div className="flex gap-1">
             {["●", "●", "●"].map((d, i) => (

@@ -1,32 +1,33 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "./CartContext";
 import { useLiff } from "@/lib/useLiff";
+import { generateTicketNumber } from "@/lib/ticket";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-type SendState = "idle" | "sending" | "done" | "error";
+type SendState = "idle" | "sending" | "dispensing" | "error";
 
 export default function CartPanel({ isOpen, onClose }: Props) {
   const { state, dispatch, total } = useCart();
   const liffStatus = useLiff();
+  const router = useRouter();
   const [sendState, setSendState] = useState<SendState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [paypayLoading, setPaypayLoading] = useState(false);
-  const [paypayError, setPaypayError] = useState("");
   const [isTakeout, setIsTakeout] = useState(false);
 
-  const buildMessageText = () => {
+  const buildMessageText = (ticketNumber: string) => {
     const lines = state.items.map(
       (i) => `・${i.name}  ×${i.quantity}  ¥${(i.price * i.quantity).toLocaleString()}`
     );
     const typeLabel = isTakeout ? "【テイクアウト】" : "【店内飲食】";
     return [
-      `🍜 ご注文内容 ${typeLabel} — キリンジ`,
+      `🎫 食券 No.${ticketNumber} ${typeLabel} — キリンジ`,
       "──────────────",
       ...lines,
       "──────────────",
@@ -35,57 +36,45 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   };
 
   const handleOrder = async () => {
-    if (sendState === "sending") return;
-    const text = buildMessageText();
-    if (liffStatus.state !== "ready") {
-      console.log("【LINE送信プレビュー（LIFF未初期化）】\n" + text);
-      setSendState("done");
-      setTimeout(() => setSendState("idle"), 3000);
-      return;
-    }
+    if (sendState === "sending" || sendState === "dispensing") return;
+    const ticketNumber = generateTicketNumber();
+    const text = buildMessageText(ticketNumber);
+
     setSendState("sending");
     setErrorMsg("");
     try {
-      const { default: liff } = await import("@line/liff");
-      if (!liff.isInClient()) {
-        console.log("【LINE送信プレビュー（ブラウザ環境）】\n" + text);
+      if (liffStatus.state === "ready") {
+        const { default: liff } = await import("@line/liff");
+        if (!liff.isInClient()) {
+          console.log("【LINE送信プレビュー（ブラウザ環境）】\n" + text);
+        } else {
+          await liff.sendMessages([{ type: "text", text }]);
+        }
       } else {
-        await liff.sendMessages([{ type: "text", text }]);
+        console.log("【LINE送信プレビュー（LIFF未初期化）】\n" + text);
       }
-      setSendState("done");
+
+      sessionStorage.setItem(
+        "kirinji-ticket",
+        JSON.stringify({
+          ticketNumber,
+          items: state.items,
+          total,
+          isTakeout,
+          issuedAt: Date.now(),
+        })
+      );
+
+      setSendState("dispensing");
       dispatch({ type: "CLEAR" });
       setTimeout(() => {
-        setSendState("idle");
-        onClose();
-      }, 1800);
+        router.push("/complete");
+      }, 900);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[LIFF] sendMessages error:", err);
       setErrorMsg(msg);
       setSendState("error");
-    }
-  };
-
-  const handlePayPay = async () => {
-    if (paypayLoading) return;
-    setPaypayLoading(true);
-    setPaypayError("");
-    try {
-      const res = await fetch("/api/paypay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: state.items, total, isTakeout }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? "PayPay QRコードの生成に失敗しました");
-      }
-      window.location.href = data.url;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setPaypayError(msg);
-    } finally {
-      setPaypayLoading(false);
     }
   };
 
@@ -107,7 +96,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               className="text-white font-black text-2xl tracking-wider"
               style={{ fontFamily: "'Bebas Neue', serif" }}
             >
-              CART
+              TICKET
             </h2>
             <button
               onClick={onClose}
@@ -140,7 +129,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             </div>
             {isTakeout && (
               <p className="text-white/40 text-[11px] text-center mt-2">
-                ※ 受け取り時間の目安は決済後に表示されます（約15分）
+                ※ 受け取り時間の目安は発券後に表示されます（約15分）
               </p>
             )}
           </div>
@@ -206,32 +195,10 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 </span>
               </div>
               <button
-                onClick={handlePayPay}
-                disabled={paypayLoading}
-                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 mb-3 ${
-                  paypayLoading ? "bg-[#ff0033]/50 text-white" : "bg-[#ff0033] text-white active:scale-[0.98]"
-                }`}
-                style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
-              >
-                {paypayLoading ? (
-                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <span>PayPayで支払う{isTakeout ? "（テイクアウト）" : ""}</span>
-                )}
-              </button>
-              {paypayError && (
-                <p className="text-red-400/70 text-[11px] text-center mb-3 px-2">{paypayError}</p>
-              )}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-white/20 text-xs">または</span>
-                <div className="flex-1 h-px bg-white/10" />
-              </div>
-              <button
                 onClick={handleOrder}
-                disabled={sendState === "sending" || sendState === "done"}
-                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  sendState === "done"
+                disabled={sendState === "sending" || sendState === "dispensing"}
+                className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 vending-button ${
+                  sendState === "dispensing"
                     ? "bg-green-500 text-white"
                     : sendState === "error"
                     ? "bg-red-500 text-white"
@@ -241,11 +208,20 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 }`}
                 style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
               >
-                {sendState === "sending" ? "送信中…" : sendState === "done" ? "✓ 送信しました" : sendState === "error" ? "⚠ 送信失敗 — タップで再試行" : "注文する（LINEで送信）"}
+                {sendState === "sending"
+                  ? "発券中…"
+                  : sendState === "dispensing"
+                  ? "🎫 食券が出てきました"
+                  : sendState === "error"
+                  ? "⚠ 発券失敗 — タップで再試行"
+                  : "食券を発行する"}
               </button>
               {sendState === "error" && errorMsg && (
                 <p className="text-red-400/60 text-[11px] text-center mt-1.5 px-2">{errorMsg}</p>
               )}
+              <p className="text-white/25 text-[11px] text-center mt-3 leading-relaxed">
+                ボタンを押すと食券が発行されます。お会計はスタッフにお申し付けください。
+              </p>
               <button
                 onClick={() => dispatch({ type: "CLEAR" })}
                 className="w-full mt-2 py-2 text-white/30 text-xs font-bold tracking-wider"

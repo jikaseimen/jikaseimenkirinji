@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useCart } from "./CartContext";
 
 type Props = {
+  number: number;
   name: string;
   price: number;
   category: string;
 };
 
-export default function MenuCard({ name, price, category }: Props) {
+export default function MenuCard({ number, name, price, category }: Props) {
   const { dispatch, state } = useCart();
   const [added, setAdded] = useState(false);
 
@@ -29,6 +30,14 @@ export default function MenuCard({ name, price, category }: Props) {
       className="menu-card bg-kirinji-charcoal border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3 active:bg-kirinji-darkgray"
       style={{ boxShadow: qty > 0 ? "0 0 0 1.5px #FFD700" : undefined }}
     >
+      {/* Button number, like a real vending machine */}
+      <span
+        className="shrink-0 w-6 h-6 rounded bg-kirinji-black border border-kirinji-yellow/40 text-kirinji-yellow text-[11px] font-black flex items-center justify-center"
+        style={{ fontFamily: "'Bebas Neue', serif" }}
+      >
+        {number}
+      </span>
+
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
