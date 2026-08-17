@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "./CartContext";
-import { useLiff } from "@/lib/useLiff";
 import { generateTicketNumber } from "@/lib/ticket";
 
 type Props = {
@@ -11,49 +10,20 @@ type Props = {
   onClose: () => void;
 };
 
-type SendState = "idle" | "sending" | "dispensing" | "error";
+type IssueState = "idle" | "issuing" | "error";
 
 export default function CartPanel({ isOpen, onClose }: Props) {
   const { state, dispatch, total } = useCart();
-  const liffStatus = useLiff();
   const router = useRouter();
-  const [sendState, setSendState] = useState<SendState>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [issueState, setIssueState] = useState<IssueState>("idle");
   const [isTakeout, setIsTakeout] = useState(false);
 
-  const buildMessageText = (ticketNumber: string) => {
-    const lines = state.items.map(
-      (i) => `・${i.name}  ×${i.quantity}  ¥${(i.price * i.quantity).toLocaleString()}`
-    );
-    const typeLabel = isTakeout ? "【テイクアウト】" : "【店内飲食】";
-    return [
-      `🎫 食券 No.${ticketNumber} ${typeLabel} — キリンジ`,
-      "──────────────",
-      ...lines,
-      "──────────────",
-      `合計  ¥${total.toLocaleString()}`,
-    ].join("\n");
-  };
+  const handleIssue = () => {
+    if (issueState === "issuing") return;
+    setIssueState("issuing");
 
-  const handleOrder = async () => {
-    if (sendState === "sending" || sendState === "dispensing") return;
-    const ticketNumber = generateTicketNumber();
-    const text = buildMessageText(ticketNumber);
-
-    setSendState("sending");
-    setErrorMsg("");
     try {
-      if (liffStatus.state === "ready") {
-        const { default: liff } = await import("@line/liff");
-        if (!liff.isInClient()) {
-          console.log("【LINE送信プレビュー（ブラウザ環境）】\n" + text);
-        } else {
-          await liff.sendMessages([{ type: "text", text }]);
-        }
-      } else {
-        console.log("【LINE送信プレビュー（LIFF未初期化）】\n" + text);
-      }
-
+      const ticketNumber = generateTicketNumber();
       sessionStorage.setItem(
         "kirinji-ticket",
         JSON.stringify({
@@ -65,16 +35,13 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         })
       );
 
-      setSendState("dispensing");
       dispatch({ type: "CLEAR" });
       setTimeout(() => {
         router.push("/complete");
       }, 900);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error("[LIFF] sendMessages error:", err);
-      setErrorMsg(msg);
-      setSendState("error");
+    } catch (err) {
+      console.error("[Ticket] failed to issue:", err);
+      setIssueState("error");
     }
   };
 
@@ -195,30 +162,23 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 </span>
               </div>
               <button
-                onClick={handleOrder}
-                disabled={sendState === "sending" || sendState === "dispensing"}
+                onClick={handleIssue}
+                disabled={issueState === "issuing"}
                 className={`w-full font-black py-4 rounded-2xl text-base tracking-wider transition-all flex items-center justify-center gap-2 vending-button ${
-                  sendState === "dispensing"
-                    ? "bg-green-500 text-white"
-                    : sendState === "error"
-                    ? "bg-red-500 text-white"
-                    : sendState === "sending"
+                  issueState === "issuing"
                     ? "bg-kirinji-amber/70 text-kirinji-black"
+                    : issueState === "error"
+                    ? "bg-red-500 text-white"
                     : "bg-kirinji-yellow text-kirinji-black active:scale-[0.98]"
                 }`}
                 style={{ fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 900 }}
               >
-                {sendState === "sending"
-                  ? "発券中…"
-                  : sendState === "dispensing"
+                {issueState === "issuing"
                   ? "🎫 食券が出てきました"
-                  : sendState === "error"
+                  : issueState === "error"
                   ? "⚠ 発券失敗 — タップで再試行"
                   : "食券を発行する"}
               </button>
-              {sendState === "error" && errorMsg && (
-                <p className="text-red-400/60 text-[11px] text-center mt-1.5 px-2">{errorMsg}</p>
-              )}
               <p className="text-white/25 text-[11px] text-center mt-3 leading-relaxed">
                 ボタンを押すと食券が発行されます。お会計はスタッフにお申し付けください。
               </p>

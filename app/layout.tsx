@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "キリンジ | モバイルオーダー",
-  description: "カスラーメン自家製麺キリンジ モバイルオーダー",
+  title: "キリンジ | 仮想券売機",
+  description: "カスラーメン自家製麺キリンジ 仮想券売機",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
