@@ -4,216 +4,341 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>仮想券売機</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --black: #0a0a0a;
-  --charcoal: #1a1a1a;
-  --darkgray: #2a2a2a;
-  --yellow: #FFD700;
-  --amber: #FFC000;
-  --gold: #E6AC00;
+  --page: #131110;
+  --page-2: #0a0908;
+  --machine: #ece6d6;
+  --machine-2: #ddd6c1;
+  --seam: #c7bfa6;
+  --trim: #a89f84;
+  --orange: #f2791c;
+  --orange-2: #d6640d;
+  --ink: #2a2318;
+  --ink-soft: #6b6250;
+  --btn: #151515;
+  --btn-2: #262626;
+  --btn-text: #f5f5f0;
+  --price-bg: #f1ede1;
+  --price-text: #2a2318;
+  --lamp-on: #34d67a;
+  --lamp-on-glow: rgba(52, 214, 122, 0.55);
+  --lamp-off: #a39c8a;
+  --lcd-bg: #04100c;
+  --lcd-text: #33e7ba;
+  --paper: #faf6ea;
+  --paper-ink: #211c14;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-html, body { background: var(--black); color: #fff; font-family: 'Noto Sans JP', sans-serif; overscroll-behavior: none; }
-.display { font-family: 'Bebas Neue', serif; letter-spacing: 0.03em; }
-button { font-family: inherit; border: none; background: none; color: inherit; cursor: pointer; }
-button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+html, body { background: var(--page); overscroll-behavior: none; }
+body {
+  min-height: 100vh;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%, #232019 0%, transparent 60%),
+    var(--page);
+  padding: 28px 12px 60px;
+  display: flex;
+  justify-content: center;
+}
+button { font-family: inherit; border: none; cursor: pointer; }
+.wordmark { font-family: 'Bebas Neue', serif; letter-spacing: 0.04em; }
+.mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
-#app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 110px; }
+/* ===== machine shell ===== */
+#machine {
+  width: 100%;
+  max-width: 620px;
+  background: linear-gradient(180deg, var(--machine) 0%, var(--machine-2) 100%);
+  border-radius: 22px;
+  box-shadow: 0 50px 90px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.4) inset, 0 -1px 0 rgba(0,0,0,0.15) inset;
+  padding: 18px 16px 20px;
+  position: relative;
+}
+#machine::before {
+  /* subtle panel seam under the header cluster */
+  content: '';
+  position: absolute;
+  left: 16px; right: 16px; top: 236px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--seam), transparent);
+}
 
-/* Header */
-header { position: sticky; top: 0; z-index: 50; background: var(--black); border-bottom: 1px solid rgba(255,215,0,0.2); }
-.header-inner { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-.logo { line-height: 1; }
-.logo .small { color: var(--yellow); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; }
-.logo .big { font-size: 30px; font-weight: 900; letter-spacing: 0.05em; display: block; }
-.logo .tiny { color: rgba(255,215,0,0.6); font-size: 10px; letter-spacing: 0.1em; }
-.cart-btn { position: relative; display: flex; align-items: center; gap: 6px; background: var(--yellow); color: var(--black); padding: 8px 16px; border-radius: 999px; font-weight: 900; font-size: 13px; }
-.cart-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; font-size: 11px; width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.accent-line { height: 2px; background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
+/* brand plate */
+.brand-plate {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.brand-plate .name { line-height: 1; }
+.brand-plate .name .jp { font-size: 10px; font-weight: 900; letter-spacing: 0.25em; color: var(--ink-soft); }
+.brand-plate .name .en { font-size: 22px; font-weight: 900; letter-spacing: 0.06em; }
+.ticket-badge {
+  background: var(--orange); color: #fff; font-weight: 900; font-size: 11px;
+  padding: 5px 12px; border-radius: 4px; letter-spacing: 0.08em; transform: skew(-6deg);
+  box-shadow: 0 2px 0 var(--orange-2);
+}
 
-/* Hero */
-.hero { background: var(--yellow); padding: 8px 16px; text-align: center; color: var(--black); font-weight: 900; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+/* lamps row */
+.lamps {
+  display: flex; gap: 14px; background: var(--machine-2); border: 1px solid var(--seam);
+  border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.lamp { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: var(--ink-soft); }
+.lamp .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--lamp-off); flex-shrink: 0; }
+.lamp.on { color: var(--ink); }
+.lamp.on .dot { background: var(--lamp-on); box-shadow: 0 0 8px var(--lamp-on-glow); }
 
-/* Coin slot */
-.coinslot { background: var(--charcoal); border-bottom: 2px solid rgba(255,192,0,0.6); padding: 12px 16px; }
-.coinslot-row { display: flex; align-items: stretch; gap: 10px; }
-.lcd { flex: 1; min-width: 0; background: #000; border-radius: 10px; border: 1px solid rgba(255,192,0,0.3); padding: 8px 12px; display: flex; flex-direction: column; justify-content: center; }
-.lcd .label { color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; }
-.lcd .amount { color: #4ade80; font-weight: 900; font-size: 26px; line-height: 1.2; letter-spacing: 0.05em; text-shadow: 0 0 6px rgba(74,222,128,0.7); font-family: 'Courier New', monospace; }
-.return-btn { flex-shrink: 0; width: 66px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all .1s; }
-.return-btn.active { border-color: rgba(255,192,0,0.6); color: var(--amber); }
-.return-btn.active:active { transform: scale(0.95); background: rgba(255,192,0,0.1); }
-.return-btn .arrow { font-size: 18px; line-height: 1; }
-.insert-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.insert-label { color: rgba(255,255,255,0.3); font-size: 10px; font-weight: 700; flex-shrink: 0; }
-.bill-btn { background: var(--amber); color: var(--black); border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 900; box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
-.coin-btn { background: rgba(255,255,255,0.9); color: var(--black); border-radius: 999px; width: 36px; height: 36px; font-size: 11px; font-weight: 900; box-shadow: 0 2px 0 rgba(0,0,0,0.3); flex-shrink: 0; }
-.bill-btn:active, .coin-btn:active { transform: translateY(2px) scale(0.95); box-shadow: none; }
-.hint { color: rgba(255,255,255,0.3); font-size: 11px; text-align: center; padding: 8px 16px; line-height: 1.6; }
+/* control cluster: return lever + LCD + bill slot */
+.control-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.return-lever {
+  flex-shrink: 0; width: 76px; border-radius: 12px; border: 2px solid var(--trim);
+  background: var(--machine); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 8px 4px; transition: transform .1s;
+}
+.return-lever .knob {
+  width: 30px; height: 30px; border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #ffb066, var(--orange) 55%, var(--orange-2) 100%);
+  box-shadow: 0 3px 0 var(--orange-2), inset 0 1px 2px rgba(255,255,255,0.5);
+}
+.return-lever .lbl { font-size: 9px; font-weight: 900; color: var(--ink); text-align: center; line-height: 1.3; }
+.return-lever:disabled { opacity: 0.45; }
+.return-lever:not(:disabled):active { transform: translateY(2px); }
 
-/* Tabs */
-.tabs-wrap { position: sticky; top: 85px; z-index: 40; background: rgba(10,10,10,0.95); backdrop-filter: blur(4px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-.tabs { display: flex; overflow-x: auto; padding: 0 8px; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab { flex-shrink: 0; padding: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.5); border-bottom: 2px solid transparent; }
-.tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+.lcd-wrap {
+  flex: 1; min-width: 0; background: var(--lcd-bg); border-radius: 10px;
+  border: 3px solid #1c1712; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+}
+.lcd-wrap .cap { color: rgba(51,231,186,0.55); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; }
+.lcd-wrap .val { color: var(--lcd-text); font-size: 20px; font-weight: 700; letter-spacing: 0.04em; text-shadow: 0 0 8px rgba(51,231,186,0.65); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Menu */
-.menu { padding: 0 16px; }
-.cat-section { padding-top: 24px; }
-.cat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.cat-bar { width: 4px; height: 24px; background: var(--yellow); border-radius: 999px; }
-.cat-title { font-size: 18px; font-weight: 900; letter-spacing: 0.1em; }
-.cat-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-.items { display: flex; flex-direction: column; gap: 8px; }
+.bill-slot {
+  flex-shrink: 0; width: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border: 3px solid var(--orange); border-radius: 10px; padding: 6px 4px; background: var(--machine);
+  box-shadow: 0 2px 0 var(--seam);
+}
+.bill-slot .cap { font-size: 9px; font-weight: 700; color: var(--ink-soft); }
+.bill-slot .amt { font-size: 15px; font-weight: 900; color: var(--ink); }
+.bill-slot .mouth { width: 70%; height: 6px; background: #14100c; border-radius: 3px; margin-top: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+.bill-slot:active { transform: translateY(1px); }
 
-.menu-card { background: var(--charcoal); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; transition: opacity .15s; }
-.menu-card.dim { opacity: 0.4; }
-.menu-card.in-cart { box-shadow: 0 0 0 1.5px var(--yellow); }
-.num-badge { flex-shrink: 0; width: 24px; height: 24px; border-radius: 6px; background: var(--black); border: 1px solid rgba(255,215,0,0.4); color: var(--yellow); font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-.item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-price { color: var(--yellow); font-weight: 900; font-size: 20px; margin-top: 2px; }
-.buy-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.4); color: var(--yellow); font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.buy-btn:disabled { opacity: 0.3; }
-.buy-btn.pop { background: var(--yellow); color: var(--black); transform: scale(1.1); }
-.qty-controls { flex-shrink: 0; display: flex; align-items: center; gap: 2px; background: var(--darkgray); border-radius: 999px; border: 1px solid rgba(255,215,0,0.3); overflow: hidden; }
-.qty-controls button { width: 32px; height: 32px; color: var(--yellow); font-weight: 900; font-size: 16px; }
-.qty-controls button:disabled { opacity: 0.3; }
-.qty-val { width: 24px; text-align: center; color: #fff; font-weight: 700; font-size: 13px; }
+/* coin row */
+.coin-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.coin-row .cap { font-size: 10px; font-weight: 700; color: var(--ink-soft); flex-shrink: 0; }
+.coin-btn {
+  width: 40px; height: 40px; border-radius: 999px; flex-shrink: 0;
+  background: radial-gradient(circle at 35% 30%, #fff, #dcd6c4 70%);
+  border: 1px solid var(--trim); color: var(--ink); font-weight: 900; font-size: 11px;
+  box-shadow: 0 3px 0 var(--trim);
+}
+.coin-btn:active { transform: translateY(2px); box-shadow: none; }
 
-/* Floating cart bar */
-.floating-bar { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 448px; margin: 0 auto; z-index: 45; }
-.floating-bar button { width: 100%; background: var(--yellow); color: var(--black); border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 12px 30px rgba(0,0,0,0.5); font-weight: 900; }
-.floating-bar .count { background: var(--black); color: var(--yellow); width: 22px; height: 22px; border-radius: 999px; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-right: 8px; }
-.floating-bar .label { display: flex; align-items: center; font-size: 14px; }
-.floating-bar .total { font-family: 'Bebas Neue', serif; font-size: 18px; }
+/* ===== menu grid ===== */
+.menu { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
+.cat { }
+.cat-label {
+  display: inline-block; background: var(--ink); color: var(--price-bg); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.1em; padding: 4px 10px; border-radius: 4px; margin-bottom: 6px;
+}
+.cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 480px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 580px) { .cat-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.item-btn {
+  position: relative;
+  background: linear-gradient(180deg, var(--btn-2), var(--btn));
+  border-radius: 8px; overflow: hidden; text-align: left;
+  border: 1px solid #000;
+  box-shadow: 0 3px 0 #000, inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: opacity .15s, transform .08s;
+  display: flex; flex-direction: column;
+}
+.item-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.item-btn.dim { opacity: 0.38; }
+.item-btn.in-cart { box-shadow: 0 0 0 2px var(--orange), 0 3px 0 var(--orange-2); }
+.item-btn .lamp-dot {
+  position: absolute; top: 6px; left: 6px; width: 6px; height: 6px; border-radius: 999px; background: var(--lamp-off);
+}
+.item-btn:not(.dim) .lamp-dot { background: var(--lamp-on); box-shadow: 0 0 6px var(--lamp-on-glow); }
+.item-btn .name {
+  color: var(--btn-text); font-weight: 900; font-size: 12.5px; line-height: 1.35; padding: 10px 8px 6px 16px;
+  min-height: 46px; display: flex; align-items: center;
+}
+.item-btn .price-strip {
+  background: var(--price-bg); color: var(--price-text); font-weight: 900; font-size: 13px; text-align: center;
+  padding: 5px 4px; letter-spacing: 0.02em; font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+.item-btn .qty-chip {
+  position: absolute; top: 4px; right: 4px; background: var(--orange); color: #fff; font-size: 10px; font-weight: 900;
+  min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 3px;
+}
+
+/* qty stepper shown once bought, replaces price strip */
+.qty-strip { background: var(--price-bg); display: flex; align-items: center; justify-content: space-between; padding: 3px 6px; }
+.qty-strip button { width: 22px; height: 22px; border-radius: 6px; background: var(--btn); color: #fff; font-weight: 900; font-size: 13px; }
+.qty-strip button:disabled { opacity: 0.3; }
+.qty-strip .n { font-weight: 900; color: var(--price-text); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+/* ===== output trays ===== */
+.trays { display: flex; gap: 10px; margin-top: 16px; }
+.tray { flex: 1; background: var(--machine-2); border: 1px solid var(--seam); border-radius: 10px; padding: 8px 10px; text-align: center; }
+.tray .cap { font-size: 10px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+.tray .mouth {
+  height: 26px; border-radius: 5px; background: #14100c; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
+}
+.ticket-peek {
+  position: absolute; bottom: -30px; width: 78%; height: 22px; background: var(--paper); border-radius: 2px;
+  transition: bottom .45s cubic-bezier(.2,.8,.2,1);
+}
+.ticket-peek.show { bottom: 4px; }
+
+/* ===== floating cart button ===== */
+#cart-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 45;
+  background: var(--orange); color: #fff; border-radius: 999px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 13px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5), 0 3px 0 var(--orange-2);
+}
+#cart-fab .badge { background: #fff; color: var(--orange-2); width: 20px; height: 20px; border-radius: 999px; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 .hidden { display: none !important; }
 
-/* Cart panel (bottom sheet) */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 60; }
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto; z-index: 61; }
-.sheet-inner { background: var(--charcoal); border-top: 1px solid rgba(255,215,0,0.3); border-radius: 24px 24px 0 0; max-height: 85vh; display: flex; flex-direction: column; }
-.sheet-handle { display: flex; justify-content: center; padding: 12px 0 4px; }
-.sheet-handle span { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 999px; }
-.sheet-head { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.sheet-head h2 { font-size: 24px; font-weight: 900; letter-spacing: 0.05em; }
-.sheet-close { width: 32px; height: 32px; color: rgba(255,255,255,0.4); font-size: 22px; }
-.type-toggle { padding: 16px 20px 8px; }
-.type-toggle-inner { background: var(--black); border-radius: 16px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); display: flex; }
-.type-toggle-inner button { flex: 1; padding: 10px; border-radius: 12px; font-weight: 900; font-size: 13px; color: rgba(255,255,255,0.4); }
-.type-toggle-inner button.active { background: var(--yellow); color: var(--black); }
-.pickup-note { color: rgba(255,255,255,0.4); font-size: 11px; text-align: center; margin-top: 8px; }
-.sheet-items { flex: 1; overflow-y: auto; padding: 12px 20px; }
-.sheet-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; gap: 12px; }
-.sheet-empty .icon { font-size: 48px; opacity: 0.2; }
-.sheet-empty p { color: rgba(255,255,255,0.3); font-size: 14px; font-weight: 700; }
-.sheet-empty .balance-note { color: var(--amber); font-size: 12px; font-weight: 700; }
-.cart-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+/* ===== cart sheet ===== */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 60; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; max-width: 620px; margin: 0 auto; z-index: 61; }
+.sheet-inner { background: var(--paper); color: var(--paper-ink); border-radius: 20px 20px 0 0; max-height: 85vh; display: flex; flex-direction: column; border-top: 4px solid var(--orange); }
+.sheet-handle { display: flex; justify-content: center; padding: 10px 0 2px; }
+.sheet-handle span { width: 40px; height: 4px; background: var(--seam); border-radius: 999px; }
+.sheet-head { padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--seam); }
+.sheet-head h2 { font-size: 22px; font-weight: 900; }
+.sheet-close { width: 30px; height: 30px; color: var(--ink-soft); font-size: 20px; background: none; }
+.type-toggle { padding: 14px 20px 6px; }
+.type-toggle-inner { background: #efe9db; border-radius: 12px; padding: 4px; border: 1px solid var(--seam); display: flex; }
+.type-toggle-inner button { flex: 1; padding: 9px; border-radius: 9px; font-weight: 900; font-size: 12px; background: none; color: var(--ink-soft); }
+.type-toggle-inner button.active { background: var(--orange); color: #fff; }
+.pickup-note { color: var(--ink-soft); font-size: 11px; text-align: center; margin-top: 6px; }
+.sheet-items { flex: 1; overflow-y: auto; padding: 10px 20px; }
+.sheet-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; gap: 10px; }
+.sheet-empty .icon { font-size: 44px; opacity: 0.3; }
+.sheet-empty p { color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+.sheet-empty .balance-note { color: var(--orange-2); font-size: 12px; font-weight: 700; }
+.cart-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--seam); }
 .cart-row-info { flex: 1; min-width: 0; }
-.cart-row-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cart-row-price { color: rgba(255,255,255,0.4); font-size: 12px; }
-.cart-row-total { color: var(--yellow); font-weight: 900; font-size: 15px; width: 80px; text-align: right; flex-shrink: 0; font-family: 'Bebas Neue', serif; }
-.sheet-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); background: var(--charcoal); }
+.cart-row-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-row-price { color: var(--ink-soft); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.cart-row .qty-strip { border-radius: 999px; overflow: hidden; }
+.cart-row-total { color: var(--ink); font-weight: 900; font-size: 14px; width: 74px; text-align: right; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.sheet-footer { padding: 16px 20px 20px; border-top: 1px solid var(--seam); background: var(--paper); }
 .total-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.total-row .label { color: rgba(255,255,255,0.6); font-weight: 700; font-size: 14px; }
-.total-row .value { color: var(--yellow); font-weight: 900; font-size: 30px; font-family: 'Bebas Neue', serif; }
-.balance-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; height: 16px; }
-.balance-row .label { color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 700; }
-.balance-row .value { color: var(--amber); font-size: 13px; font-weight: 700; }
-.issue-btn { width: 100%; background: var(--yellow); color: var(--black); font-weight: 900; padding: 16px; border-radius: 16px; font-size: 15px; letter-spacing: 0.05em; box-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,215,0,0.25); }
+.total-row .label { color: var(--ink-soft); font-weight: 700; font-size: 13px; }
+.total-row .value { color: var(--ink); font-weight: 900; font-size: 26px; font-family: 'JetBrains Mono', monospace; }
+.balance-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; height: 15px; }
+.balance-row .label { color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.balance-row .value { color: var(--orange-2); font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.issue-btn { width: 100%; background: var(--orange); color: #fff; font-weight: 900; padding: 15px; border-radius: 12px; font-size: 14px; letter-spacing: 0.03em; box-shadow: 0 3px 0 var(--orange-2); }
 .issue-btn:active { transform: translateY(2px); box-shadow: none; }
 .issue-btn:disabled { opacity: 0.4; }
-.footer-note { color: rgba(255,255,255,0.25); font-size: 11px; text-align: center; margin-top: 12px; line-height: 1.6; }
-.clear-btn { width: 100%; margin-top: 8px; padding: 8px; color: rgba(255,255,255,0.3); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+.footer-note { color: var(--ink-soft); font-size: 10.5px; text-align: center; margin-top: 10px; line-height: 1.6; }
+.clear-btn { width: 100%; margin-top: 6px; padding: 8px; color: var(--ink-soft); font-size: 11px; font-weight: 700; background: none; }
 
-/* Ticket screen */
-#ticket-screen { position: fixed; inset: 0; background: var(--black); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; gap: 24px; text-align: center; overflow-y: auto; }
-.ticket-emoji { font-size: 60px; }
-.ticket-title { color: var(--yellow); font-size: 36px; font-weight: 900; font-family: 'Bebas Neue', serif; letter-spacing: 0.05em; }
-.ticket-stub { width: 100%; max-width: 320px; background: var(--charcoal); border: 1px solid rgba(255,215,0,0.3); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 14px; position: relative; }
-.ticket-stub::before { content: ''; position: absolute; top: -1px; left: 12px; right: 12px; height: 1px; background-image: repeating-linear-gradient(90deg, rgba(255,215,0,0.4) 0, rgba(255,215,0,0.4) 6px, transparent 6px, transparent 12px); }
-.ticket-row { display: flex; align-items: center; justify-content: space-between; }
-.ticket-no-label { color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
-.ticket-no { color: var(--yellow); font-size: 30px; font-weight: 900; font-family: 'Bebas Neue', serif; letter-spacing: 0.1em; }
-.ticket-hr { height: 1px; background: rgba(255,255,255,0.1); }
-.ticket-item-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
-.ticket-item-row .name { color: rgba(255,255,255,0.8); font-weight: 700; }
-.ticket-item-row .qty { color: rgba(255,255,255,0.4); font-weight: 400; }
-.ticket-item-row .price { color: rgba(255,255,255,0.6); }
-.ticket-total-label { color: rgba(255,255,255,0.6); font-weight: 700; font-size: 14px; }
-.ticket-total-value { color: var(--yellow); font-weight: 900; font-size: 24px; font-family: 'Bebas Neue', serif; }
-.ticket-type { font-size: 14px; font-weight: 700; }
-.ticket-pickup { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.ticket-pickup .big { font-size: 22px; font-weight: 900; font-family: 'Bebas Neue', serif; }
-.ticket-instruction { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2); border-radius: 16px; padding: 16px; max-width: 320px; width: 100%; }
-.ticket-instruction p { color: var(--yellow); font-size: 12px; font-weight: 700; line-height: 1.7; }
-.ticket-instruction .sub { color: rgba(255,255,255,0.6); font-weight: 400; }
-.play-again-btn { background: var(--yellow); color: var(--black); font-weight: 900; padding: 12px 32px; border-radius: 999px; font-size: 14px; letter-spacing: 0.05em; }
+/* ===== ticket screen (printed paper ticket) ===== */
+#ticket-screen {
+  position: fixed; inset: 0; background: var(--page); z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 20px; gap: 20px; text-align: center; overflow-y: auto;
+}
+.ticket-paper {
+  width: 100%; max-width: 300px; background: var(--paper); color: var(--paper-ink);
+  padding: 26px 22px; position: relative; text-align: left;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  clip-path: polygon(0% 2%, 4% 0%, 8% 2%, 12% 0%, 16% 2%, 20% 0%, 24% 2%, 28% 0%, 32% 2%, 36% 0%, 40% 2%, 44% 0%, 48% 2%, 52% 0%, 56% 2%, 60% 0%, 64% 2%, 68% 0%, 72% 2%, 76% 0%, 80% 2%, 84% 0%, 88% 2%, 92% 0%, 96% 2%, 100% 0%, 100% 100%, 0% 100%);
+}
+.ticket-paper .brand { text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 0.15em; color: var(--ink-soft); margin-bottom: 2px; }
+.ticket-paper .kind { text-align: center; font-weight: 900; font-size: 15px; letter-spacing: 0.1em; margin-bottom: 14px; }
+.ticket-paper .no-label { font-size: 10px; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.1em; }
+.ticket-paper .no { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 26px; letter-spacing: 0.05em; margin-bottom: 10px; }
+.ticket-hr { border: none; border-top: 1px dashed var(--seam); margin: 10px 0; }
+.ticket-item-row { display: flex; align-items: baseline; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-bottom: 4px; }
+.ticket-item-row .name { font-weight: 700; }
+.ticket-item-row .qty { color: var(--ink-soft); font-weight: 400; }
+.ticket-total-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.ticket-total-row .label { font-weight: 700; font-size: 13px; }
+.ticket-total-row .value { font-weight: 900; font-size: 22px; font-family: 'JetBrains Mono', monospace; }
+.ticket-type { text-align: center; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.ticket-pickup { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+.ticket-pickup .big { font-size: 18px; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+.ticket-instruction { background: rgba(242,121,28,0.12); border: 1px solid rgba(242,121,28,0.35); border-radius: 14px; padding: 14px; max-width: 300px; width: 100%; }
+.ticket-instruction p { color: var(--orange); font-size: 12px; font-weight: 700; line-height: 1.7; }
+.ticket-instruction .sub { color: rgba(255,255,255,0.55); font-weight: 400; }
+.play-again-btn { background: var(--orange); color: #fff; font-weight: 900; padding: 12px 30px; border-radius: 999px; font-size: 13px; letter-spacing: 0.04em; box-shadow: 0 3px 0 var(--orange-2); }
+.play-again-btn:active { transform: translateY(2px); box-shadow: none; }
 </style>
 </head>
 <body>
 
-<div id="app">
-  <header>
-    <div class="header-inner">
-      <div class="logo">
-        <span class="small display">自家製麺</span>
-        <span class="big display">KIRINJI</span>
-        <span class="tiny">カスラーメン自家製麺キリンジ</span>
-      </div>
-      <button class="cart-btn" id="open-cart-btn">
-        <span>🧾</span>
-        <span>カート</span>
-        <span class="cart-badge hidden" id="cart-badge">0</span>
-      </button>
+<div id="machine">
+  <div class="brand-plate">
+    <div class="name">
+      <div class="jp">自家製麺</div>
+      <div class="en wordmark">KIRINJI</div>
     </div>
-    <div class="accent-line"></div>
-  </header>
-
-  <div class="hero">仮想券売機 — カスラーメン自家製麺キリンジ</div>
-
-  <div class="coinslot">
-    <div class="coinslot-row">
-      <div class="lcd">
-        <span class="label">ただいまの金額</span>
-        <span class="amount" id="lcd-amount">¥0</span>
-      </div>
-      <button class="return-btn" id="return-btn" disabled>
-        <span class="arrow">↺</span>
-        <span>おつり<br>返却</span>
-      </button>
-    </div>
-    <div class="insert-row">
-      <span class="insert-label">紙幣</span>
-      <button class="bill-btn" data-amount="1000">¥1,000</button>
-      <span class="insert-label" style="margin-left:6px;">硬貨</span>
-      <button class="coin-btn" data-amount="500">500</button>
-      <button class="coin-btn" data-amount="100">100</button>
-      <button class="coin-btn" data-amount="50">50</button>
-      <button class="coin-btn" data-amount="10">10</button>
-    </div>
+    <div class="ticket-badge">TICKET</div>
   </div>
-  <p class="hint">お金を入れてボタンを押すと食券が出てきます</p>
 
-  <div class="tabs-wrap">
-    <div class="tabs" id="tabs"></div>
+  <div class="lamps">
+    <div class="lamp on"><span class="dot"></span>発売中</div>
+    <div class="lamp"><span class="dot"></span>お札中止</div>
+    <div class="lamp"><span class="dot"></span>中止</div>
+    <div class="lamp"><span class="dot"></span>つり切れ</div>
+  </div>
+
+  <div class="control-row">
+    <button class="return-lever" id="return-btn" disabled>
+      <span class="knob"></span>
+      <span class="lbl">おつり<br>返却</span>
+    </button>
+    <div class="lcd-wrap">
+      <span class="cap mono">ただいまの金額</span>
+      <span class="val mono" id="lcd-amount">お金を入れてください</span>
+    </div>
+    <button class="bill-slot" data-amount="1000">
+      <span class="cap">紙幣</span>
+      <span class="amt">1000</span>
+      <span class="mouth"></span>
+    </button>
+  </div>
+
+  <div class="coin-row">
+    <span class="cap">硬貨</span>
+    <button class="coin-btn" data-amount="500">500</button>
+    <button class="coin-btn" data-amount="100">100</button>
+    <button class="coin-btn" data-amount="50">50</button>
+    <button class="coin-btn" data-amount="10">10</button>
   </div>
 
   <div class="menu" id="menu"></div>
 
-  <div class="floating-bar hidden" id="floating-bar">
-    <button id="floating-cart-btn">
-      <span class="label"><span class="count" id="floating-count">0</span>カートを見る</span>
-      <span class="total display" id="floating-total">¥0</span>
-    </button>
+  <div class="trays">
+    <div class="tray">
+      <div class="cap">硬貨取出口</div>
+      <div class="mouth"></div>
+    </div>
+    <div class="tray">
+      <div class="cap">券取出口</div>
+      <div class="mouth"><div class="ticket-peek" id="ticket-peek"></div></div>
+    </div>
   </div>
 </div>
+
+<button id="cart-fab" class="hidden">
+  🧾 カートを見る <span class="badge" id="cart-badge">0</span>
+</button>
 
 <!-- Cart sheet -->
 <div id="cart-overlay-wrap" class="hidden">
@@ -222,7 +347,7 @@ header { position: sticky; top: 0; z-index: 50; background: var(--black); border
     <div class="sheet-inner">
       <div class="sheet-handle"><span></span></div>
       <div class="sheet-head">
-        <h2 class="display">TICKET</h2>
+        <h2>選択中の商品</h2>
         <button class="sheet-close" id="close-cart-btn">✕</button>
       </div>
       <div class="type-toggle">
@@ -236,12 +361,9 @@ header { position: sticky; top: 0; z-index: 50; background: var(--black); border
       <div class="sheet-footer hidden" id="sheet-footer">
         <div class="total-row">
           <span class="label">合計金額</span>
-          <span class="value display" id="sheet-total">¥0</span>
+          <span class="value" id="sheet-total">¥0</span>
         </div>
-        <div class="balance-row" id="balance-row">
-          <span class="label">投入金額（残高）</span>
-          <span class="value" id="balance-value">¥0</span>
-        </div>
+        <div class="balance-row" id="balance-row"></div>
         <button class="issue-btn" id="issue-btn">食券を発行する</button>
         <p class="footer-note">食券が発行されます。残った投入金額はおつりとして返却されます。</p>
         <button class="clear-btn" id="clear-btn">カートを空にする</button>
@@ -252,25 +374,23 @@ header { position: sticky; top: 0; z-index: 50; background: var(--black); border
 
 <!-- Ticket screen -->
 <div id="ticket-screen" class="hidden">
-  <div class="ticket-emoji">🎫</div>
-  <h1 class="ticket-title">食券発行完了</h1>
-  <div class="ticket-stub">
-    <div class="ticket-row">
-      <span class="ticket-no-label">Ticket No.</span>
-      <span class="ticket-no" id="ticket-no"></span>
-    </div>
-    <div class="ticket-hr"></div>
+  <div class="ticket-paper">
+    <div class="brand">自家製麺キリンジ</div>
+    <div class="kind">食&nbsp;券</div>
+    <div class="no-label">TICKET No.</div>
+    <div class="no" id="ticket-no"></div>
+    <hr class="ticket-hr">
     <div id="ticket-items"></div>
-    <div class="ticket-hr"></div>
-    <div class="ticket-row">
-      <span class="ticket-total-label">合計金額</span>
-      <span class="ticket-total-value display" id="ticket-total"></span>
+    <hr class="ticket-hr">
+    <div class="ticket-total-row">
+      <span class="label">合計</span>
+      <span class="value" id="ticket-total"></span>
     </div>
-    <div class="ticket-hr"></div>
+    <hr class="ticket-hr">
     <p class="ticket-type" id="ticket-type"></p>
     <div class="ticket-pickup hidden" id="ticket-pickup-wrap">
       <span>🕐</span>
-      <p class="big display" id="ticket-pickup"></p>
+      <p class="big" id="ticket-pickup"></p>
     </div>
   </div>
   <div class="ticket-instruction">
@@ -355,7 +475,18 @@ function buyItem(name, price, category) {
   } else {
     state.items.push({ name: name, price: price, quantity: 1, category: category });
   }
+  flashTicketTray();
   render();
+}
+
+function flashTicketTray() {
+  var peek = document.getElementById("ticket-peek");
+  peek.classList.remove("show");
+  // force reflow so the animation can retrigger on consecutive purchases
+  void peek.offsetWidth;
+  peek.classList.add("show");
+  clearTimeout(flashTicketTray._t);
+  flashTicketTray._t = setTimeout(function () { peek.classList.remove("show"); }, 700);
 }
 
 function changeQty(name, delta) {
@@ -386,62 +517,41 @@ function cartCount() {
 
 /* ---------- rendering ---------- */
 
-var activeTab = 0;
-var buttonNumber = 0;
-
 function buildMenuDom() {
-  var tabsEl = document.getElementById("tabs");
   var menuEl = document.getElementById("menu");
-  tabsEl.innerHTML = "";
   menuEl.innerHTML = "";
 
-  MENU_DATA.forEach(function (cat, idx) {
-    var tabBtn = document.createElement("button");
-    tabBtn.className = "tab" + (idx === 0 ? " active" : "");
-    tabBtn.textContent = cat.category;
-    tabBtn.dataset.idx = idx;
-    tabBtn.addEventListener("click", function () {
-      document.getElementById("cat-" + idx).scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    tabsEl.appendChild(tabBtn);
-
+  MENU_DATA.forEach(function (cat) {
     var section = document.createElement("div");
-    section.className = "cat-section";
-    section.id = "cat-" + idx;
+    section.className = "cat";
 
-    var header = document.createElement("div");
-    header.className = "cat-header";
-    header.innerHTML = '<div class="cat-bar"></div><h2 class="cat-title display">' + cat.category + '</h2><div class="cat-rule"></div>';
-    section.appendChild(header);
+    var label = document.createElement("div");
+    label.className = "cat-label";
+    label.textContent = cat.category;
+    section.appendChild(label);
 
-    var itemsWrap = document.createElement("div");
-    itemsWrap.className = "items";
+    var grid = document.createElement("div");
+    grid.className = "cat-grid";
 
     cat.items.forEach(function (item) {
-      buttonNumber += 1;
-      var card = document.createElement("div");
-      card.className = "menu-card";
-      card.dataset.name = item.name;
-
-      var isTopping = cat.category === "トッピング・サイド";
-      card.innerHTML =
-        '<span class="num-badge display">' + buttonNumber + '</span>' +
-        '<div class="item-info">' +
-          '<p class="item-name">' + (isTopping ? '<span style="font-size:9px;background:rgba(255,215,0,0.2);color:var(--yellow);padding:1px 5px;border-radius:4px;font-weight:700;margin-right:4px;">ADD</span>' : '') + item.name + '</p>' +
-          '<p class="item-price display">' + formatYen(item.price) + '</p>' +
-        '</div>' +
-        '<div class="card-controls"></div>';
-
-      itemsWrap.appendChild(card);
+      var btn = document.createElement("div");
+      btn.className = "item-btn";
+      btn.dataset.name = item.name;
+      btn.innerHTML =
+        '<span class="lamp-dot"></span>' +
+        '<span class="qty-chip hidden"></span>' +
+        '<span class="name">' + item.name + '</span>' +
+        '<div class="control-slot"></div>';
+      grid.appendChild(btn);
     });
 
-    section.appendChild(itemsWrap);
+    section.appendChild(grid);
     menuEl.appendChild(section);
   });
 }
 
 function renderMenuControls() {
-  document.querySelectorAll(".menu-card").forEach(function (card) {
+  document.querySelectorAll(".item-btn").forEach(function (card) {
     var name = card.dataset.name;
     var itemData = null;
     MENU_DATA.forEach(function (cat) {
@@ -454,43 +564,47 @@ function renderMenuControls() {
     card.classList.toggle("dim", !affordable && qty === 0);
     card.classList.toggle("in-cart", qty > 0);
 
-    var controls = card.querySelector(".card-controls");
+    var chip = card.querySelector(".qty-chip");
     if (qty > 0) {
-      controls.innerHTML =
-        '<div class="qty-controls">' +
+      chip.textContent = qty;
+      chip.classList.remove("hidden");
+    } else {
+      chip.classList.add("hidden");
+    }
+
+    var slot = card.querySelector(".control-slot");
+    if (qty > 0) {
+      slot.innerHTML =
+        '<div class="qty-strip">' +
           '<button data-action="dec">−</button>' +
-          '<span class="qty-val">' + qty + '</span>' +
+          '<span class="n">' + formatYen(item_price_times(qty, itemData.price)) + '</span>' +
           '<button data-action="inc"' + (affordable ? "" : " disabled") + '>＋</button>' +
         '</div>';
-      controls.querySelector('[data-action="dec"]').addEventListener("click", function () { changeQty(name, -1); });
-      controls.querySelector('[data-action="inc"]').addEventListener("click", function () { changeQty(name, 1); });
+      slot.querySelector('[data-action="dec"]').addEventListener("click", function (e) { e.stopPropagation(); changeQty(name, -1); });
+      slot.querySelector('[data-action="inc"]').addEventListener("click", function (e) { e.stopPropagation(); changeQty(name, 1); });
     } else {
-      controls.innerHTML = '<button class="buy-btn"' + (affordable ? "" : " disabled") + '>＋</button>';
-      controls.querySelector(".buy-btn").addEventListener("click", function (e) {
-        buyItem(name, itemData.price, itemData.category);
-        var btn = e.currentTarget;
-        btn.classList.add("pop");
-        setTimeout(function () { btn.classList.remove("pop"); }, 300);
-      });
+      slot.innerHTML = '<div class="price-strip">' + formatYen(itemData.price) + '</div>';
     }
+
+    card.onclick = function () {
+      if (qty === 0) buyItem(name, itemData.price, itemData.category);
+    };
   });
 }
+function item_price_times(qty, price) { return qty * price; }
 
 function renderCoinSlot() {
-  document.getElementById("lcd-amount").textContent = formatYen(state.insertedAmount);
+  var lcd = document.getElementById("lcd-amount");
+  lcd.textContent = state.insertedAmount > 0 ? formatYen(state.insertedAmount) : "お金を入れてください";
   var returnBtn = document.getElementById("return-btn");
   returnBtn.disabled = state.insertedAmount === 0;
-  returnBtn.classList.toggle("active", state.insertedAmount > 0);
 }
 
 function renderFloatingBar() {
-  var bar = document.getElementById("floating-bar");
+  var fab = document.getElementById("cart-fab");
   var count = cartCount();
-  bar.classList.toggle("hidden", count === 0);
-  document.getElementById("floating-count").textContent = count;
-  document.getElementById("floating-total").textContent = formatYen(cartTotal());
+  fab.classList.toggle("hidden", count === 0);
   var badge = document.getElementById("cart-badge");
-  badge.classList.toggle("hidden", count === 0);
   badge.textContent = count;
 }
 
@@ -501,9 +615,9 @@ function renderCartSheet() {
 
   if (state.items.length === 0) {
     var balanceNote = state.insertedAmount > 0
-      ? '<p class="balance-note">' + formatYen(state.insertedAmount) + ' 投入中 — メニューのボタンを押してください</p>'
+      ? '<p class="balance-note">' + formatYen(state.insertedAmount) + ' 投入中 — 機械のボタンを押してください</p>'
       : "";
-    itemsEl.innerHTML = '<div class="sheet-empty"><div class="icon">🍜</div><p>カートは空です</p>' + balanceNote + '</div>';
+    itemsEl.innerHTML = '<div class="sheet-empty"><div class="icon">🍜</div><p>まだ何も選んでいません</p>' + balanceNote + '</div>';
     footer.classList.add("hidden");
   } else {
     itemsEl.innerHTML = "";
@@ -515,12 +629,12 @@ function renderCartSheet() {
           '<p class="cart-row-name">' + item.name + '</p>' +
           '<p class="cart-row-price">' + formatYen(item.price) + ' × ' + item.quantity + '</p>' +
         '</div>' +
-        '<div class="qty-controls">' +
+        '<div class="qty-strip">' +
           '<button data-action="dec">−</button>' +
-          '<span class="qty-val">' + item.quantity + '</span>' +
+          '<span class="n">' + item.quantity + '</span>' +
           '<button data-action="inc"' + (state.insertedAmount >= item.price ? "" : " disabled") + '>＋</button>' +
         '</div>' +
-        '<span class="cart-row-total display">' + formatYen(item.price * item.quantity) + '</span>';
+        '<span class="cart-row-total">' + formatYen(item.price * item.quantity) + '</span>';
       row.querySelector('[data-action="dec"]').addEventListener("click", function () { changeQty(item.name, -1); });
       row.querySelector('[data-action="inc"]').addEventListener("click", function () { changeQty(item.name, 1); });
       itemsEl.appendChild(row);
@@ -589,6 +703,7 @@ function issueTicket() {
 
   clearCart();
   closeCartSheet();
+  flashTicketTray();
   document.getElementById("ticket-screen").classList.remove("hidden");
 }
 
@@ -603,12 +718,11 @@ function closeCartSheet() {
 
 /* ---------- wire up static controls ---------- */
 
-document.querySelectorAll(".bill-btn, .coin-btn").forEach(function (btn) {
+document.querySelectorAll(".bill-slot, .coin-btn").forEach(function (btn) {
   btn.addEventListener("click", function () { insertMoney(Number(btn.dataset.amount)); });
 });
 document.getElementById("return-btn").addEventListener("click", returnChange);
-document.getElementById("open-cart-btn").addEventListener("click", openCartSheet);
-document.getElementById("floating-cart-btn").addEventListener("click", openCartSheet);
+document.getElementById("cart-fab").addEventListener("click", openCartSheet);
 document.getElementById("close-cart-btn").addEventListener("click", closeCartSheet);
 document.getElementById("cart-overlay").addEventListener("click", closeCartSheet);
 document.getElementById("clear-btn").addEventListener("click", clearCart);
@@ -629,22 +743,6 @@ document.getElementById("type-takeout").addEventListener("click", function () {
   document.getElementById("type-eatin").classList.remove("active");
   document.getElementById("pickup-note").classList.remove("hidden");
 });
-
-/* keep the sticky tab underline in sync while scrolling */
-window.addEventListener("scroll", function () {
-  var sections = MENU_DATA.map(function (_, idx) { return document.getElementById("cat-" + idx); });
-  var offset = 140;
-  var current = 0;
-  sections.forEach(function (sec, idx) {
-    if (sec.getBoundingClientRect().top - offset <= 0) current = idx;
-  });
-  if (current !== activeTab) {
-    activeTab = current;
-    document.querySelectorAll(".tab").forEach(function (tab, idx) {
-      tab.classList.toggle("active", idx === current);
-    });
-  }
-}, { passive: true });
 
 /* ---------- init ---------- */
 buildMenuDom();
