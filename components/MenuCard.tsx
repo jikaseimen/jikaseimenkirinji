@@ -12,22 +12,26 @@ type Props = {
 
 export default function MenuCard({ number, name, price, category }: Props) {
   const { dispatch, state } = useCart();
-  const [added, setAdded] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   const cartItem = state.items.find((i) => i.name === name);
   const qty = cartItem?.quantity ?? 0;
+  const affordable = state.insertedAmount >= price;
 
-  const handleAdd = () => {
-    dispatch({ type: "ADD", item: { name, price, category } });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 600);
+  const handleBuy = () => {
+    if (!affordable) return;
+    dispatch({ type: "BUY", item: { name, price, category } });
+    setPressed(true);
+    setTimeout(() => setPressed(false), 600);
   };
 
   const isTopping = category === "トッピング・サイド";
 
   return (
     <div
-      className="menu-card bg-kirinji-charcoal border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3 active:bg-kirinji-darkgray"
+      className={`menu-card bg-kirinji-charcoal border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3 transition-opacity ${
+        affordable ? "active:bg-kirinji-darkgray" : "opacity-40"
+      }`}
       style={{ boxShadow: qty > 0 ? "0 0 0 1.5px #FFD700" : undefined }}
     >
       {/* Button number, like a real vending machine */}
@@ -67,17 +71,19 @@ export default function MenuCard({ number, name, price, category }: Props) {
           </button>
           <span className="w-6 text-center text-white font-bold text-sm">{qty}</span>
           <button
-            onClick={handleAdd}
-            className="w-8 h-8 flex items-center justify-center text-kirinji-yellow font-black text-lg active:bg-kirinji-yellow/20"
+            onClick={handleBuy}
+            disabled={!affordable}
+            className="w-8 h-8 flex items-center justify-center text-kirinji-yellow font-black text-lg active:bg-kirinji-yellow/20 disabled:opacity-30"
           >
             ＋
           </button>
         </div>
       ) : (
         <button
-          onClick={handleAdd}
+          onClick={handleBuy}
+          disabled={!affordable}
           className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xl transition-all ${
-            added
+            pressed
               ? "bg-kirinji-yellow text-kirinji-black scale-110"
               : "bg-kirinji-yellow/10 text-kirinji-yellow border border-kirinji-yellow/40 active:bg-kirinji-yellow active:text-kirinji-black"
           }`}

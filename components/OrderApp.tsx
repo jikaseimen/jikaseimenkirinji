@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CartProvider } from "@/components/CartContext";
 import Header from "@/components/Header";
+import CoinSlot from "@/components/CoinSlot";
 import MenuSection from "@/components/MenuSection";
 import CartPanel from "@/components/CartPanel";
 import FloatingCartBar from "@/components/FloatingCartBar";
@@ -14,7 +15,7 @@ export default function OrderApp() {
     <CartProvider>
       <div className="relative">
         <Header onCartClick={() => setCartOpen(true)} />
-        
+
         {/* Hero strip */}
         <div className="bg-kirinji-yellow px-4 py-2 flex items-center gap-3">
           <div className="flex gap-1">
@@ -31,6 +32,11 @@ export default function OrderApp() {
             ))}
           </div>
         </div>
+
+        <CoinSlot />
+        <p className="text-white/30 text-[11px] text-center py-2 px-4 leading-relaxed">
+          お金を入れてボタンを押すと食券が出てきます
+        </p>
 
         <MenuSection />
         <FloatingCartBar onCartClick={() => setCartOpen(true)} />

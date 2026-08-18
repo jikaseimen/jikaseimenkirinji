@@ -106,6 +106,11 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <div className="text-5xl opacity-20">🍜</div>
                 <p className="text-white/30 text-sm font-bold">カートは空です</p>
+                {state.insertedAmount > 0 && (
+                  <p className="text-kirinji-amber text-xs font-bold">
+                    ¥{state.insertedAmount.toLocaleString()} 投入中 — メニューのボタンを押してください
+                  </p>
+                )}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -152,7 +157,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
 
           {state.items.length > 0 && (
             <div className="px-5 py-5 border-t border-white/10 bg-kirinji-charcoal">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-1">
                 <span className="text-white/60 font-bold text-sm">合計金額</span>
                 <span
                   className="text-kirinji-yellow font-black text-3xl"
@@ -160,6 +165,16 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 >
                   ¥{total.toLocaleString()}
                 </span>
+              </div>
+              <div className="flex items-center justify-between mb-4 h-4">
+                {state.insertedAmount > 0 && (
+                  <>
+                    <span className="text-white/40 text-xs font-bold">投入金額（残高）</span>
+                    <span className="text-kirinji-amber text-sm font-bold">
+                      ¥{state.insertedAmount.toLocaleString()}
+                    </span>
+                  </>
+                )}
               </div>
               <button
                 onClick={handleIssue}
@@ -180,7 +195,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   : "食券を発行する"}
               </button>
               <p className="text-white/25 text-[11px] text-center mt-3 leading-relaxed">
-                ボタンを押すと食券が発行されます。お会計はスタッフにお申し付けください。
+                食券が発行されます。残った投入金額はおつりとして返却されます。
               </p>
               <button
                 onClick={() => dispatch({ type: "CLEAR" })}
