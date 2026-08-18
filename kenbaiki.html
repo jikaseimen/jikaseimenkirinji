@@ -284,9 +284,89 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .ticket-instruction .sub { color: rgba(255,255,255,0.55); font-weight: 400; }
 .play-again-btn { background: var(--orange); color: #fff; font-weight: 900; padding: 12px 30px; border-radius: 999px; font-size: 13px; letter-spacing: 0.04em; box-shadow: 0 3px 0 var(--orange-2); }
 .play-again-btn:active { transform: translateY(2px); box-shadow: none; }
+
+/* ===== owner character + speech bubble ===== */
+#owner-wrap { position: fixed; left: 14px; top: 14px; z-index: 120; display: flex; align-items: flex-start; gap: 8px; pointer-events: none; }
+.owner-avatar {
+  width: 46px; height: 46px; border-radius: 999px; background: var(--machine); border: 2px solid var(--seam);
+  display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  flex-shrink: 0; transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+.owner-avatar.angry { border-color: #ff3b30; box-shadow: 0 0 0 4px rgba(255,59,48,0.35), 0 6px 16px rgba(0,0,0,0.4); animation: shake-owner .35s ease; }
+@keyframes shake-owner { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px) rotate(-4deg);} 40%{transform:translateX(4px) rotate(4deg);} 60%{transform:translateX(-3px) rotate(-3deg);} 80%{transform:translateX(3px) rotate(3deg);} }
+.owner-bubble {
+  max-width: 220px; background: var(--paper); color: var(--paper-ink); border: 2px solid var(--ink);
+  border-radius: 4px 14px 14px 14px; padding: 8px 12px; font-size: 12px; font-weight: 700; line-height: 1.5;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35); margin-top: 2px;
+}
+.owner-bubble.angry { background: #2a0d0a; color: #ffd9d0; border-color: #ff3b30; }
+.owner-bubble .who { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; color: var(--ink-soft); display: block; margin-bottom: 2px; }
+.owner-bubble.angry .who { color: #ff9c8f; }
+
+/* full-screen rage flash */
+#rage-flash { position: fixed; inset: 0; z-index: 118; pointer-events: none; background: radial-gradient(circle, rgba(255,80,10,0.7), rgba(255,40,20,0.15) 55%, rgba(255,40,20,0) 78%); opacity: 0; }
+#rage-flash.show { animation: rage-flash .7s ease; }
+@keyframes rage-flash { 0% { opacity: 0; } 12% { opacity: 1; } 40% { opacity: 0.85; } 100% { opacity: 0; } }
+.rage-particle { position: fixed; z-index: 119; font-size: 30px; pointer-events: none; animation: rage-particle-fly 1.1s ease-out forwards; text-shadow: 0 0 12px rgba(255,120,0,0.9); }
+@keyframes rage-particle-fly {
+  0% { transform: translate(0,0) scale(0.6) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(180deg); opacity: 0; }
+}
+
+/* ===== start screen ===== */
+#start-screen {
+  position: fixed; inset: 0; background: var(--page); z-index: 110;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; padding: 32px 24px; text-align: center;
+}
+#start-screen h1 { font-size: 26px; font-weight: 900; color: var(--orange); }
+#start-screen p { color: rgba(255,255,255,0.65); font-size: 13px; line-height: 1.8; max-width: 320px; }
+.start-btn { background: var(--orange); color: #fff; font-weight: 900; padding: 16px 40px; border-radius: 999px; font-size: 15px; letter-spacing: 0.05em; box-shadow: 0 3px 0 var(--orange-2); }
+.start-btn:active { transform: translateY(2px); box-shadow: none; }
+.start-btn:disabled { opacity: 0.5; }
+.budget-reveal { background: var(--machine); border-radius: 16px; padding: 18px 30px; }
+.budget-reveal .cap { color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; }
+.budget-reveal .val { color: var(--ink); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 34px; }
+.budget-reveal.show .val { animation: budget-pop .4s cubic-bezier(.3,1.4,.4,1); }
+@keyframes budget-pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* ===== timer ===== */
+.timer-wrap { display: flex; align-items: center; gap: 6px; background: var(--ink); color: var(--lcd-text); border-radius: 8px; padding: 6px 10px; margin-left: 8px; }
+.timer-wrap .t { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; }
+.timer-wrap.urgent { background: #7a1410; animation: shake-owner .3s infinite; }
+.timer-wrap.urgent .t { color: #ffdcd6; }
+
+/* ===== time up screen ===== */
+#timeup-screen {
+  position: fixed; inset: 0; background: var(--page); z-index: 105;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px; text-align: center;
+}
+#timeup-screen h1 { color: #ff5b45; font-size: 32px; font-weight: 900; }
+#timeup-screen p { color: rgba(255,255,255,0.6); font-size: 13px; }
+
+/* ===== rank stamp + verdict on ticket ===== */
+.rank-stamp {
+  width: 70px; height: 70px; border-radius: 999px; border: 4px solid #c81e1e; color: #c81e1e;
+  display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', serif; font-size: 34px;
+  transform: rotate(-14deg); margin: 0 auto 8px; opacity: 0.9;
+}
+.verdict-title { text-align: center; font-weight: 900; font-size: 13px; color: var(--orange); margin-bottom: 4px; }
+.verdict-comment { text-align: center; font-size: 12px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 10px; }
+.records-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; max-width: 300px; width: 100%; }
+.records-box .cap { color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px; }
+.records-box .line { color: rgba(255,255,255,0.75); font-size: 12px; font-family: 'JetBrains Mono', monospace; line-height: 1.7; }
+.share-btn { background: #1a1a1a; border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 900; padding: 11px 24px; border-radius: 999px; font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
+.share-btn:active { transform: translateY(1px); }
+.ticket-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 </style>
 </head>
 <body>
+
+<div id="owner-wrap">
+  <div class="owner-avatar" id="owner-avatar">😊</div>
+  <div class="owner-bubble hidden" id="owner-bubble"></div>
+</div>
+<div id="rage-flash"></div>
 
 <div id="machine">
   <div class="brand-plate">
@@ -295,6 +375,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
       <div class="en wordmark">KIRINJI</div>
     </div>
     <div class="header-right">
+      <div class="timer-wrap" id="timer-wrap"><span>⏱</span><span class="t" id="timer-val">60</span></div>
       <button id="mute-btn" class="mute-btn" aria-label="効果音を切り替え" title="効果音のON/OFF">🔊</button>
       <div class="ticket-badge">TICKET</div>
     </div>
@@ -348,6 +429,25 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 <button id="cart-fab" class="hidden">
   🧾 カートを見る <span class="badge" id="cart-badge">0</span>
 </button>
+
+<!-- Start screen -->
+<div id="start-screen">
+  <h1>本日の券売機チャレンジ</h1>
+  <p>制限時間60秒。渡された所持金の中で、好きな注文を組み立てて食券を発行しよう。<br>組み合わせ次第で店主が採点します。</p>
+  <div class="budget-reveal hidden" id="budget-reveal">
+    <div class="cap">本日の所持金</div>
+    <div class="val mono" id="budget-value">¥0</div>
+  </div>
+  <button class="start-btn" id="start-btn">スタート</button>
+</div>
+
+<!-- Time up screen -->
+<div id="timeup-screen" class="hidden">
+  <div style="font-size:56px;">⏰</div>
+  <h1>タイムアップ！</h1>
+  <p>制限時間内に食券を発行できませんでした。</p>
+  <button class="play-again-btn" id="timeup-retry-btn">もう一度挑戦</button>
+</div>
 
 <!-- Cart sheet -->
 <div id="cart-overlay-wrap" class="hidden">
@@ -405,7 +505,19 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <div class="ticket-instruction">
     <p>📍 この画面をスタッフにお見せください<br><span class="sub">お会計はレジにてお願いいたします</span></p>
   </div>
-  <button class="play-again-btn" id="play-again-btn">もう一度あそぶ</button>
+
+  <div id="verdict-box" style="width:100%; max-width:300px;">
+    <div class="rank-stamp" id="rank-stamp">S</div>
+    <div class="verdict-title" id="verdict-title"></div>
+    <div class="verdict-comment" id="verdict-comment"></div>
+  </div>
+
+  <div class="records-box" id="records-box"></div>
+
+  <div class="ticket-actions">
+    <button class="share-btn" id="share-btn">📤 結果をシェア</button>
+    <button class="play-again-btn" id="play-again-btn">もう一度あそぶ</button>
+  </div>
 </div>
 
 <script>
@@ -568,6 +680,22 @@ var SFX = (function () {
     });
   }
 
+  // 店主ブチギレ — harsh dissonant blast for a terrible order
+  function rage() {
+    blip(220, "sawtooth", 0.22, 0.18, 0);
+    blip(233, "sawtooth", 0.22, 0.18, 0);
+    blip(140, "sawtooth", 0.24, 0.4, 0.12);
+    blip(147, "sawtooth", 0.2, 0.4, 0.12);
+    noiseBurst(0.3, 0.18, 0.05, 900);
+  }
+
+  // timer running out
+  function timeUp() {
+    blip(392, "sawtooth", 0.2, 0.22, 0);
+    blip(329.6, "sawtooth", 0.2, 0.22, 0.16);
+    blip(261.6, "sawtooth", 0.2, 0.35, 0.32);
+  }
+
   function toggleMute() {
     muted = !muted;
     localStorage.setItem("kirinji-muted", muted ? "1" : "0");
@@ -577,13 +705,22 @@ var SFX = (function () {
 
   function isMuted() { return muted; }
 
-  return { insert: insert, denied: denied, buy: buy, coinReturn: coinReturn, jackpot: jackpot, toggleMute: toggleMute, isMuted: isMuted };
+  return {
+    insert: insert, denied: denied, buy: buy, coinReturn: coinReturn, jackpot: jackpot,
+    rage: rage, timeUp: timeUp, toggleMute: toggleMute, isMuted: isMuted
+  };
 })();
 
+var TIME_LIMIT = 60;
+
 var state = {
+  wallet: 0,
   insertedAmount: 0,
   items: [], // {name, price, quantity, category}
   isTakeout: false,
+  timeLeft: TIME_LIMIT,
+  timerId: null,
+  gameOver: false,
 };
 
 function formatYen(n) { return "¥" + n.toLocaleString("ja-JP"); }
@@ -593,18 +730,24 @@ function findItem(name) {
 }
 
 function insertMoney(amount) {
+  if (state.gameOver) return;
+  if (state.wallet < amount) { showOwnerToast("所持金が足りません。"); SFX.denied(); return; }
+  state.wallet -= amount;
   state.insertedAmount += amount;
   SFX.insert(amount);
   render();
 }
 
 function returnChange() {
+  if (state.gameOver) return;
+  state.wallet += state.insertedAmount;
   state.insertedAmount = 0;
   SFX.coinReturn();
   render();
 }
 
 function buyItem(name, price, category) {
+  if (state.gameOver) return;
   if (state.insertedAmount < price) return;
   state.insertedAmount -= price;
   var existing = findItem(name);
@@ -643,6 +786,7 @@ function changeQty(name, delta) {
 }
 
 function clearCart() {
+  state.wallet += state.insertedAmount;
   state.items = [];
   state.insertedAmount = 0;
   render();
@@ -727,8 +871,13 @@ function renderMenuControls() {
     }
 
     card.onclick = function () {
+      if (state.gameOver) return;
       if (qty > 0) return;
-      if (!affordable) { SFX.denied(); return; }
+      if (!affordable) {
+        SFX.denied();
+        showOwnerToast(state.insertedAmount === 0 ? "まずお金を入れてください。" : "お金が足りません。");
+        return;
+      }
       buyItem(name, itemData.price, itemData.category);
     };
   });
@@ -798,6 +947,228 @@ function render() {
   renderCartSheet();
 }
 
+/* ---------- owner character ---------- */
+
+var ownerToastTimer = null;
+
+function showOwnerToast(text, angry) {
+  var avatar = document.getElementById("owner-avatar");
+  var bubble = document.getElementById("owner-bubble");
+  avatar.textContent = angry ? "😡" : "😊";
+  avatar.classList.toggle("angry", !!angry);
+  bubble.classList.toggle("angry", !!angry);
+  bubble.innerHTML = '<span class="who">店主</span>' + text;
+  bubble.classList.remove("hidden");
+  clearTimeout(ownerToastTimer);
+  ownerToastTimer = setTimeout(function () {
+    bubble.classList.add("hidden");
+    avatar.classList.remove("angry");
+    avatar.textContent = "😊";
+  }, 2600);
+}
+
+function triggerRage(text) {
+  showOwnerToast(text, true);
+  SFX.rage();
+  var flash = document.getElementById("rage-flash");
+  flash.classList.remove("show");
+  void flash.offsetWidth;
+  flash.classList.add("show");
+  spawnRageParticles();
+}
+
+function spawnRageParticles() {
+  var emojis = ["🔥", "🔥", "🔥", "💥", "🍜", "😤"];
+  var cx = window.innerWidth / 2;
+  var cy = window.innerHeight / 2;
+  for (var i = 0; i < 22; i++) {
+    var el = document.createElement("span");
+    el.className = "rage-particle";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    var angle = Math.random() * Math.PI * 2;
+    var dist = 140 + Math.random() * 260;
+    el.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    el.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+    el.style.left = (cx - 15) + "px";
+    el.style.top = (cy - 15) + "px";
+    document.body.appendChild(el);
+    (function (node) { setTimeout(function () { node.remove(); }, 1150); })(el);
+  }
+}
+
+/* ---------- 店主採点 (owner's verdict) ---------- */
+
+var NOODLE_NAMES = [
+  "こってり", "味玉こってり", "野菜こってり", "豚増こってり",
+  "あっさり", "味玉あっさり", "野菜あっさり", "豚増あっさり",
+  "汁無し", "チーズ汁無し", "野菜汁無し", "豚マシ汁無し",
+  "【冷】油そば", "【温】油そば"
+];
+var ATTACK_NAMES = ["豚増", "かす増", "麺特盛", "全部", "粒ニンニク", "テイクアウトあぶらかす"];
+
+function judgeOrder(items, total, walletLeft) {
+  var qty = function (n) { var it = items.find(function (i) { return i.name === n; }); return it ? it.quantity : 0; };
+  var has = function (n) { return qty(n) > 0; };
+  var hasBase = items.some(function (i) { return NOODLE_NAMES.indexOf(i.name) !== -1; });
+  var onlyBeer = items.length === 1 && items[0].name === "ビール";
+  var onlyTamago = items.length === 1 && (items[0].name === "味玉" || items[0].name === "生卵");
+  var attackCount = ATTACK_NAMES.reduce(function (s, n) { return s + qty(n); }, 0);
+
+  // specific scripted reactions, most distinctive first
+  if (onlyBeer) {
+    return { rank: "C", title: "店主に煽られた", comment: "ラーメン屋でビールだけ……渋いっすね。", angry: false };
+  }
+  if (onlyTamago) {
+    return { rank: "D", title: "店主に煽られた", comment: "今日はラーメン食べないんですね。", angry: false };
+  }
+  if (has("全部") && has("麺特盛") && has("豚増")) {
+    return { rank: "S", title: "店主に認められた", comment: "……本当に？　気合入ってますね、儲かります。", angry: false };
+  }
+  if (has("あっさり") && has("チーズ")) {
+    return { rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。", angry: false };
+  }
+  if (!hasBase) {
+    return { rank: "F", title: "店主に怒られた", comment: "ラーメン屋なんですけど！　食べられる量を考えてください。", angry: true };
+  }
+
+  // generic score from spend + "attack" toppings
+  var score = attackCount * 1.5 + total / 1500;
+  var rank = score >= 7 ? "S" : score >= 5 ? "A" : score >= 3 ? "B" : score >= 1.2 ? "C" : "D";
+  var comments = {
+    S: "食う気満々でよろしい。今日イチの上客です。",
+    A: "いい食べっぷりです、また来てください。",
+    B: "普通ですね、悪くないです。",
+    C: "それだけ？　もっと頼んでいいんですよ。",
+    D: "それで足りるんですか……？"
+  };
+  var titles = { S: "店主に認められた", A: "店主に認められた", B: "店主に煽られた", C: "店主に煽られた", D: "店主に怒られた" };
+  var comment = comments[rank];
+  var angry = rank === "D";
+  if (total >= 5000) { comment = "その注文、正気ですか？　" + comment; angry = false; }
+  if (walletLeft === 0) { comment += "　……財布が軽い。明日の昼飯どうするんです？"; }
+  return { rank: rank, title: titles[rank], comment: comment, angry: angry };
+}
+
+/* ---------- personal record (device-local; there is no shared backend, so this is not a real cross-user ranking) ---------- */
+
+var RECORDS_KEY = "kirinji-records-v1";
+
+function loadRecords() {
+  try {
+    return JSON.parse(localStorage.getItem(RECORDS_KEY)) || { plays: 0, best: 0, ranks: {} };
+  } catch (e) {
+    return { plays: 0, best: 0, ranks: {} };
+  }
+}
+
+function saveRecord(total, rank) {
+  var r = loadRecords();
+  r.plays += 1;
+  r.best = Math.max(r.best, total);
+  r.ranks[rank] = (r.ranks[rank] || 0) + 1;
+  localStorage.setItem(RECORDS_KEY, JSON.stringify(r));
+  return r;
+}
+
+function renderRecordsBox(r) {
+  var box = document.getElementById("records-box");
+  var bestRankOrder = ["S", "A", "B", "C", "D", "F"];
+  var bestRank = bestRankOrder.find(function (k) { return r.ranks[k] > 0; }) || "-";
+  box.innerHTML =
+    '<div class="cap">あなたの記録（この端末のみ）</div>' +
+    '<div class="line">プレイ回数　' + r.plays + ' 回</div>' +
+    '<div class="line">自己最高額　' + formatYen(r.best) + '</div>' +
+    '<div class="line">最高評価　　' + bestRank + ' ランク</div>';
+}
+
+/* ---------- SNS share ---------- */
+
+function shareResult(verdict, total) {
+  var text =
+    "【自家製麺キリンジ 仮想券売機チャレンジ】\n" +
+    "注文額 " + formatYen(total) + "\n" +
+    "店主評価：" + verdict.rank + "ランク（" + verdict.title + "）\n" +
+    "「" + verdict.comment + "」\n" +
+    "#キリンジ仮想券売機";
+  if (navigator.share) {
+    navigator.share({ text: text }).catch(function () {});
+  } else {
+    window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+  }
+}
+
+/* ---------- timer ---------- */
+
+function startTimer() {
+  clearInterval(state.timerId);
+  state.timeLeft = TIME_LIMIT;
+  updateTimerUI();
+  state.timerId = setInterval(function () {
+    state.timeLeft -= 1;
+    updateTimerUI();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerId);
+      onTimeUp();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timerId);
+}
+
+function updateTimerUI() {
+  document.getElementById("timer-val").textContent = state.timeLeft;
+  document.getElementById("timer-wrap").classList.toggle("urgent", state.timeLeft <= 10);
+}
+
+function onTimeUp() {
+  state.gameOver = true;
+  SFX.timeUp();
+  document.getElementById("timeup-screen").classList.remove("hidden");
+}
+
+/* ---------- game round lifecycle ---------- */
+
+function randomBudget() {
+  return Math.round((2000 + Math.random() * 3000) / 100) * 100;
+}
+
+function startNewRound() {
+  stopTimer();
+  state.wallet = 0;
+  state.insertedAmount = 0;
+  state.items = [];
+  state.isTakeout = false;
+  state.timeLeft = TIME_LIMIT;
+  state.gameOver = false;
+
+  document.getElementById("ticket-screen").classList.add("hidden");
+  document.getElementById("timeup-screen").classList.add("hidden");
+  document.getElementById("cart-overlay-wrap").classList.add("hidden");
+  document.getElementById("budget-reveal").classList.add("hidden");
+  document.getElementById("start-btn").disabled = false;
+  document.getElementById("start-screen").classList.remove("hidden");
+  updateTimerUI();
+  render();
+}
+
+function beginRound() {
+  var startBtn = document.getElementById("start-btn");
+  startBtn.disabled = true;
+  state.wallet = randomBudget();
+  var reveal = document.getElementById("budget-reveal");
+  document.getElementById("budget-value").textContent = formatYen(state.wallet);
+  reveal.classList.remove("hidden");
+  reveal.classList.add("show");
+  SFX.buy();
+  setTimeout(function () {
+    document.getElementById("start-screen").classList.add("hidden");
+    startTimer();
+    render();
+  }, 900);
+}
+
 /* ---------- ticket issuing ---------- */
 
 function generateTicketNumber() {
@@ -812,13 +1183,18 @@ function calcPickupTime() {
   return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
 }
 
+var lastVerdict = null;
+var lastTotal = 0;
+
 function issueTicket() {
-  if (state.items.length === 0) return;
+  if (state.gameOver || state.items.length === 0) return;
   var ticketNumber = generateTicketNumber();
   var total = cartTotal();
   var isTakeout = state.isTakeout;
   var pickupTime = isTakeout ? calcPickupTime() : "";
   var items = state.items.slice();
+  var walletAfterChange = state.wallet + state.insertedAmount;
+  var verdict = judgeOrder(items, total, walletAfterChange);
 
   document.getElementById("ticket-no").textContent = ticketNumber;
   document.getElementById("ticket-total").textContent = formatYen(total);
@@ -843,10 +1219,28 @@ function issueTicket() {
     pickupWrap.classList.add("hidden");
   }
 
+  document.getElementById("rank-stamp").textContent = verdict.rank;
+  document.getElementById("verdict-title").textContent = verdict.title;
+  document.getElementById("verdict-comment").textContent = "「" + verdict.comment + "」";
+
+  var records = saveRecord(total, verdict.rank);
+  renderRecordsBox(records);
+  lastVerdict = verdict;
+  lastTotal = total;
+
+  stopTimer();
+  state.gameOver = true;
   clearCart();
   closeCartSheet();
   flashTicketTray();
-  SFX.jackpot();
+
+  if (verdict.angry) {
+    SFX.jackpot();
+    setTimeout(function () { triggerRage(verdict.comment); }, 1600);
+  } else {
+    SFX.jackpot();
+    showOwnerToast(verdict.comment);
+  }
   document.getElementById("ticket-screen").classList.remove("hidden");
 }
 
@@ -870,8 +1264,11 @@ document.getElementById("close-cart-btn").addEventListener("click", closeCartShe
 document.getElementById("cart-overlay").addEventListener("click", closeCartSheet);
 document.getElementById("clear-btn").addEventListener("click", clearCart);
 document.getElementById("issue-btn").addEventListener("click", issueTicket);
-document.getElementById("play-again-btn").addEventListener("click", function () {
-  document.getElementById("ticket-screen").classList.add("hidden");
+document.getElementById("play-again-btn").addEventListener("click", startNewRound);
+document.getElementById("timeup-retry-btn").addEventListener("click", startNewRound);
+document.getElementById("start-btn").addEventListener("click", beginRound);
+document.getElementById("share-btn").addEventListener("click", function () {
+  if (lastVerdict) shareResult(lastVerdict, lastTotal);
 });
 
 var muteBtn = document.getElementById("mute-btn");
@@ -896,7 +1293,7 @@ document.getElementById("type-takeout").addEventListener("click", function () {
 
 /* ---------- init ---------- */
 buildMenuDom();
-render();
+startNewRound();
 </script>
 </body>
 </html>
