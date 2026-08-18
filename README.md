@@ -9,6 +9,8 @@
 
 **[https://jikaseimenkirinji.vercel.app](https://jikaseimenkirinji.vercel.app)**
 
+このNext.jsアプリと同じ仮想券売機の仕組みを、ビルド不要の単体HTMLゲームとしても用意しています。`kenbaiki.html` をブラウザで開くだけで遊べます（`game.html`・`menmatchi.html` と同じ、フレームワーク無しの静的ファイルです）。
+
 ## 📖 概要
 
 実店舗の券売機をそのままスマホに移植しました。お金を入れる → ボタンが光る → 押すと食券が出てくる、という実機と同じ操作感で注文できます。
@@ -104,6 +106,7 @@ MIT License — 自由に使用・改変・再配布できます。
 - 公式サイト [jikaseimenkirinji.com](https://jikaseimenkirinji.com)
 - あぶらかすキャッチ (https://jikaseimenkirinji.com/game.html)
 - 麺マッチ (https://jikaseimenkirinji.com/app/)
+- 仮想券売機ゲーム (https://jikaseimenkirinji.com/kenbaiki.html)
 - RAMEN_PROMPT (https://jikaseimenkirinji.com/RAMEN_PROMPT.html)
 - 📍 仙台市青葉区二日町15-15第二石原ビル101
 - 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
