@@ -370,6 +370,22 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .share-btn { background: #1a1a1a; border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 900; padding: 11px 24px; border-radius: 999px; font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
 .share-btn:active { transform: translateY(1px); }
 .ticket-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* ===== share modal ===== */
+#share-modal-wrap { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.share-modal {
+  position: relative; z-index: 131; width: 100%; max-width: 340px; background: var(--paper); color: var(--paper-ink);
+  border-radius: 18px; border-top: 4px solid var(--orange); padding: 18px 20px 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.share-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.share-modal-head h3 { font-size: 17px; font-weight: 900; }
+#share-text {
+  width: 100%; resize: none; border: 1px solid var(--seam); border-radius: 10px; background: #fff; color: var(--paper-ink);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; padding: 10px; margin-bottom: 12px;
+}
+.share-modal-actions { display: flex; flex-direction: column; gap: 8px; }
+.share-modal-actions .share-btn { text-align: center; text-decoration: none; }
+.share-copy-status { min-height: 16px; text-align: center; font-size: 12px; font-weight: 700; color: var(--orange-2); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -534,6 +550,23 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <div class="ticket-actions">
     <button class="share-btn" id="share-btn">📤 結果をシェア</button>
     <button class="play-again-btn" id="play-again-btn">もう一度あそぶ</button>
+  </div>
+</div>
+
+<!-- Share modal (reliable fallback — native share/window.open can fail silently in embedded contexts) -->
+<div id="share-modal-wrap" class="hidden">
+  <div class="overlay" id="share-modal-overlay"></div>
+  <div class="share-modal">
+    <div class="share-modal-head">
+      <h3>結果をシェア</h3>
+      <button class="sheet-close" id="share-modal-close">✕</button>
+    </div>
+    <textarea id="share-text" readonly rows="6"></textarea>
+    <div class="share-modal-actions">
+      <button class="issue-btn" id="share-copy-btn">📋 テキストをコピー</button>
+      <a class="share-btn" id="share-tweet-link" href="#" target="_blank" rel="noopener">🐦 Xで投稿する</a>
+    </div>
+    <p id="share-copy-status" class="share-copy-status"></p>
   </div>
 </div>
 
@@ -1106,18 +1139,64 @@ function renderRecordsBox(r) {
 }
 
 /* ---------- SNS share ---------- */
+/* navigator.share()/window.open() are unreliable inside a sandboxed iframe
+   (e.g. when this page is embedded as a Claude Artifact) — they can fail
+   silently with no visible error. Always fall back to a copy-to-clipboard
+   panel that works everywhere, and only skip it if the native share sheet
+   genuinely completed. */
 
-function shareResult(verdict, total) {
-  var text =
+function buildShareText(verdict, total) {
+  return (
     "【自家製麺キリンジ 仮想券売機チャレンジ】\n" +
     "注文額 " + formatYen(total) + "\n" +
     "店主評価：" + verdict.rank + "ランク（" + verdict.title + "）\n" +
     "「" + verdict.comment + "」\n" +
-    "#キリンジ仮想券売機";
+    "#キリンジ仮想券売機"
+  );
+}
+
+function shareResult(verdict, total) {
+  var text = buildShareText(verdict, total);
   if (navigator.share) {
-    navigator.share({ text: text }).catch(function () {});
+    navigator.share({ text: text }).catch(function () {
+      openShareModal(text);
+    });
   } else {
-    window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+    openShareModal(text);
+  }
+}
+
+function openShareModal(text) {
+  document.getElementById("share-text").value = text;
+  document.getElementById("share-tweet-link").href =
+    "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  document.getElementById("share-copy-status").textContent = "";
+  document.getElementById("share-modal-wrap").classList.remove("hidden");
+}
+
+function closeShareModal() {
+  document.getElementById("share-modal-wrap").classList.add("hidden");
+}
+
+function copyShareText() {
+  var textarea = document.getElementById("share-text");
+  var status = document.getElementById("share-copy-status");
+  var done = function () {
+    status.textContent = "コピーしました！";
+    setTimeout(function () { status.textContent = ""; }, 2200);
+  };
+  var fallback = function () {
+    textarea.focus();
+    textarea.select();
+    try {
+      if (document.execCommand("copy")) { done(); return; }
+    } catch (e) {}
+    status.textContent = "コピーできませんでした。手動で選択してください。";
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textarea.value).then(done).catch(fallback);
+  } else {
+    fallback();
   }
 }
 
@@ -1294,6 +1373,9 @@ document.getElementById("start-btn").addEventListener("click", beginRound);
 document.getElementById("share-btn").addEventListener("click", function () {
   if (lastVerdict) shareResult(lastVerdict, lastTotal);
 });
+document.getElementById("share-modal-close").addEventListener("click", closeShareModal);
+document.getElementById("share-modal-overlay").addEventListener("click", closeShareModal);
+document.getElementById("share-copy-btn").addEventListener("click", copyShareText);
 
 var muteBtn = document.getElementById("mute-btn");
 muteBtn.textContent = SFX.isMuted() ? "🔇" : "🔊";
