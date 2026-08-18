@@ -83,6 +83,12 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   padding: 5px 12px; border-radius: 4px; letter-spacing: 0.08em; transform: skew(-6deg);
   box-shadow: 0 2px 0 var(--orange-2);
 }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.mute-btn {
+  width: 30px; height: 30px; border-radius: 999px; background: var(--machine-2); border: 1px solid var(--seam);
+  font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--ink);
+}
+.mute-btn:active { transform: scale(0.92); }
 
 /* lamps row */
 .lamps {
@@ -288,7 +294,10 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
       <div class="jp">自家製麺</div>
       <div class="en wordmark">KIRINJI</div>
     </div>
-    <div class="ticket-badge">TICKET</div>
+    <div class="header-right">
+      <button id="mute-btn" class="mute-btn" aria-label="効果音を切り替え" title="効果音のON/OFF">🔊</button>
+      <div class="ticket-badge">TICKET</div>
+    </div>
   </div>
 
   <div class="lamps">
@@ -444,6 +453,133 @@ var MENU_DATA = [
   ]},
 ];
 
+/* ---------- SFX: synthesized "flashy pachinko" sound effects ---------- */
+/* No audio files — everything below is generated with the Web Audio API. */
+
+var SFX = (function () {
+  var ctx = null;
+  var muted = localStorage.getItem("kirinji-muted") === "1";
+
+  function ensureCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  // one pitched blip with a percussive attack + exponential decay
+  function blip(freq, type, peak, dur, when) {
+    if (muted) return;
+    var c = ensureCtx();
+    var t0 = c.currentTime + (when || 0);
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = type || "square";
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  // short burst of filtered noise, for coin "tink" and mechanical clatter
+  function noiseBurst(dur, peak, when, hz) {
+    if (muted) return;
+    var c = ensureCtx();
+    var t0 = c.currentTime + (when || 0);
+    var bufferSize = Math.max(1, Math.floor(c.sampleRate * dur));
+    var buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    var src = c.createBufferSource();
+    src.buffer = buffer;
+    var filt = c.createBiquadFilter();
+    filt.type = "bandpass";
+    filt.frequency.value = hz || 3200;
+    filt.Q.value = 1.4;
+    var gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filt).connect(gain).connect(c.destination);
+    src.start(t0);
+  }
+
+  // coin/bill inserted into the slot — bright ascending "chin!"
+  function insert(amount) {
+    if (amount >= 1000) {
+      blip(1046.5, "square", 0.18, 0.1, 0);
+      blip(1568.0, "square", 0.16, 0.14, 0.05);
+      blip(2093.0, "square", 0.12, 0.18, 0.1);
+    } else {
+      blip(1568.0, "square", 0.15, 0.09, 0);
+      blip(2093.0, "square", 0.12, 0.12, 0.045);
+    }
+  }
+
+  // button pressed but not enough balance — flat buzz
+  function denied() {
+    blip(150, "sawtooth", 0.16, 0.14, 0);
+    blip(110, "sawtooth", 0.14, 0.18, 0.06);
+  }
+
+  // item successfully bought — quick two-note "get!" chime
+  function buy() {
+    blip(1318.5, "square", 0.2, 0.09, 0);
+    blip(1760.0, "square", 0.2, 0.14, 0.06);
+    noiseBurst(0.05, 0.1, 0, 4000);
+  }
+
+  // おつり返却 — coins spilling into the tray
+  function coinReturn() {
+    for (var i = 0; i < 18; i++) {
+      var t = i * 0.03 + Math.random() * 0.015;
+      noiseBurst(0.06, 0.14, t, 2200 + Math.random() * 2600);
+    }
+  }
+
+  // ticket issued — the big flashy pachinko-style jackpot fanfare
+  function jackpot() {
+    // mechanical ticket-print rattle
+    for (var i = 0; i < 10; i++) {
+      noiseBurst(0.03, 0.16, i * 0.045, 1800);
+    }
+    var printEnd = 10 * 0.045 + 0.1;
+
+    // rising bell arpeggio
+    var notes = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568.0];
+    notes.forEach(function (f, i) {
+      blip(f, "square", 0.22, 0.22, printEnd + i * 0.09);
+      blip(f * 2, "triangle", 0.08, 0.18, printEnd + i * 0.09);
+    });
+    var arpeggioEnd = printEnd + notes.length * 0.09 + 0.05;
+
+    // coin shower payout
+    for (var j = 0; j < 34; j++) {
+      var t2 = arpeggioEnd + j * 0.026 + Math.random() * 0.012;
+      blip(1100 + Math.random() * 1500, "triangle", 0.12, 0.07, t2);
+    }
+
+    // triumphant final chord
+    var chordAt = arpeggioEnd + 34 * 0.026 + 0.05;
+    [1046.5, 1318.5, 1568.0, 2093.0].forEach(function (f) {
+      blip(f, "square", 0.16, 0.5, chordAt);
+    });
+  }
+
+  function toggleMute() {
+    muted = !muted;
+    localStorage.setItem("kirinji-muted", muted ? "1" : "0");
+    if (!muted) ensureCtx();
+    return muted;
+  }
+
+  function isMuted() { return muted; }
+
+  return { insert: insert, denied: denied, buy: buy, coinReturn: coinReturn, jackpot: jackpot, toggleMute: toggleMute, isMuted: isMuted };
+})();
+
 var state = {
   insertedAmount: 0,
   items: [], // {name, price, quantity, category}
@@ -458,11 +594,13 @@ function findItem(name) {
 
 function insertMoney(amount) {
   state.insertedAmount += amount;
+  SFX.insert(amount);
   render();
 }
 
 function returnChange() {
   state.insertedAmount = 0;
+  SFX.coinReturn();
   render();
 }
 
@@ -475,6 +613,7 @@ function buyItem(name, price, category) {
   } else {
     state.items.push({ name: name, price: price, quantity: 1, category: category });
   }
+  SFX.buy();
   flashTicketTray();
   render();
 }
@@ -499,6 +638,7 @@ function changeQty(name, delta) {
   if (item.quantity <= 0) {
     state.items = state.items.filter(function (i) { return i.name !== name; });
   }
+  if (delta > 0) SFX.buy();
   render();
 }
 
@@ -587,7 +727,9 @@ function renderMenuControls() {
     }
 
     card.onclick = function () {
-      if (qty === 0) buyItem(name, itemData.price, itemData.category);
+      if (qty > 0) return;
+      if (!affordable) { SFX.denied(); return; }
+      buyItem(name, itemData.price, itemData.category);
     };
   });
 }
@@ -704,6 +846,7 @@ function issueTicket() {
   clearCart();
   closeCartSheet();
   flashTicketTray();
+  SFX.jackpot();
   document.getElementById("ticket-screen").classList.remove("hidden");
 }
 
@@ -729,6 +872,13 @@ document.getElementById("clear-btn").addEventListener("click", clearCart);
 document.getElementById("issue-btn").addEventListener("click", issueTicket);
 document.getElementById("play-again-btn").addEventListener("click", function () {
   document.getElementById("ticket-screen").classList.add("hidden");
+});
+
+var muteBtn = document.getElementById("mute-btn");
+muteBtn.textContent = SFX.isMuted() ? "🔇" : "🔊";
+muteBtn.addEventListener("click", function () {
+  var muted = SFX.toggleMute();
+  muteBtn.textContent = muted ? "🔇" : "🔊";
 });
 
 document.getElementById("type-eatin").addEventListener("click", function () {
