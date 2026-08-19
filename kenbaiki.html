@@ -371,6 +371,27 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 #timeup-screen h1 { color: #ff5b45; font-size: 32px; font-weight: 900; }
 #timeup-screen p { color: rgba(255,255,255,0.6); font-size: 13px; }
 
+/* ===== ban screen ===== */
+#ban-screen {
+  position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 30%, #2a0505 0%, #0a0403 70%); z-index: 108;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; text-align: center;
+}
+.ban-photo-wrap { position: relative; width: 170px; height: 170px; border-radius: 999px; overflow: visible; }
+.ban-photo-wrap .owner-photo { width: 100%; height: 100%; border-radius: 999px; object-fit: cover; border: 4px solid #7a0000; filter: grayscale(0.3) contrast(1.15); }
+.ban-stamp {
+  position: absolute; top: 50%; left: 50%; width: 190px;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  border: 6px solid #ff2020; color: #ff2020; border-radius: 10px;
+  font-family: 'Bebas Neue', serif; font-size: 44px; font-weight: 900; letter-spacing: 0.1em;
+  text-align: center; padding: 6px 0; opacity: 0.92; mix-blend-mode: screen;
+  box-shadow: 0 0 24px rgba(255,32,32,0.5);
+  animation: stamp-hit .35s cubic-bezier(.2,1.6,.4,1);
+}
+@keyframes stamp-hit { 0% { transform: translate(-50%,-50%) rotate(-18deg) scale(2.6); opacity: 0; } 70% { opacity: 1; } 100% { transform: translate(-50%,-50%) rotate(-18deg) scale(1); opacity: 0.92; } }
+#ban-screen h1 { color: #ff5b45; font-size: 26px; font-weight: 900; max-width: 320px; }
+#ban-count-text { color: rgba(255,255,255,0.55); font-size: 12.5px; font-family: 'JetBrains Mono', monospace; }
+.ban-sub { color: rgba(255,255,255,0.4); font-size: 12px; max-width: 300px; }
+
 /* ===== rank stamp + verdict on ticket ===== */
 .rank-stamp {
   width: 70px; height: 70px; border-radius: 999px; border: 4px solid #c81e1e; color: #c81e1e;
@@ -521,6 +542,18 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <h1>タイムアップ！</h1>
   <p>制限時間内に食券を発行できませんでした。</p>
   <button class="play-again-btn" id="timeup-retry-btn">もう一度挑戦</button>
+</div>
+
+<!-- Ban screen — the payoff for repeatedly pushing the owner too far -->
+<div id="ban-screen" class="hidden">
+  <div class="ban-photo-wrap">
+    <img class="owner-photo" alt="店主">
+    <div class="ban-stamp">出禁</div>
+  </div>
+  <h1>本日をもって、出禁とします。</h1>
+  <p id="ban-count-text"></p>
+  <p class="ban-sub">二度と来るな。……なんて、また来てくれてもいいですけどね。</p>
+  <button class="play-again-btn" id="ban-retry-btn">土下座して許してもらう</button>
 </div>
 
 <!-- Cart sheet -->
@@ -1178,19 +1211,19 @@ function judgeOrder(items, total, walletLeft) {
 
   // specific scripted reactions, most distinctive first
   if (onlyBeer) {
-    return withFlame({ rank: "C", title: "店主に煽られた", comment: "ラーメン屋でビールだけ……渋いっすね。", angry: false });
+    return withFlame({ rank: "C", title: "店主に煽られた", comment: "ラーメン屋でビールだけ……渋いっすね。次やったら出禁だぞ。", angry: false });
   }
   if (onlyTamago) {
-    return withFlame({ rank: "D", title: "店主に煽られた", comment: "今日はラーメン食べないんですね。", angry: false });
+    return withFlame({ rank: "D", title: "店主に煽られた", comment: "今日はラーメン食べないんですね。次やったら出禁な。", angry: false });
   }
   if (has("全部") && has("麺特盛") && has("豚増")) {
-    return withFlame({ rank: "S", title: "店主に認められた", comment: "……本当に？　気合入ってますね、儲かります。", angry: false });
+    return withFlame({ rank: "S", title: "店主に認められた", comment: "……本当に？　気合入ってますね、儲かります。出禁の心配は無用です。", angry: false });
   }
   if (has("あっさり") && has("チーズ")) {
-    return withFlame({ rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。", angry: false });
+    return withFlame({ rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。出禁一歩手前だぞ。", angry: false });
   }
   if (!hasBase) {
-    return withFlame({ rank: "F", title: "店主、完全ブチギレ", comment: "ラーメン屋なんですけど！！　食べられる量を考えてください。", angry: true, mood: "demon" });
+    return withFlame({ rank: "F", title: "店主、完全ブチギレ", comment: "ラーメン屋なんですけど！！　食べられる量を考えてください。次やったら本当に出禁にするからな。", angry: true, mood: "demon", banStrike: true });
   }
 
   // generic score from spend + "attack" toppings
@@ -1201,12 +1234,12 @@ function judgeOrder(items, total, walletLeft) {
     A: "いい食べっぷりです、また来てください。",
     B: "普通ですね、悪くないです。",
     C: "それだけ？　もっと頼んでいいんですよ。",
-    D: "それで足りるんですか……？"
+    D: "それで足りるんですか……？　出禁にしますよ。"
   };
   var titles = { S: "店主に認められた", A: "店主に認められた", B: "店主に煽られた", C: "店主に煽られた", D: "店主、ブチギレ寸前" };
   var comment = comments[rank];
   var angry = rank === "D";
-  if (total >= 5000) { comment = "その注文、正気ですか？　" + comment; angry = false; }
+  if (total >= 5000) { comment = "その注文、正気ですか？　" + comment + "　はしゃぎすぎると出禁だぞ。"; angry = false; }
   if (walletLeft === 0) { comment += "　……財布が軽い。明日の昼飯どうするんです？"; }
   return withFlame({ rank: rank, title: titles[rank], comment: comment, angry: angry, mood: angry ? "angry" : "normal" });
 }
@@ -1241,6 +1274,35 @@ function renderRecordsBox(r) {
     '<div class="line">プレイ回数　' + r.plays + ' 回</div>' +
     '<div class="line">自己最高額　' + formatYen(r.best) + '</div>' +
     '<div class="line">最高評価　　' + bestRank + ' ランク</div>';
+}
+
+/* ---------- 出禁 (ban) strikes — device-local, escalates across replays ---------- */
+
+var BAN_KEY = "kirinji-ban-strikes-v1";
+var BAN_THRESHOLD = 3;
+
+function getBanStrikes() {
+  var n = parseInt(localStorage.getItem(BAN_KEY) || "0", 10);
+  return isNaN(n) ? 0 : n;
+}
+
+function addBanStrike() {
+  var n = getBanStrikes() + 1;
+  localStorage.setItem(BAN_KEY, String(n));
+  return n;
+}
+
+function clearBanStrikes() {
+  localStorage.setItem(BAN_KEY, "0");
+}
+
+function showBanScreen(strikeCount) {
+  var banScreen = document.getElementById("ban-screen");
+  banScreen.querySelector(".owner-photo").src = DEMON_IMG;
+  document.getElementById("ban-count-text").textContent =
+    "警告 " + strikeCount + "回目 — 店主の堪忍袋の緒が切れました。";
+  banScreen.classList.remove("hidden");
+  SFX.rage();
 }
 
 /* ---------- SNS share ---------- */
@@ -1554,6 +1616,7 @@ function startNewRound() {
 
   document.getElementById("ticket-screen").classList.add("hidden");
   document.getElementById("timeup-screen").classList.add("hidden");
+  document.getElementById("ban-screen").classList.add("hidden");
   document.getElementById("cart-overlay-wrap").classList.add("hidden");
   document.getElementById("budget-reveal").classList.add("hidden");
   document.getElementById("start-btn").disabled = false;
@@ -1658,9 +1721,19 @@ function issueTicket() {
   closeCartSheet();
   flashTicketTray();
 
+  var banStrikeCount = verdict.banStrike ? addBanStrike() : getBanStrikes();
+
   if (verdict.angry) {
     SFX.jackpot();
-    setTimeout(function () { triggerRage(verdict.comment, verdict.mood); }, 1600);
+    setTimeout(function () {
+      triggerRage(verdict.comment, verdict.mood);
+      if (verdict.banStrike && banStrikeCount >= BAN_THRESHOLD) {
+        setTimeout(function () {
+          showBanScreen(banStrikeCount);
+          clearBanStrikes();
+        }, 2600);
+      }
+    }, 1600);
   } else {
     SFX.jackpot();
     showOwnerToast(verdict.comment, verdict.mood);
@@ -1690,6 +1763,7 @@ document.getElementById("clear-btn").addEventListener("click", clearCart);
 document.getElementById("issue-btn").addEventListener("click", issueTicket);
 document.getElementById("play-again-btn").addEventListener("click", startNewRound);
 document.getElementById("timeup-retry-btn").addEventListener("click", startNewRound);
+document.getElementById("ban-retry-btn").addEventListener("click", startNewRound);
 document.getElementById("start-btn").addEventListener("click", beginRound);
 document.getElementById("share-btn").addEventListener("click", function () {
   if (lastVerdict) shareResult(lastVerdict, lastTotal);
