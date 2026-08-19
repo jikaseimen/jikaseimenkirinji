@@ -51,6 +51,20 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
+.screen-shake { animation: screen-shake .5s cubic-bezier(.36,.07,.19,.97); }
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0,0); }
+  10% { transform: translate(-6px,-3px); }
+  20% { transform: translate(6px,3px); }
+  30% { transform: translate(-5px,3px); }
+  40% { transform: translate(5px,-3px); }
+  50% { transform: translate(-4px,2px); }
+  60% { transform: translate(4px,-2px); }
+  70% { transform: translate(-3px,2px); }
+  80% { transform: translate(3px,-2px); }
+  90% { transform: translate(-2px,1px); }
+}
+
 /* ===== machine shell ===== */
 #machine {
   width: 100%;
@@ -364,6 +378,27 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .verdict-title { text-align: center; font-weight: 900; font-size: 13px; color: var(--orange); margin-bottom: 8px; }
 .verdict-owner { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; text-align: left; }
 .verdict-comment { flex: 1; font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.6; }
+.flame-meter { text-align: left; }
+.flame-meter-head { display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.6); margin-bottom: 5px; }
+.flame-meter-head span:last-child { color: #ff6a3d; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+.flame-meter-track { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+.flame-meter-fill {
+  height: 100%; border-radius: 999px; width: 0%;
+  background: linear-gradient(90deg, #ffd23f, #ff6a3d, #ff2d2d);
+  box-shadow: 0 0 12px rgba(255,90,40,0.6);
+  transition: width 1s cubic-bezier(.2,.8,.2,1);
+}
+.flame-meter-caption { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; text-align: center; }
+
+/* 炎上中 ticker banner, shown during a rage moment */
+#flame-ticker {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 121; overflow: hidden;
+  background: linear-gradient(90deg, #b30000, #ff3d00, #b30000); border-bottom: 2px solid #ffcf3f;
+  padding: 6px 0; white-space: nowrap;
+}
+#flame-ticker .track { display: inline-block; padding-left: 100%; animation: ticker-scroll 6s linear infinite; color: #fff; font-weight: 900; font-size: 13px; letter-spacing: 0.08em; }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
 .records-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; max-width: 300px; width: 100%; }
 .records-box .cap { color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 4px; }
 .records-box .line { color: rgba(255,255,255,0.75); font-size: 12px; font-family: 'JetBrains Mono', monospace; line-height: 1.7; }
@@ -395,6 +430,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <div class="owner-bubble hidden" id="owner-bubble"></div>
 </div>
 <div id="rage-flash"><img class="fire-photo" alt=""></div>
+<div id="flame-ticker" class="hidden"><span class="track">🔥🚨 炎上中 🚨🔥　この注文はネットが黙っていない　🔥🚨 炎上中 🚨🔥　店主、限界突破　🔥🚨 炎上中 🚨🔥　この注文はネットが黙っていない　🔥🚨 炎上中 🚨🔥　店主、限界突破　</span></div>
 
 <div id="machine">
   <div class="brand-plate">
@@ -543,6 +579,14 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
       <div class="owner-avatar" style="width:34px;height:34px;"><img class="owner-photo" alt="店主"></div>
       <div class="verdict-comment" id="verdict-comment"></div>
     </div>
+    <div class="flame-meter">
+      <div class="flame-meter-head">
+        <span>🔥 炎上予測度</span>
+        <span id="flame-percent">0%</span>
+      </div>
+      <div class="flame-meter-track"><div class="flame-meter-fill" id="flame-meter-fill"></div></div>
+      <p class="flame-meter-caption" id="flame-meter-caption"></p>
+    </div>
   </div>
 
   <div class="records-box" id="records-box"></div>
@@ -654,6 +698,24 @@ var SFX = (function () {
     osc.stop(t0 + dur + 0.02);
   }
 
+  // frequency-swept alarm siren
+  function siren(freqFrom, freqTo, dur, peak, when) {
+    if (muted) return;
+    var c = ensureCtx();
+    var t0 = c.currentTime + (when || 0);
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(freqFrom, t0);
+    osc.frequency.linearRampToValueAtTime(freqTo, t0 + dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
   // short burst of filtered noise, for coin "tink" and mechanical clatter
   function noiseBurst(dur, peak, when, hz) {
     if (muted) return;
@@ -739,13 +801,16 @@ var SFX = (function () {
     });
   }
 
-  // 店主ブチギレ — harsh dissonant blast for a terrible order
+  // 店主ブチギレ — harsh dissonant blast + alarm siren for a terrible order
   function rage() {
     blip(220, "sawtooth", 0.22, 0.18, 0);
     blip(233, "sawtooth", 0.22, 0.18, 0);
     blip(140, "sawtooth", 0.24, 0.4, 0.12);
     blip(147, "sawtooth", 0.2, 0.4, 0.12);
     noiseBurst(0.3, 0.18, 0.05, 900);
+    siren(500, 900, 0.35, 0.14, 0.55);
+    siren(900, 500, 0.35, 0.14, 0.9);
+    siren(500, 900, 0.35, 0.14, 1.25);
   }
 
   // timer running out
@@ -1021,7 +1086,7 @@ function showOwnerToast(text, angry) {
   ownerToastTimer = setTimeout(function () {
     bubble.classList.add("hidden");
     avatar.classList.remove("angry");
-  }, 2600);
+  }, angry ? 3600 : 2600);
 }
 
 function triggerRage(text) {
@@ -1032,18 +1097,28 @@ function triggerRage(text) {
   void flash.offsetWidth;
   flash.classList.add("show");
   spawnRageParticles();
+  spawnRageParticles();
+
+  var shakeTarget = document.getElementById("ticket-screen");
+  shakeTarget.classList.add("screen-shake");
+  setTimeout(function () { shakeTarget.classList.remove("screen-shake"); }, 500);
+
+  var ticker = document.getElementById("flame-ticker");
+  ticker.classList.remove("hidden");
+  clearTimeout(triggerRage._tickerTimer);
+  triggerRage._tickerTimer = setTimeout(function () { ticker.classList.add("hidden"); }, 3600);
 }
 
 function spawnRageParticles() {
-  var emojis = ["🔥", "🔥", "🔥", "💥", "🍜", "😤"];
+  var emojis = ["🔥", "🔥", "🔥", "💥", "🍜", "😤", "🚨"];
   var cx = window.innerWidth / 2;
   var cy = window.innerHeight / 2;
-  for (var i = 0; i < 22; i++) {
+  for (var i = 0; i < 18; i++) {
     var el = document.createElement("span");
     el.className = "rage-particle";
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
     var angle = Math.random() * Math.PI * 2;
-    var dist = 140 + Math.random() * 260;
+    var dist = 140 + Math.random() * 280;
     el.style.setProperty("--dx", Math.cos(angle) * dist + "px");
     el.style.setProperty("--dy", Math.sin(angle) * dist + "px");
     el.style.left = (cx - 15) + "px";
@@ -1063,6 +1138,13 @@ var NOODLE_NAMES = [
 ];
 var ATTACK_NAMES = ["豚増", "かす増", "麺特盛", "全部", "粒ニンニク", "テイクアウトあぶらかす"];
 
+var FLAME_BY_RANK = { S: 5, A: 20, B: 45, C: 70, D: 90, F: 100 };
+
+function withFlame(v) {
+  v.flame = FLAME_BY_RANK[v.rank] != null ? FLAME_BY_RANK[v.rank] : 50;
+  return v;
+}
+
 function judgeOrder(items, total, walletLeft) {
   var qty = function (n) { var it = items.find(function (i) { return i.name === n; }); return it ? it.quantity : 0; };
   var has = function (n) { return qty(n) > 0; };
@@ -1073,19 +1155,19 @@ function judgeOrder(items, total, walletLeft) {
 
   // specific scripted reactions, most distinctive first
   if (onlyBeer) {
-    return { rank: "C", title: "店主に煽られた", comment: "ラーメン屋でビールだけ……渋いっすね。", angry: false };
+    return withFlame({ rank: "C", title: "店主に煽られた", comment: "ラーメン屋でビールだけ……渋いっすね。", angry: false });
   }
   if (onlyTamago) {
-    return { rank: "D", title: "店主に煽られた", comment: "今日はラーメン食べないんですね。", angry: false };
+    return withFlame({ rank: "D", title: "店主に煽られた", comment: "今日はラーメン食べないんですね。", angry: false });
   }
   if (has("全部") && has("麺特盛") && has("豚増")) {
-    return { rank: "S", title: "店主に認められた", comment: "……本当に？　気合入ってますね、儲かります。", angry: false };
+    return withFlame({ rank: "S", title: "店主に認められた", comment: "……本当に？　気合入ってますね、儲かります。", angry: false });
   }
   if (has("あっさり") && has("チーズ")) {
-    return { rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。", angry: false };
+    return withFlame({ rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。", angry: false });
   }
   if (!hasBase) {
-    return { rank: "F", title: "店主に怒られた", comment: "ラーメン屋なんですけど！　食べられる量を考えてください。", angry: true };
+    return withFlame({ rank: "F", title: "店主、ブチギレ／炎上不可避", comment: "ラーメン屋なんですけど！！　食べられる量を考えてください。", angry: true });
   }
 
   // generic score from spend + "attack" toppings
@@ -1098,12 +1180,12 @@ function judgeOrder(items, total, walletLeft) {
     C: "それだけ？　もっと頼んでいいんですよ。",
     D: "それで足りるんですか……？"
   };
-  var titles = { S: "店主に認められた", A: "店主に認められた", B: "店主に煽られた", C: "店主に煽られた", D: "店主に怒られた" };
+  var titles = { S: "店主に認められた", A: "店主に認められた", B: "店主に煽られた", C: "店主に煽られた", D: "店主、ブチギレ寸前" };
   var comment = comments[rank];
   var angry = rank === "D";
   if (total >= 5000) { comment = "その注文、正気ですか？　" + comment; angry = false; }
   if (walletLeft === 0) { comment += "　……財布が軽い。明日の昼飯どうするんです？"; }
-  return { rank: rank, title: titles[rank], comment: comment, angry: angry };
+  return withFlame({ rank: rank, title: titles[rank], comment: comment, angry: angry });
 }
 
 /* ---------- personal record (device-local; there is no shared backend, so this is not a real cross-user ranking) ---------- */
@@ -1146,12 +1228,15 @@ function renderRecordsBox(r) {
    genuinely completed. */
 
 function buildShareText(verdict, total) {
+  var hook = verdict.flame >= 90 ? "【炎上覚悟】" : verdict.flame >= 60 ? "【閲覧注意】" : verdict.flame >= 30 ? "【拡散希望】" : "【神対応】";
   return (
-    "【自家製麺キリンジ 仮想券売機チャレンジ】\n" +
+    hook + "自家製麺キリンジ 仮想券売機チャレンジ\n" +
     "注文額 " + formatYen(total) + "\n" +
     "店主評価：" + verdict.rank + "ランク（" + verdict.title + "）\n" +
+    "炎上予測度　" + verdict.flame + "%\n" +
     "「" + verdict.comment + "」\n" +
-    "#キリンジ仮想券売機"
+    "あなたも挑戦して店主を怒らせてみろ\n" +
+    "#キリンジ仮想券売機 #炎上覚悟"
   );
 }
 
@@ -1325,6 +1410,17 @@ function issueTicket() {
   document.getElementById("rank-stamp").textContent = verdict.rank;
   document.getElementById("verdict-title").textContent = verdict.title;
   document.getElementById("verdict-comment").textContent = "「" + verdict.comment + "」";
+
+  document.getElementById("flame-percent").textContent = verdict.flame + "%";
+  var flameCaption =
+    verdict.flame >= 90 ? "これは伸びる。閲覧注意レベル。" :
+    verdict.flame >= 60 ? "コメント欄が荒れる可能性あり。" :
+    verdict.flame >= 30 ? "軽くバズる程度。" :
+    "円満。むしろ神対応で伸びるやつ。";
+  document.getElementById("flame-meter-caption").textContent = flameCaption;
+  var flameFill = document.getElementById("flame-meter-fill");
+  flameFill.style.width = "0%";
+  setTimeout(function () { flameFill.style.width = verdict.flame + "%"; }, 50);
 
   var records = saveRecord(total, verdict.rank);
   renderRecordsBox(records);
