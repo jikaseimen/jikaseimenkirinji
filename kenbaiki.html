@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>仮想券売機</title>
+<title>炎上する券売機</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -416,6 +416,47 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .owner-promo { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 11.5px; color: rgba(255,255,255,0.5); line-height: 1.6; text-align: center; }
 .owner-promo a { color: var(--orange); font-weight: 700; text-decoration: underline; }
 
+/* ===== 経営レポート ===== */
+.report-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; max-width: 300px; width: 100%; margin-top: 12px; }
+.report-title { font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; margin-bottom: 8px; text-align: center; }
+.report-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 12.5px; color: rgba(255,255,255,0.65); border-bottom: 1px dashed rgba(255,255,255,0.07); }
+.report-row:last-child { border-bottom: none; }
+.report-row .val { font-family: 'JetBrains Mono', monospace; font-weight: 900; color: #fff; }
+.report-row.sales .val { color: var(--orange); font-size: 19px; }
+.report-row.risk-LOW .val { color: #7bdc8f; }
+.report-row.risk-MID .val { color: #ffd23f; }
+.report-row.risk-HIGH .val { color: #ff8a3d; }
+.report-row.risk-MAX .val { color: #ff3b30; }
+
+/* ===== 架空SNSコメント ===== */
+.sns-feed { max-width: 300px; width: 100%; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.sns-comment { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 7px 10px; font-size: 11.5px; color: rgba(255,255,255,0.6); text-align: left; }
+.sns-comment::before { content: "💬 "; }
+
+/* ===== 謝罪・反論による炎上コントロール ===== */
+.response-box { max-width: 300px; width: 100%; margin-top: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; }
+.response-prompt { font-size: 12px; color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 10px; }
+.response-buttons { display: flex; flex-direction: column; gap: 6px; }
+.response-buttons button { background: var(--btn); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 9px; font-size: 12px; font-weight: 700; text-align: left; }
+.response-buttons button:active:not(:disabled) { transform: translateY(1px); }
+.response-buttons button:disabled { opacity: 0.35; }
+.response-result { margin-top: 10px; font-size: 12px; color: var(--orange); text-align: center; min-height: 16px; }
+
+/* ===== エンディング ===== */
+.ending-badge { margin-top: 12px; max-width: 300px; width: 100%; background: linear-gradient(90deg, #ff6a3d, #ff2d2d); color: #fff; padding: 12px 16px; border-radius: 14px; text-align: center; }
+.ending-code { font-size: 10px; font-weight: 900; letter-spacing: 0.15em; opacity: 0.8; }
+.ending-label { font-size: 18px; font-weight: 900; margin-top: 2px; }
+.ending-desc { font-size: 11px; margin-top: 4px; opacity: 0.9; }
+
+/* ===== 実績トースト ===== */
+#achievement-toast {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-140%); z-index: 125;
+  background: linear-gradient(90deg, #ffd23f, #ff8a3d); color: #241505; font-weight: 900; font-size: 12.5px;
+  padding: 10px 18px; border-radius: 999px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); white-space: nowrap;
+  transition: transform .35s cubic-bezier(.2,1.4,.4,1);
+}
+#achievement-toast.show { transform: translateX(-50%) translateY(0); }
+
 /* "店主ブチギレ中" ticker banner, shown during a rage moment */
 #flame-ticker {
   position: fixed; top: 0; left: 0; right: 0; z-index: 121; overflow: hidden;
@@ -461,6 +502,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <div class="owner-bubble hidden" id="owner-bubble"></div>
 </div>
 <div id="rage-flash"><img class="fire-photo" alt=""></div>
+<div id="achievement-toast" class="hidden"></div>
 <div id="flame-ticker" class="hidden"><span class="track">🔥🚨 店主ブチギレ中 🚨🔥　この注文、ただでは済まない　🔥🚨 店主ブチギレ中 🚨🔥　店主、限界突破　🔥🚨 店主ブチギレ中 🚨🔥　この注文、ただでは済まない　🔥🚨 店主ブチギレ中 🚨🔥　店主、限界突破　</span></div>
 
 <div id="machine">
@@ -633,6 +675,21 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
     <p class="owner-promo" id="owner-promo"></p>
   </div>
 
+  <div class="report-box" id="report-box"></div>
+  <div class="sns-feed hidden" id="sns-feed"></div>
+  <div class="response-box hidden" id="response-box">
+    <p class="response-prompt">SNSでの反応が広がっています。どう対応しますか？</p>
+    <div class="response-buttons">
+      <button data-action="apologize">① 謝罪する</button>
+      <button data-action="ignore">② 無視する</button>
+      <button data-action="defiant">③ 強気に反論</button>
+      <button data-action="thanks">④「ご意見ありがとうございます」</button>
+      <button data-action="dontlike">⑤「嫌なら買わなければいい」</button>
+    </div>
+    <p class="response-result" id="response-result"></p>
+  </div>
+  <div class="ending-badge hidden" id="ending-badge"></div>
+
   <div class="records-box" id="records-box"></div>
 
   <div class="ticket-actions">
@@ -705,6 +762,14 @@ var MENU_DATA = [
     { name: "粒ニンニク", price: 400 },
     { name: "麺特盛", price: 350 },
     { name: "かす飯", price: 400 },
+  ]},
+  { category: "炎上メニュー", items: [
+    { name: "話題の一杯", price: 980 },
+    { name: "SNS限定", price: 1200 },
+    { name: "炎上記念ラーメン", price: 1500 },
+    { name: "店主激怒ラーメン", price: 1800 },
+    { name: "もうどうにでもなれラーメン", price: 2000 },
+    { name: "🔥 炎上", price: 1000 },
   ]},
 ];
 
@@ -1196,6 +1261,8 @@ var NOODLE_NAMES = [
   "【冷】油そば", "【温】油そば"
 ];
 var ATTACK_NAMES = ["豚増", "かす増", "麺特盛", "全部", "粒ニンニク", "テイクアウトあぶらかす"];
+var FLAME_ITEM_NAMES = ["話題の一杯", "SNS限定", "炎上記念ラーメン", "店主激怒ラーメン", "もうどうにでもなれラーメン"];
+var FLAME_PRODUCT_NAME = "🔥 炎上";
 
 /* ---------- 店主の宣伝（関連ページの案内） ---------- */
 var OWNER_PROMOS = [
@@ -1228,13 +1295,44 @@ function withFlame(v) {
   return v;
 }
 
+/* ---------- 炎上経済ループ: 炎上度 -> 売上倍率 / 店主の怒りLV / 出禁危険度 ---------- */
+/* Continuous bracket lookup — used both for the initial verdict.flame value
+   and for the post-choice (謝罪/反論) recalculated flame. */
+function stageFromFlame(f) {
+  if (f >= 95) return { label: "全国炎上", mult: 5.0, risk: "MAX" };
+  if (f >= 80) return { label: "大炎上", mult: 2.0, risk: "HIGH" };
+  if (f >= 60) return { label: "プチ炎上", mult: 1.5, risk: "MID" };
+  if (f >= 40) return { label: "SNSで話題", mult: 1.2, risk: "MID" };
+  if (f >= 20) return { label: "ちょっと話題", mult: 1.05, risk: "LOW" };
+  return { label: "平和営業", mult: 1.0, risk: "LOW" };
+}
+
+var ANGER_BY_RANK = {
+  S: { lv: "LV1", line: "まあ……いいけど。" },
+  A: { lv: "LV2", line: "その注文、必要？" },
+  B: { lv: "LV3", line: "ちょっと待って。" },
+  C: { lv: "LV4", line: "お前、本気か？" },
+  D: { lv: "LV5", line: "もう帰ってくれ。" },
+  F: { lv: "MAX", line: "出禁です。" }
+};
+
 function judgeOrder(items, total, walletLeft) {
   var qty = function (n) { var it = items.find(function (i) { return i.name === n; }); return it ? it.quantity : 0; };
   var has = function (n) { return qty(n) > 0; };
   var hasBase = items.some(function (i) { return NOODLE_NAMES.indexOf(i.name) !== -1; });
   var onlyBeer = items.length === 1 && items[0].name === "ビール";
   var onlyTamago = items.length === 1 && (items[0].name === "味玉" || items[0].name === "生卵");
-  var attackCount = ATTACK_NAMES.reduce(function (s, n) { return s + qty(n); }, 0);
+  var attackCount = ATTACK_NAMES.reduce(function (s, n) { return s + qty(n); }, 0)
+    + FLAME_ITEM_NAMES.reduce(function (s, n) { return s + qty(n) * 2.5; }, 0);
+
+  // buying the "炎上" product itself is the climactic, unconditional case
+  if (has(FLAME_PRODUCT_NAME)) {
+    return withFlame({
+      rank: "F", title: "店主、完全ブチギレ",
+      comment: "「炎上を購入しました。」……は？　お前、正気か？　次やったら本当に出禁にするからな。",
+      angry: true, mood: "demon", banStrike: true, boughtFlame: true
+    });
+  }
 
   // specific scripted reactions, most distinctive first
   if (onlyBeer) {
@@ -1269,6 +1367,175 @@ function judgeOrder(items, total, walletLeft) {
   if (total >= 5000) { comment = "その注文、正気ですか？　" + comment + "　はしゃぎすぎると出禁だぞ。"; angry = false; }
   if (walletLeft === 0) { comment += "　……財布が軽い。明日の昼飯どうするんです？"; }
   return withFlame({ rank: rank, title: titles[rank], comment: comment, angry: angry, mood: angry ? "angry" : "normal" });
+}
+
+/* ---------- 経営レポート（売上・SNS拡散・出禁危険度） ---------- */
+
+function computeFlameReport(flame, total) {
+  return {
+    sns: Math.round(flame * flame * 1.15 + total / 15),
+    newCust: Math.round(flame * 3.4),
+    followers: Math.round(flame * flame * 0.55)
+  };
+}
+
+function renderReportBox(flame, total, salesAmount, rank) {
+  var stage = stageFromFlame(flame);
+  var anger = ANGER_BY_RANK[rank] || ANGER_BY_RANK.S;
+  var rep = computeFlameReport(flame, total);
+  var fireCount = flame >= 95 ? 3 : flame >= 80 ? 2 : flame >= 60 ? 1 : 0;
+  var firePrefix = fireCount > 0 ? new Array(fireCount + 1).join("🔥") + " " : "";
+
+  var box = document.getElementById("report-box");
+  box.innerHTML =
+    '<div class="report-title">本日の経営レポート — ' + stage.label + '</div>' +
+    '<div class="report-row sales"><span>売上</span><span class="val">' + firePrefix + formatYen(salesAmount) + '</span></div>' +
+    '<div class="report-row"><span>SNS拡散</span><span class="val">' + rep.sns.toLocaleString() + '件</span></div>' +
+    '<div class="report-row"><span>新規客</span><span class="val">+' + rep.newCust.toLocaleString() + '人</span></div>' +
+    '<div class="report-row"><span>フォロワー</span><span class="val">+' + rep.followers.toLocaleString() + '</span></div>' +
+    '<div class="report-row"><span>店主の怒り</span><span class="val">' + anger.lv + '</span></div>' +
+    '<div class="report-row risk-' + stage.risk + '"><span>出禁危険度</span><span class="val">' + stage.risk + '</span></div>';
+}
+
+/* ---------- 架空SNSコメント ---------- */
+
+var SNS_COMMENTS = [
+  "この店ヤバくね？", "いや普通に面白い", "宣伝乙", "誰がこんなの買うんだよ",
+  "お前ら騒ぎすぎ", "店主出てこい", "これは伸びる", "みんな見て見て",
+  "炎上商法うまいな", "店主かわいそう", "もう笑うしかない", "この流れ懐かしい"
+];
+
+function sampleComments(n) {
+  var pool = SNS_COMMENTS.slice();
+  var picked = [];
+  while (picked.length < n && pool.length > 0) {
+    picked.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return picked;
+}
+
+function renderSnsFeed(flame) {
+  var el = document.getElementById("sns-feed");
+  var n = flame >= 95 ? 6 : flame >= 80 ? 4 : flame >= 60 ? 3 : flame >= 40 ? 2 : flame >= 20 ? 1 : 0;
+  if (n === 0) { el.classList.add("hidden"); el.innerHTML = ""; return; }
+  el.classList.remove("hidden");
+  el.innerHTML = sampleComments(n).map(function (c) { return '<div class="sns-comment">' + c + '</div>'; }).join("");
+}
+
+/* ---------- 謝罪・反論による炎上コントロール ---------- */
+
+var RESPONSE_OPTIONS = [
+  { action: "apologize", label: "① 謝罪する", delta: -10, salesBoost: false, result: "「申し訳ございません」……火は少し収まった。" },
+  { action: "ignore", label: "② 無視する", delta: 5, salesBoost: false, result: "スルーした。ネットはざわついたままだ。" },
+  { action: "defiant", label: "③ 強気に反論", delta: 20, salesBoost: false, result: "反論した。火に油を注いだ。" },
+  { action: "thanks", label: "④「ご意見ありがとうございます」", delta: 30, salesBoost: true, result: "煽り気味の返信。さらに拡散した。" },
+  { action: "dontlike", label: "⑤「嫌なら買わなければいい」", delta: 50, salesBoost: true, result: "完全に開き直った。伝説になった。" }
+];
+
+function renderResponseBox(flame) {
+  var box = document.getElementById("response-box");
+  var stage = stageFromFlame(flame);
+  if (stage.risk === "LOW") { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  box.querySelectorAll("button").forEach(function (btn) { btn.disabled = false; });
+  document.getElementById("response-result").textContent = "";
+}
+
+function chooseResponse(action) {
+  var ctx = state.roundCtx;
+  if (!ctx || ctx.responseChosen) return;
+  var opt = RESPONSE_OPTIONS.find(function (o) { return o.action === action; });
+  if (!opt) return;
+  ctx.responseChosen = action;
+
+  var newFlame = Math.max(0, Math.min(100, ctx.flame + opt.delta));
+  var newStage = stageFromFlame(newFlame);
+  var extraMult = opt.salesBoost ? 1.3 : 1.0;
+  var newSales = Math.round(ctx.total * newStage.mult * extraMult);
+
+  document.getElementById("response-result").textContent =
+    opt.result + "　新しい炎上度：" + Math.round(newFlame) + "%";
+  document.querySelectorAll("#response-box button").forEach(function (b) { b.disabled = true; });
+
+  ctx.finalFlame = newFlame;
+  ctx.salesAmount = newSales;
+  renderReportBox(newFlame, ctx.total, newSales, ctx.rank);
+  renderSnsFeed(newFlame);
+  renderEndingBadge(ctx);
+  checkAchievements(ctx);
+}
+
+/* ---------- エンディング ---------- */
+
+function computeEnding(ctx) {
+  if (ctx.bannedThisRound) return { code: "END04", label: "炎上しすぎ", desc: "出禁。" };
+  var flame = ctx.finalFlame != null ? ctx.finalFlame : ctx.flame;
+  if (flame >= 100) return { code: "END06", label: "伝説の大炎上", desc: "あなたは店を潰して、店を有名にしました。" };
+  if (ctx.rank === "F") return { code: "END05", label: "店が有名になりすぎた", desc: "売上は最高。しかし店主が疲弊。" };
+  if (ctx.rank === "D" || ctx.rank === "C") return { code: "END03", label: "炎上商法", desc: "売上・フォロワー爆増。" };
+  if (ctx.rank === "B") return { code: "END02", label: "人気店", desc: "ほどほどに炎上して成功。" };
+  return { code: "END01", label: "平和な店", desc: "売上は低いが店主は穏やか。" };
+}
+
+function renderEndingBadge(ctx) {
+  var ending = computeEnding(ctx);
+  var el = document.getElementById("ending-badge");
+  el.classList.remove("hidden");
+  el.innerHTML =
+    '<div class="ending-code">' + ending.code + '</div>' +
+    '<div class="ending-label">' + ending.label + '</div>' +
+    '<div class="ending-desc">' + ending.desc + '</div>';
+}
+
+/* ---------- 炎上商法実績 ---------- */
+
+var ACH_KEY = "kirinji-achievements-v1";
+var ACHIEVEMENTS = [
+  { id: "learned", name: "炎上商法を覚えた", check: function (ctx) { return ctx.flame >= 80 && ctx.salesAmount >= 100000; } },
+  { id: "talent", name: "炎上の才能", check: function (ctx) { return ctx.rank === "F"; } },
+  { id: "backfire", name: "火消し失敗", check: function (ctx) { return ctx.responseChosen === "apologize" && ctx.finalFlame >= 60; } },
+  { id: "reflame", name: "謝罪で再炎上", check: function (ctx) { return (ctx.responseChosen === "thanks" || ctx.responseChosen === "dontlike") && ctx.finalFlame > ctx.flame; } },
+  { id: "banned3", name: "店主を3回出禁にした", check: function (ctx) { return getTotalBans() >= 3; } },
+  { id: "profitFromFlame", name: "炎上だけで黒字化", check: function (ctx) { return ctx.total <= 1000 && ctx.salesAmount >= 5000; } }
+];
+
+function loadAchievements() {
+  try { return JSON.parse(localStorage.getItem(ACH_KEY)) || {}; } catch (e) { return {}; }
+}
+
+function checkAchievements(ctx) {
+  var unlocked = loadAchievements();
+  var newlyUnlocked = [];
+  ACHIEVEMENTS.forEach(function (a) {
+    if (!unlocked[a.id] && a.check(ctx)) {
+      unlocked[a.id] = true;
+      newlyUnlocked.push(a.name);
+    }
+  });
+  if (newlyUnlocked.length > 0) {
+    localStorage.setItem(ACH_KEY, JSON.stringify(unlocked));
+    showAchievementToast(newlyUnlocked);
+  }
+}
+
+function showAchievementToast(names) {
+  var el = document.getElementById("achievement-toast");
+  el.textContent = "🏆 実績解除：" + names.join("、");
+  el.classList.remove("hidden");
+  el.classList.add("show");
+  clearTimeout(showAchievementToast._t);
+  showAchievementToast._t = setTimeout(function () { el.classList.remove("show"); }, 3200);
+}
+
+var TOTAL_BANS_KEY = "kirinji-total-bans-v1";
+function getTotalBans() {
+  var n = parseInt(localStorage.getItem(TOTAL_BANS_KEY) || "0", 10);
+  return isNaN(n) ? 0 : n;
+}
+function addTotalBan() {
+  var n = getTotalBans() + 1;
+  localStorage.setItem(TOTAL_BANS_KEY, String(n));
+  return n;
 }
 
 /* ---------- personal record (device-local; there is no shared backend, so this is not a real cross-user ranking) ---------- */
@@ -1640,6 +1907,7 @@ function startNewRound() {
   state.isTakeout = false;
   state.timeLeft = TIME_LIMIT;
   state.gameOver = false;
+  state.roundCtx = null;
 
   document.getElementById("ticket-screen").classList.add("hidden");
   document.getElementById("timeup-screen").classList.add("hidden");
@@ -1751,15 +2019,36 @@ function issueTicket() {
   flashTicketTray();
 
   var banStrikeCount = verdict.banStrike ? addBanStrike() : getBanStrikes();
+  var bannedThisRound = !!(verdict.banStrike && banStrikeCount >= BAN_THRESHOLD);
+
+  // ---- 炎上経済ループ: 炎上度 -> 売上 / SNS拡散 / エンディング ----
+  var stage = stageFromFlame(verdict.flame);
+  var salesAmount = Math.round(total * stage.mult);
+  state.roundCtx = {
+    flame: verdict.flame,
+    finalFlame: verdict.flame,
+    total: total,
+    rank: verdict.rank,
+    salesAmount: salesAmount,
+    responseChosen: null,
+    bannedThisRound: bannedThisRound
+  };
+  renderReportBox(verdict.flame, total, salesAmount, verdict.rank);
+  renderSnsFeed(verdict.flame);
+  renderResponseBox(verdict.flame);
+  renderEndingBadge(state.roundCtx);
+  checkAchievements(state.roundCtx);
 
   if (verdict.angry) {
     SFX.jackpot();
     setTimeout(function () {
       triggerRage(verdict.comment, verdict.mood);
-      if (verdict.banStrike && banStrikeCount >= BAN_THRESHOLD) {
+      if (bannedThisRound) {
         setTimeout(function () {
           showBanScreen(banStrikeCount);
           clearBanStrikes();
+          addTotalBan();
+          checkAchievements(state.roundCtx);
         }, 2600);
       }
     }, 1600);
@@ -1801,6 +2090,10 @@ document.getElementById("share-modal-close").addEventListener("click", closeShar
 document.getElementById("share-modal-overlay").addEventListener("click", closeShareModal);
 document.getElementById("share-copy-btn").addEventListener("click", copyShareText);
 document.getElementById("share-card-download").addEventListener("click", saveShareCard);
+
+document.querySelectorAll("#response-box button[data-action]").forEach(function (btn) {
+  btn.addEventListener("click", function () { chooseResponse(btn.dataset.action); });
+});
 
 var muteBtn = document.getElementById("mute-btn");
 muteBtn.textContent = SFX.isMuted() ? "🔇" : "🔊";
