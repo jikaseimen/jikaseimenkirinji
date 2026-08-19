@@ -393,7 +393,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 }
 .flame-meter-caption { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; text-align: center; }
 
-/* 炎上中 ticker banner, shown during a rage moment */
+/* "店主ブチギレ中" ticker banner, shown during a rage moment */
 #flame-ticker {
   position: fixed; top: 0; left: 0; right: 0; z-index: 121; overflow: hidden;
   background: linear-gradient(90deg, #b30000, #ff3d00, #b30000); border-bottom: 2px solid #ffcf3f;
@@ -438,7 +438,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   <div class="owner-bubble hidden" id="owner-bubble"></div>
 </div>
 <div id="rage-flash"><img class="fire-photo" alt=""></div>
-<div id="flame-ticker" class="hidden"><span class="track">🔥🚨 炎上中 🚨🔥　この注文はネットが黙っていない　🔥🚨 炎上中 🚨🔥　店主、限界突破　🔥🚨 炎上中 🚨🔥　この注文はネットが黙っていない　🔥🚨 炎上中 🚨🔥　店主、限界突破　</span></div>
+<div id="flame-ticker" class="hidden"><span class="track">🔥🚨 店主ブチギレ中 🚨🔥　この注文、ただでは済まない　🔥🚨 店主ブチギレ中 🚨🔥　店主、限界突破　🔥🚨 店主ブチギレ中 🚨🔥　この注文、ただでは済まない　🔥🚨 店主ブチギレ中 🚨🔥　店主、限界突破　</span></div>
 
 <div id="machine">
   <div class="brand-plate">
@@ -589,7 +589,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
     </div>
     <div class="flame-meter">
       <div class="flame-meter-head">
-        <span>🔥 炎上予測度</span>
+        <span>🔥 店主ブチギレ度</span>
         <span id="flame-percent">0%</span>
       </div>
       <div class="flame-meter-track"><div class="flame-meter-fill" id="flame-meter-fill"></div></div>
@@ -1190,7 +1190,7 @@ function judgeOrder(items, total, walletLeft) {
     return withFlame({ rank: "B", title: "店主に煽られた", comment: "あっさりにチーズ……その組み合わせ、攻めますね。", angry: false });
   }
   if (!hasBase) {
-    return withFlame({ rank: "F", title: "店主、ブチギレ／炎上不可避", comment: "ラーメン屋なんですけど！！　食べられる量を考えてください。", angry: true, mood: "demon" });
+    return withFlame({ rank: "F", title: "店主、完全ブチギレ", comment: "ラーメン屋なんですけど！！　食べられる量を考えてください。", angry: true, mood: "demon" });
   }
 
   // generic score from spend + "attack" toppings
@@ -1251,15 +1251,15 @@ function renderRecordsBox(r) {
    genuinely completed. */
 
 function buildShareText(verdict, total) {
-  var hook = verdict.flame >= 90 ? "【炎上覚悟】" : verdict.flame >= 60 ? "【閲覧注意】" : verdict.flame >= 30 ? "【拡散希望】" : "【神対応】";
+  var hook = verdict.flame >= 90 ? "【衝撃】" : verdict.flame >= 60 ? "【閲覧注意】" : verdict.flame >= 30 ? "【波紋】" : "【神対応】";
   return (
     hook + "自家製麺キリンジ 仮想券売機チャレンジ\n" +
     "注文額 " + formatYen(total) + "\n" +
     "店主評価：" + verdict.rank + "ランク（" + verdict.title + "）\n" +
-    "炎上予測度　" + verdict.flame + "%\n" +
+    "店主ブチギレ度　" + verdict.flame + "%\n" +
     "「" + verdict.comment + "」\n" +
     "あなたも挑戦して店主を怒らせてみろ\n" +
-    "#キリンジ仮想券売機 #炎上覚悟"
+    "#キリンジ仮想券売機 #店主ブチギレ"
   );
 }
 
@@ -1391,7 +1391,7 @@ function buildShareImage(verdict, total, ticketNumber) {
     ctx.fillRect(0, H - 280, W, 280);
 
     ctx.textAlign = "center";
-    var hookText = verdict.flame >= 90 ? "炎上覚悟" : verdict.flame >= 60 ? "閲覧注意" : verdict.flame >= 30 ? "拡散希望" : "神対応";
+    var hookText = verdict.flame >= 90 ? "衝撃" : verdict.flame >= 60 ? "閲覧注意" : verdict.flame >= 30 ? "波紋" : "神対応";
     ctx.fillStyle = "#ff5a2e";
     ctx.font = "900 46px sans-serif";
     ctx.fillText("【" + hookText + "】", W / 2, 92);
@@ -1434,7 +1434,7 @@ function buildShareImage(verdict, total, ticketNumber) {
       ctx.textAlign = "left";
       ctx.font = "900 26px sans-serif";
       ctx.fillStyle = "#fff";
-      ctx.fillText("🔥 炎上予測度", meterX, meterY - 16);
+      ctx.fillText("🔥 店主ブチギレ度", meterX, meterY - 16);
       ctx.textAlign = "right";
       ctx.fillStyle = moodColor;
       ctx.fillText(verdict.flame + "%", meterX + meterW, meterY - 16);
@@ -1467,7 +1467,7 @@ function buildShareImage(verdict, total, ticketNumber) {
       ctx.fillText("あなたも挑戦して店主を怒らせてみろ", W / 2, H - 88);
       ctx.font = "900 27px sans-serif";
       ctx.fillStyle = "#fff";
-      ctx.fillText("#キリンジ仮想券売機　#炎上覚悟", W / 2, H - 42);
+      ctx.fillText("#キリンジ仮想券売機　#店主ブチギレ", W / 2, H - 42);
 
       try {
         resolve({ dataUrl: canvas.toDataURL("image/png"), canvas: canvas });
@@ -1637,10 +1637,10 @@ function issueTicket() {
 
   document.getElementById("flame-percent").textContent = verdict.flame + "%";
   var flameCaption =
-    verdict.flame >= 90 ? "これは伸びる。閲覧注意レベル。" :
-    verdict.flame >= 60 ? "コメント欄が荒れる可能性あり。" :
-    verdict.flame >= 30 ? "軽くバズる程度。" :
-    "円満。むしろ神対応で伸びるやつ。";
+    verdict.flame >= 90 ? "店主、完全に沸点突破。血管キレそう。" :
+    verdict.flame >= 60 ? "店主、額に血管が浮いている。" :
+    verdict.flame >= 30 ? "店主、片眉がピクピクしている。" :
+    "店主、満足げにうなずいている。";
   document.getElementById("flame-meter-caption").textContent = flameCaption;
   var flameFill = document.getElementById("flame-meter-fill");
   flameFill.style.width = "0%";
