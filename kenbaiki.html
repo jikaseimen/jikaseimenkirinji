@@ -432,6 +432,8 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .sns-feed { max-width: 300px; width: 100%; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .sns-comment { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 7px 10px; font-size: 11.5px; color: rgba(255,255,255,0.6); text-align: left; }
 .sns-comment::before { content: "💬 "; }
+.sns-comment-enter { opacity: 0; transform: translateY(6px); transition: opacity .3s ease, transform .3s ease; }
+.sns-comment-enter.sns-comment-in { opacity: 1; transform: translateY(0); }
 
 /* ===== 謝罪・反論による炎上コントロール ===== */
 .response-box { max-width: 300px; width: 100%; margin-top: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; }
@@ -1394,6 +1396,23 @@ function computeFlameReport(flame, total) {
   };
 }
 
+/* counts a number up from 0 -> target, simulating live spread rather than
+   a static instant readout. Respects prefers-reduced-motion by jumping
+   straight to the final value. */
+function animateCountUp(el, target, prefix, suffix, duration) {
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || target === 0) { el.textContent = prefix + target.toLocaleString() + suffix; return; }
+  var start = performance.now();
+  duration = duration || 900;
+  function tick(now) {
+    var p = Math.min(1, (now - start) / duration);
+    var eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 function renderReportBox(flame, total, salesAmount, rank) {
   var stage = stageFromFlame(flame);
   var anger = ANGER_BY_RANK[rank] || ANGER_BY_RANK.S;
@@ -1405,11 +1424,15 @@ function renderReportBox(flame, total, salesAmount, rank) {
   box.innerHTML =
     '<div class="report-title">本日の経営レポート — ' + stage.label + '</div>' +
     '<div class="report-row sales"><span>売上</span><span class="val">' + firePrefix + formatYen(salesAmount) + '</span></div>' +
-    '<div class="report-row"><span>SNS拡散</span><span class="val">' + rep.sns.toLocaleString() + '件</span></div>' +
-    '<div class="report-row"><span>新規客</span><span class="val">+' + rep.newCust.toLocaleString() + '人</span></div>' +
-    '<div class="report-row"><span>フォロワー</span><span class="val">+' + rep.followers.toLocaleString() + '</span></div>' +
+    '<div class="report-row"><span>SNS拡散</span><span class="val" id="report-sns-val">0件</span></div>' +
+    '<div class="report-row"><span>新規客</span><span class="val" id="report-newcust-val">+0人</span></div>' +
+    '<div class="report-row"><span>フォロワー</span><span class="val" id="report-followers-val">+0</span></div>' +
     '<div class="report-row"><span>店主の怒り</span><span class="val">' + anger.lv + '</span></div>' +
     '<div class="report-row risk-' + stage.risk + '"><span>出禁危険度</span><span class="val">' + stage.risk + '</span></div>';
+
+  animateCountUp(document.getElementById("report-sns-val"), rep.sns, "", "件", 1100);
+  animateCountUp(document.getElementById("report-newcust-val"), rep.newCust, "+", "人", 900);
+  animateCountUp(document.getElementById("report-followers-val"), rep.followers, "+", "", 1300);
 }
 
 /* ---------- 架空SNSコメント ---------- */
@@ -1431,10 +1454,26 @@ function sampleComments(n) {
 
 function renderSnsFeed(flame) {
   var el = document.getElementById("sns-feed");
+  clearTimeout(renderSnsFeed._timer);
   var n = flame >= 95 ? 6 : flame >= 80 ? 4 : flame >= 60 ? 3 : flame >= 40 ? 2 : flame >= 20 ? 1 : 0;
-  if (n === 0) { el.classList.add("hidden"); el.innerHTML = ""; return; }
+  el.innerHTML = "";
+  if (n === 0) { el.classList.add("hidden"); return; }
   el.classList.remove("hidden");
-  el.innerHTML = sampleComments(n).map(function (c) { return '<div class="sns-comment">' + c + '</div>'; }).join("");
+  var comments = sampleComments(n);
+  var i = 0;
+  function addNext() {
+    if (i >= comments.length) return;
+    var row = document.createElement("div");
+    row.className = "sns-comment sns-comment-enter";
+    row.textContent = comments[i];
+    el.appendChild(row);
+    requestAnimationFrame(function () { row.classList.add("sns-comment-in"); });
+    i += 1;
+    if (i < comments.length) {
+      renderSnsFeed._timer = setTimeout(addNext, 380 + Math.random() * 260);
+    }
+  }
+  addNext();
 }
 
 /* ---------- 謝罪・反論による炎上コントロール ---------- */
@@ -1500,6 +1539,18 @@ function renderEndingBadge(ctx) {
     '<div class="ending-code">' + ending.code + '</div>' +
     '<div class="ending-label">' + ending.label + '</div>' +
     '<div class="ending-desc">' + ending.desc + '</div>';
+}
+
+/* At 全国炎上 (the top risk tier) the moment is worth spreading for real —
+   open the share flow automatically instead of waiting for a tap. Real
+   posting still needs the viewer's own action (browsers don't allow a
+   page to post on someone's behalf); this just removes the friction of
+   finding the button at the one moment it matters most. */
+function maybeAutoOpenShare() {
+  if (!lastVerdict || state.gameOver !== true) return;
+  if (stageFromFlame(lastVerdict.flame).risk !== "MAX") return;
+  if (!document.getElementById("share-modal-wrap").classList.contains("hidden")) return;
+  shareResult(lastVerdict, lastTotal);
 }
 
 /* ---------- 炎上商法実績 ---------- */
@@ -2065,6 +2116,8 @@ function issueTicket() {
           addTotalBan();
           checkAchievements(state.roundCtx);
         }, 2600);
+      } else {
+        setTimeout(function () { maybeAutoOpenShare(); }, 2600);
       }
     }, 1600);
   } else {
