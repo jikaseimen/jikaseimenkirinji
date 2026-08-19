@@ -617,7 +617,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
       <img id="share-card-img" class="share-card-img" alt="結果カード">
     </div>
     <p class="share-card-caption">画像を長押し（PCは右クリック）で保存できます</p>
-    <a id="share-card-download" class="share-btn" download="kirinji-kenbaiki-result.png" href="#">💾 画像を保存</a>
+    <button id="share-card-download" class="share-btn">💾 画像を保存</button>
     <textarea id="share-text" readonly rows="5"></textarea>
     <div class="share-modal-actions">
       <button class="issue-btn" id="share-copy-btn">📋 テキストをコピー</button>
@@ -1274,6 +1274,8 @@ function shareResult(verdict, total) {
   }
 }
 
+var lastShareCanvas = null;
+
 function openShareModal(text, verdict, total, ticketNumber) {
   document.getElementById("share-text").value = text;
   document.getElementById("share-tweet-link").href =
@@ -1282,15 +1284,56 @@ function openShareModal(text, verdict, total, ticketNumber) {
   document.getElementById("share-modal-wrap").classList.remove("hidden");
 
   var img = document.getElementById("share-card-img");
-  var dl = document.getElementById("share-card-download");
   img.classList.add("hidden");
-  buildShareImage(verdict, total, ticketNumber).then(function (dataUrl) {
-    img.src = dataUrl;
+  lastShareCanvas = null;
+  buildShareImage(verdict, total, ticketNumber).then(function (result) {
+    img.src = result.dataUrl;
     img.classList.remove("hidden");
-    dl.href = dataUrl;
+    lastShareCanvas = result.canvas;
   }).catch(function () {
     // image card failed to render (e.g. odd browser) — text share still works fine
   });
+}
+
+/* saves the generated card: the `downloads` capability when this page runs
+   as a Claude Artifact (declared at publish time), otherwise a plain
+   <a download> click, which works when this file is hosted normally
+   (e.g. on the shop's own site) but is inert inside the Artifact sandbox —
+   that's fine, the capability path covers that case instead. */
+function saveShareCard() {
+  if (!lastShareCanvas) return;
+  var status = document.getElementById("share-copy-status");
+
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("downloads").then(function (downloads) {
+      if (!downloads) { saveShareCardViaLink(); return; }
+      lastShareCanvas.toBlob(function (blob) {
+        if (!blob) { status.textContent = "画像の生成に失敗しました。"; return; }
+        downloads.save({ filename: "kirinji-kenbaiki-result.png", data: blob })
+          .then(function () {
+            status.textContent = "保存しました！";
+            setTimeout(function () { status.textContent = ""; }, 2200);
+          })
+          .catch(function (err) {
+            if (err && err.code === "declined") return;
+            status.textContent = "保存できませんでした。長押しで画像を保存してください。";
+          });
+      }, "image/png");
+    }).catch(saveShareCardViaLink);
+  } else {
+    saveShareCardViaLink();
+  }
+}
+
+function saveShareCardViaLink() {
+  var img = document.getElementById("share-card-img");
+  if (!img.src) return;
+  var a = document.createElement("a");
+  a.href = img.src;
+  a.download = "kirinji-kenbaiki-result.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 /* ---------- shareable result card (canvas) ---------- */
@@ -1427,7 +1470,7 @@ function buildShareImage(verdict, total, ticketNumber) {
       ctx.fillText("#キリンジ仮想券売機　#炎上覚悟", W / 2, H - 42);
 
       try {
-        resolve(canvas.toDataURL("image/png"));
+        resolve({ dataUrl: canvas.toDataURL("image/png"), canvas: canvas });
       } catch (e) {
         reject(e);
       }
@@ -1654,6 +1697,7 @@ document.getElementById("share-btn").addEventListener("click", function () {
 document.getElementById("share-modal-close").addEventListener("click", closeShareModal);
 document.getElementById("share-modal-overlay").addEventListener("click", closeShareModal);
 document.getElementById("share-copy-btn").addEventListener("click", copyShareText);
+document.getElementById("share-card-download").addEventListener("click", saveShareCard);
 
 var muteBtn = document.getElementById("mute-btn");
 muteBtn.textContent = SFX.isMuted() ? "🔇" : "🔊";
