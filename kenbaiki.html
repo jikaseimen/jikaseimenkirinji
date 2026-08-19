@@ -413,6 +413,8 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   transition: width 1s cubic-bezier(.2,.8,.2,1);
 }
 .flame-meter-caption { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; text-align: center; }
+.owner-promo { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 11.5px; color: rgba(255,255,255,0.5); line-height: 1.6; text-align: center; }
+.owner-promo a { color: var(--orange); font-weight: 700; text-decoration: underline; }
 
 /* "店主ブチギレ中" ticker banner, shown during a rage moment */
 #flame-ticker {
@@ -628,6 +630,7 @@ button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
       <div class="flame-meter-track"><div class="flame-meter-fill" id="flame-meter-fill"></div></div>
       <p class="flame-meter-caption" id="flame-meter-caption"></p>
     </div>
+    <p class="owner-promo" id="owner-promo"></p>
   </div>
 
   <div class="records-box" id="records-box"></div>
@@ -1194,6 +1197,24 @@ var NOODLE_NAMES = [
 ];
 var ATTACK_NAMES = ["豚増", "かす増", "麺特盛", "全部", "粒ニンニク", "テイクアウトあぶらかす"];
 
+/* ---------- 店主の宣伝（関連ページの案内） ---------- */
+var OWNER_PROMOS = [
+  { text: "うちの公式サイトも覗いてってください。", label: "公式サイト", url: "https://jikaseimenkirinji.com/" },
+  { text: "ラーメン写真をAI画像にする無料プロンプト、172種類も作ったので使ってやってください。", label: "RAMEN_PROMPT", url: "https://jikaseimenkirinji.com/RAMEN_PROMPT.html" },
+  { text: "ラーメンの原価とカロリーが丸わかりの図鑑も作りました。暇な人はどうぞ。", label: "原価図鑑", url: "https://jikaseimenkirinji.com/ramen-genka.html" },
+  { text: "麺を茹でるとき、声だけで動くキッチンタイマーも無料で使えます。", label: "音声キッチンタイマー", url: "https://jikaseimenkirinji.com/timer-lp.html" },
+  { text: "暇なら「あぶらかすキャッチ」もやってって。", label: "あぶらかすキャッチ", url: "https://jikaseimenkirinji.com/game.html" },
+  { text: "「丼チャレンジ」のページも見といてください。", label: "丼チャレンジ", url: "https://jikaseimenkirinji.com/%E4%B8%BC%E3%83%81%E3%83%A3%E3%83%AC%E3%83%B3%E3%82%B8/" }
+];
+
+function renderOwnerPromo() {
+  var el = document.getElementById("owner-promo");
+  var p = OWNER_PROMOS[Math.floor(Math.random() * OWNER_PROMOS.length)];
+  el.innerHTML =
+    '店主：「' + p.text + '」<br>' +
+    '<a href="' + p.url + '" target="_blank" rel="noopener">' + p.label + ' →</a>';
+}
+
 var FLAME_BY_RANK = { S: 5, A: 20, B: 45, C: 70, D: 90, F: 100 };
 
 function withFlame(v) {
@@ -1708,6 +1729,8 @@ function issueTicket() {
   var flameFill = document.getElementById("flame-meter-fill");
   flameFill.style.width = "0%";
   setTimeout(function () { flameFill.style.width = verdict.flame + "%"; }, 50);
+
+  renderOwnerPromo();
 
   var records = saveRecord(total, verdict.rank);
   renderRecordsBox(records);
