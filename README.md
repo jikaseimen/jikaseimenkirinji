@@ -25,10 +25,10 @@
 
 2006年12月 オープンしました。
 
-## 🔗 公式X
+## 🔗 公式SNS
 
 (https://x.com/ramen_after_all)
-
+(https://www.tiktok.com/@jikaseimenkirinji)
 ## 📖 概要
 
 券売機と併用するキャッシュレス対応のスマホで注文できる仕組みを作りました。
