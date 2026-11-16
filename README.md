@@ -25,9 +25,9 @@
 
 2006年12月 オープンしました。
 
-## 🔗 デモ
+## 🔗 公式X
 
-**[https://jikaseimenkirinji.vercel.app](https://jikaseimenkirinji.vercel.app)**
+(https://x.com/ramen_after_all)
 
 ## 📖 概要
 
