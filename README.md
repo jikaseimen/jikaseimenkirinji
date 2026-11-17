@@ -44,8 +44,8 @@
 * **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台をドローンで飛び回るフライトゲーム
 * **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：爽快破壊アクションゲーム
 
-## 🛠️ オリジナル厨房Webアプリ・ツール（無料）
-* **[Hands-Free Kitchen Timer](https://jikaseimen.github.io/jikaseimenkirinji/timer-lp.html)**：声だけで動くキッチンタイマー（登録なし）
+## 🛠️ オリジナル厨房Webアプリ・ツール（無料）（登録なし）（広告なし）
+* **[Hands-Free Kitchen Timer](https://jikaseimen.github.io/jikaseimenkirinji/timer-lp.html)**：声だけで動くキッチンタイマー
 * **[ラーメン原価図鑑](https://jikaseimen.github.io/jikaseimenkirinji/ramen-genka-all.html)**：ラーメンの原価とカロリーを計算できるツール
 * **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：ラーメン写真をAI画像にする無料プロンプト172種
 
