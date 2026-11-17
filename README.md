@@ -7,7 +7,7 @@
 * **2020年3月**：ウーバーイーツはじめました（[YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)）
 * **2015年9月**：京都音楽博覧会に出店しました（[はてなブログ](https://jikaseimenkirinji.hatenablog.com/entry/2015/09/21/084851))）
 * **2013年1月**：YouTube開設しました（[YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)）
-* **2006年12月**：自家製麺キリンジオープンしました
+* **2006年12月**：オープンしました
 
 ## 自家製麺キリンジ
 
@@ -49,9 +49,11 @@
 * **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：ラーメン写真をAI画像にする無料プロンプト172種
 
 ## 📍 店舗情報・アクセス
-* **住所**：宮城県仙台市青葉区二日町15-15 第2鹿島ビル 101
+* **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
 * **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
 * **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
+* **電話　無し
+* **メール　jikaseimen@gmail.com
 
 ## 🔗 関連リンク・SNS
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
