@@ -24,140 +24,58 @@
 
 2006年12月 オープンしました。
 
-# 自家製麺キリンジ
+## 自家製麺キリンジ
 
 2006年12月創業、宮城県仙台市青葉区二日町のラーメン店です。
-名物「あぶらかすのカスラーメン」を中心に、自家製麺を生かしたメニューを展開しております。
+創業以来、名物「あぶらかすのカスラーメン」を中心に、自家製麺を活かした一杯を作り続けています。
 
 ## 🍜 お店・メニューについて
-* **看板メニュー**：あぶらかすのカスラーメン2種類
+* **看板メニュー**：あぶらかすのカスラーメン
 * **メニュー表**：[メニューを見る](https://jikaseimen.github.io/jikaseimenkirinji/3d.html)
 * **創業**：2006年12月
 * **こだわり**：自家製麺と、旨味が凝縮されたあぶらかすの相性抜群な一杯をご提供しています。
 * 2009年11月からは「あぶらかす」のテイクアウトも実施しています。
 
 ## 📍 店舗情報・アクセス
-* **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
-* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約2分（約360m）
+* **住所**：宮城県仙台市青葉区二日町15-15 第2鹿島ビル 101
+* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
 * **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
 
-🕐 営業時間 11:00〜14:00 / 17:00〜20:00
-🕐 木曜定休
-
-電話：なし
-
-連絡先：jikaseimen@gmail.com
 ## 🔗 公式SNSリンク
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
-* [X（旧Twitter）](https://x.com/ramen_after_all)
+* [X（旧Twitter](https://x.com/ramen_after_all)
 
 
-## ✨ 機能
+## 🎮 自家製麺キリンジのブラウザゲーム（無料）
+暇つぶしに遊べるオリジナルゲームです。スコア達成でお得な特典も！
+* **[麺打ち拳 冒険編](https://jikaseimen.github.io/jikaseimenkirinji/bouken.html)**：突き・蹴り・必殺技で戦うアクションゲーム
+* **[あぶらかすキャッチ](https://jikaseimen.github.io/jikaseimenkirinji/game.html)**：スワイプであぶらかすをキャッチ！一万点でお店の味玉ゲット
+* **[丼チャレンジ](https://jikaseimen.github.io/jikaseimenkirinji/donburi.html)**：丼を積み上げるゲーム！金の丼100個で生卵1個無料
+* **[3D今昔地図](https://jikaseimen.github.io/jikaseimenkirinji/now.html)仙台市の今と昔を比べられる3D地図
+* **[麺打ち拳 カンフー](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：カンフーアクションゲーム
+* **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台をドローンで飛び回るフライトゲーム
+* **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：爽快破壊アクションゲーム
 
-- 📱 モバイルファースト設計
-- 🗂 カテゴリタブ切り替えメニュー
-- 🛒 カート機能（数量変更・削除）
-- 💳 PayPay QRコード決済
-- 💬 LINE LIFF連携（注文内容をLINEで送信）
-- 🔒 セキュリティ対策済み（金額改ざん防止・レート制限・CORS）
+## 🛠️ オリジナル厨房Webアプリ・ツール（無料）
+* **[Hands-Free Kitchen Timer](https://jikaseimen.github.io/jikaseimenkirinji/timer-lp.html)**：声だけで動くキッチンタイマー（登録なし）
+* **[ラーメン原価図鑑](https://jikaseimen.github.io/jikaseimenkirinji/ramen-genka-all.html)**：ラーメンの原価とカロリーを計算できるツール
+* **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：ラーメン写真をAI画像にする無料プロンプト172種
 
-## 🛠 使用技術
+## 📍 店舗情報・アクセス
+* **住所**：宮城県仙台市青葉区二日町15-15 第2鹿島ビル 101
+* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
+* **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
 
-| 技術 | 用途 |
-|---|---|
-| [Next.js 14](https://nextjs.org/) App Router | フレームワーク |
-| TypeScript | 型安全な開発 |
-| Tailwind CSS | スタイリング |
-| [@line/liff](https://developers.line.biz/ja/docs/liff/) | LINE連携 |
-| [PayPay API](https://developer.paypay.ne.jp/) | 決済 |
-| [Vercel](https://vercel.com/) | ホスティング |
+## 🔗 関連リンク・SNS
+* [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
+* [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
+* [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
+* [X（旧Twitter](https://x.com/ramen_after_all)
 
-## 🚀 セットアップ
 
-### 1. リポジトリをクローン
 
-```bash
-git clone https://github.com/jikaseimen/jikaseimenkirinji.git
-cd jikaseimenkirinji
-npm install
-```
-
-### 2. 環境変数を設定
-
-```bash
-cp .env.local.example .env.local
-```
-
-`.env.local` を編集：
-
-```env
-NEXT_PUBLIC_LIFF_ID=あなたのLIFF_ID
-PAYPAY_API_KEY=あなたのAPIキー
-PAYPAY_API_SECRET=あなたのAPIシークレット
-PAYPAY_MERCHANT_ID=あなたの加盟店ID
-NEXT_PUBLIC_APP_URL=https://あなたのドメイン
-```
-
-### 3. 開発サーバー起動
-
-```bash
-npm run dev
-```
-
-[http://localhost:3000](http://localhost:3000) で確認できます。
-
-### 4. メニューを変更する
-
-`lib/menu.ts` を編集してください。
-
-```typescript
-export const MENU_DATA: MenuCategory[] = [
-  {
-    category: "カテゴリ名",
-    items: [
-      { name: "商品名", price: 1000 },
-    ],
-  },
-];
-```
-
-## 📦 デプロイ
-
-Vercelへのデプロイを推奨します。
-
-1. GitHubリポジトリをVercelにインポート
-2. 環境変数を設定
-3. デプロイ
-
-詳細は [Vercel公式ドキュメント](https://vercel.com/docs) を参照してください。
-
-## 🔒 セキュリティ
-
-- 金額はサーバー側のメニューデータから再計算（改ざん防止）
-- IPベースのレート制限（1分間10リクエストまで）
-- CORS設定（自サイトからのリクエストのみ許可）
-- 入力バリデーション（存在しない商品・異常な数量を拒否）
-
-## 📝 ライセンス
-
-MIT License — 自由に使用・改変・再配布できます。
-
-## 🏪 について
-
-**カスラーメン自家製麺キリンジ**
-
-あぶらかすラーメン専門店。2006年創業。仙台市青葉区二日町で営業中。
-
-- 公式サイト [jikaseimenkirinji.com](https://jikaseimenkirinji.com)
-- あぶらかすキャッチ (https://jikaseimenkirinji.com/game.html)
-- 麺マッチ (https://jikaseimenkirinji.com/app/)
-- RAMEN_PROMPT (https://jikaseimenkirinji.com/RAMEN_PROMPT.html)
-- 📍 仙台市青葉区二日町15-15第二石原ビル101
-- 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
-- 🕐 木曜定休
-- contact　jikaseimen@gmail.com
 
 ---
 
