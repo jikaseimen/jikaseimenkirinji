@@ -2,7 +2,7 @@
 # 🍜 仙台 北四番丁 二日町 カスラーメン自家製麺キリンジ 公式サイト
 ニュース
 
-2026年10月 ClaudCode実績まとめました。
+2026年10月 [ClaudCode実績まとめ](https://jikaseimen.github.io/jikaseimenkirinji/works.html)ました。
 
 2026年10月 店の地図を3D化 しました。
 
