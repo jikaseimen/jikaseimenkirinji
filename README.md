@@ -5,8 +5,8 @@
 最新ニュース
 * **2026年11月**：公式サイトを移設しました（[公式サイト](https://jikaseimen.github.io/jikaseimenkirinji/)）
 * **2023年1月**：TikTok開設しました（[TikTok](https://www.tiktok.com/@jikaseimenkirinji)）
-* **2020年3月**：ウーバーイーツはじめました（[ウーバーイーツ](https://www.ubereats.com/store-browse-uuid/3da01a20-e74a-4f64-a9f1-dcd158757c9c?diningMode=DELIVERY)
-* **2015年9月**：京都音楽博覧会に出店しました（[はてなブログ](https://jikaseimenkirinji.hatenablog.com/entry/2015/09/21/084851))）
+* **2020年3月**：ウーバーイーツはじめました（[ウーバーイーツ](https://www.ubereats.com/store-browse-uuid/3da01a20-e74a-4f64-a9f1-dcd158757c9c?diningMode=DELIVERY)）
+* **2015年9月**：京都音楽博覧会に出店しました（[はてなブログ](https://jikaseimenkirinji.hatenablog.com/entry/2015/09/21/084851)）
 * **2013年1月**：YouTube開設しました（[YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)）
 * **2006年12月**：オープンしました
 
