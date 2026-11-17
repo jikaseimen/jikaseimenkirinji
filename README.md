@@ -31,7 +31,7 @@
 
 ## 🍜 お店・メニューについて
 * **看板メニュー**：あぶらかすのカスラーメン
-* **メニュー表**：(https://jikaseimen.github.io/jikaseimenkirinji/3d.html)
+* **3Dメニュー表**：[メニューを見る](https://jikaseimen.github.io/jikaseimenkirinji/3d.html)
 * **創業**：2006年12月
 * **こだわり**：自家製麺と、旨味が凝縮されたあぶらかすの相性抜群な一杯をご提供しています。
 * 2009年11月からは「あぶらかす」のテイクアウトも実施しています。
