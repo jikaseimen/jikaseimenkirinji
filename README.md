@@ -1,7 +1,7 @@
 <img src="1000002559.jpg" alt="説明">
-# 🍜 仙台 北四番丁 二日町 カスラーメン自家製麺キリンジ 公式サイト
+# 🍜 仙台 北四番丁 二日町 
+カスラーメン自家製麺キリンジ 公式サイト
 ニュース
-
 * **2026年11月**：公式サイトを移設しました（[公式サイト](https://jikaseimen.github.io/jikaseimenkirinji/)）
 * **2023年1月**：TikTok開設しました（[TikTok](https://www.tiktok.com/@jikaseimenkirinji)）
 * **2020年3月**：ウーバーイーツはじめました（[YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)）
