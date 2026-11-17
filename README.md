@@ -47,7 +47,7 @@
 電話：なし
 
 連絡先：jikaseimen@gmail.com
-## 🔗 公式SNS
+## 🔗 公式SNSリンク
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
