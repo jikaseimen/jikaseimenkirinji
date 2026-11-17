@@ -39,7 +39,7 @@
 ## 📍 店舗情報・アクセス
 * **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
 * **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約2分（約360m）
-* **道案内マップ**：[立体（3D）アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
+* **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
 
 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
 🕐 木曜定休
