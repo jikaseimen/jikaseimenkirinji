@@ -25,10 +25,11 @@
 2006年12月 オープンしました。
 
 ## 🔗 公式SNS
+* [X（旧Twitter）](https://x.com/ramen_after_all)[cite: 1]## 
+* [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
+* [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
+* [TikTok](https://www.tiktok.com/@jikaseimenkirinji)[cite: 1]
 
-(https://x.com/ramen_after_all)
-
-(https://www.tiktok.com/@jikaseimenkirinji)
 ## 📖 概要
 
 住所：宮城県仙台市青葉区二日町15-15第二石原ビル101
