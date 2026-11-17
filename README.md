@@ -24,17 +24,21 @@
 
 2006年12月 オープンしました。
 
-## 🔗 自家製麺キリンジ公式SNS
-* [X（旧Twitter）](https://x.com/ramen_after_all)
-* [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
-* [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
-* [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
+# 自家製麺キリンジ
 
-## 📖 概要
+2006年12月創業、宮城県仙台市青葉区二日町のラーメン店です。
+名物「あぶらかすのカスラーメン」を中心に、自家製麺を生かしたメニューを展開しております。
 
-住所：宮城県仙台市青葉区二日町15-15第二石原ビル101
+## 🍜 お店・メニューについて
+* **看板メニュー**：あぶらかすのカスラーメン
+* **メニュー表**：(https://jikaseimen.github.io/jikaseimenkirinji/3d.html)
+* **創業**：2006年12月
+* **こだわり**：自家製麺と、旨味が凝縮されたあぶらかすの相性抜群な一杯をご提供しています。2009年11月からは「あぶらかす」のテイクアウトも実施しています。
 
-創業：2006年12月
+## 📍 店舗情報・アクセス
+* **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
+* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約2分（約360m）
+* **道案内マップ**：[立体（3D）アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
 
 🕐 営業時間 11:00〜14:00 / 17:00〜20:00
 🕐 木曜定休
@@ -42,11 +46,12 @@
 電話：なし
 
 連絡先：jikaseimen@gmail.com
+## 🔗 関連リンク・SNS
+* [はてなブログ（お知らせ・日々の記録）](https://jikaseimenkirinji.hatenablog.com/)
+* [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
+* [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
+* [X（旧Twitter）](https://x.com/ramen_after_all)
 
-- テーブルのQRコードを読み取って注文
-- ダウンロード無し、友達追加無し
-- PayPayでその場で支払い
-- LINEで注文内容を送信
 
 ## ✨ 機能
 
