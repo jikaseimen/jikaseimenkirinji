@@ -24,13 +24,13 @@
 * 2009年11月からは「あぶらかす」のテイクアウトも実施しています。
 
 ## 📍 店舗情報・アクセス
-* **住所**：宮城県仙台市青葉区二日町15-15 第2鹿島ビル 101
+* **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
 * **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
 * **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
 * **電話　無し
 * **Contact　jikaseimen@gmail.com
 
-## 🔗 公式SNSリンク
+## 🔗 公式自家製麺キリンジリンク
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
