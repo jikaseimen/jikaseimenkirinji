@@ -27,6 +27,8 @@
 * **住所**：宮城県仙台市青葉区二日町15-15 第2鹿島ビル 101
 * **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
 * **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
+* **電話　無し
+* **Contact　jikaseimen@gmail.com
 
 ## 🔗 公式SNSリンク
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
@@ -50,12 +52,7 @@
 * **[ラーメン原価図鑑](https://jikaseimen.github.io/jikaseimenkirinji/ramen-genka-all.html)**：ラーメンの原価とカロリーを計算できるツール
 * **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：ラーメン写真をAI画像にする無料プロンプト172種
 
-## 📍 店舗情報・アクセス
-* **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
-* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約4分（約360m）
-* **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
-* 電話　無し
-* Contact　jikaseimen@gmail.com
+
 
 
 
