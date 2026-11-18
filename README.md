@@ -44,7 +44,7 @@
 * **[麺打ち拳 ホテル木町編](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：自家製麺キリンジの世界観で繰り広げるカンフーアクションゲーム
 * **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台の街並みをドローンで飛び回るフライトゲーム
 * **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：ストレス発散にぴったりの爽快破壊アクションゲーム
-* **3D今昔地図**：仙台市の今と昔の街並みを立体的に見比べられる3Dマップ
+* **[仙台3D今昔地図](https://jikaseimen.github.io/jikaseimenkirinji/now.html)**：仙台市の今と昔の街並みを立体的に見比べられる3Dマップ
   
 ## 🛠️ オリジナル厨房Webアプリ・ツール（完全無料・登録なし・広告なし）
 飲食店経営や日々の調理・PRに役立つ実用ツールを公開しています。
