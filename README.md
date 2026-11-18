@@ -1,3 +1,7 @@
+<div style="position:relative;width:100%;aspect-ratio:16/9;margin:0 auto 1em;">
+  <iframe src="https://www.youtube-nocookie.com/embed/7vxkwY1di5E" title="自家製麺キリンジ" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 <img src="1000002559.jpg" alt="自家製麺キリンジのメニュー（こってり・あっさり・汁無し豚・油そば）" width="100%">
 
 # カスラーメン自家製麺キリンジ 公式サイト
@@ -10,11 +14,9 @@
 * **2013年1月**：YouTube開設しました（[YouTube](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)）
 * **2006年12月**：オープンしました
 
-<!-- ▼動画（YouTubeショートを1本）。動画ID「XXXXXXXXXXX」を差し替えてからコメントを外す
 <div style="position:relative;width:100%;max-width:360px;aspect-ratio:9/16;margin:1em auto;">
-  <iframe src="https://www.youtube-nocookie.com/embed/XXXXXXXXXXX" title="自家製麺キリンジのカスラーメン" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe src="https://www.youtube-nocookie.com/embed/k-Hjftw1tco" title="自家製麺キリンジのカスラーメン" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
-▲動画ここまで -->
 
 ## 自家製麺キリンジとは
 
