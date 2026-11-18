@@ -34,7 +34,7 @@
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
 * [X（旧Twitter)](https://x.com/ramen_after_all)
-[はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
+*[はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 
 ## 🎮 自家製麺キリンジのブラウザゲーム（無料）
 暇つぶしに遊べるオリジナルゲームです。スコア達成でお得な特典も！
