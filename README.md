@@ -43,7 +43,9 @@
 
 **🎥 お店までの案内動画**
 
-<p><a href="https://www.tiktok.com/@ユーザーID/video/7707186707363417345" target="_blank" rel="noopener">TikTokで駅からの案内動画を見る</a></p>
+<div style="position:relative;width:100%;max-width:325px;aspect-ratio:9/16;margin:1em auto;">
+  <video src="【動画のファイルパスまたはMP4のURL】" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;"></video>
+</div>>TikTokで駅からの案内動画を見る</a></p>
 ## 🔗 公式自家製麺キリンジリンク
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
