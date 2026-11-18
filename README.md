@@ -37,11 +37,11 @@
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 
 ## 🎮 自家製麺キリンジのブラウザゲーム（無料）
-待ち時間や暇つぶしにすぐ遊べるオリジナルゲームです。高スコア達成でお店のトッピング特典も！
-* **[麺打ち拳 冒険編](https://jikaseimen.github.io/jikaseimenkirinji/bouken.html)**：突き・蹴り・必殺技を駆使して戦う本格アクションゲーム
-* **[あぶらかすキャッチ](https://jikaseimen.github.io/jikaseimenkirinji/game.html)**：スワイプ操作であぶらかすをキャッチ！1万点達成でお店の味玉ゲット
+暇つぶしにすぐ遊べるオリジナルゲームです。高スコア達成でお店のトッピング特典も！
+* **[麺打ち拳 冒険編](https://jikaseimen.github.io/jikaseimenkirinji/bouken.html)**：仙台市内が舞台の突き・蹴り・必殺技を駆使して戦う本格アクションゲーム
+* **[あぶらかすキャッチ](https://jikaseimen.github.io/jikaseimenkirinji/game.html)**：スワイプ操作であぶらかすをキャッチ！株式投資でお金を増やせ。1万点達成でお店の味玉ゲット
 * **[丼チャレンジ](https://jikaseimen.github.io/jikaseimenkirinji/donburi.html)**：バランスよく丼を積み上げるゲーム！金の丼100個達成で生卵1個無料
-* **[麺打ち拳 ホテル木町編](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：キリンジの世界観で繰り広げるカンフーアクションゲーム
+* **[麺打ち拳 ホテル木町編](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：自家製麺キリンジの世界観で繰り広げるカンフーアクションゲーム
 * **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台の街並みをドローンで飛び回るフライトゲーム
 * **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：ストレス発散にぴったりの爽快破壊アクションゲーム
 * **3D今昔地図**：仙台市の今と昔の街並みを立体的に見比べられる3Dマップ
