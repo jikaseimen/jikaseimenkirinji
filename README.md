@@ -41,6 +41,12 @@
 * **電話**：なし
 * **Contact**：jikaseimen@gmail.com
 
+**🎥 駅からお店までの案内動画**
+
+<div style="position:relative;width:100%;max-width:325px;aspect-ratio:9/16;margin:1em auto;">
+  <iframe src="https://www.tiktok.com/player/v1/7707184452245425409" title="自家製麺キリンジへの道案内" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ## 🔗 公式自家製麺キリンジリンク
 * [TikTok](https://www.tiktok.com/@jikaseimenkirinji)
 * [YouTubeチャンネル](https://www.youtube.com/@%E4%BB%99%E5%8F%B0%E8%87%AA%E5%AE%B6%E8%A3%BD%E9%BA%BA%E3%82%AD%E3%83%AA%E3%83%B3%E3%82%B8)
