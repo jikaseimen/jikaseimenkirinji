@@ -37,28 +37,19 @@
 * [はてなブログ](https://jikaseimenkirinji.hatenablog.com/)
 
 ## 🎮 自家製麺キリンジのブラウザゲーム（無料）
-暇つぶしに遊べるオリジナルゲームです。スコア達成でお得な特典も！
-* **[麺打ち拳 冒険編](https://jikaseimen.github.io/jikaseimenkirinji/bouken.html)**：突き・蹴り・必殺技で戦うアクションゲーム
-* **[あぶらかすキャッチ](https://jikaseimen.github.io/jikaseimenkirinji/game.html)**：スワイプであぶらかすをキャッチ！一万点でお店の味玉ゲット
-* **[丼チャレンジ](https://jikaseimen.github.io/jikaseimenkirinji/donburi.html)**：丼を積み上げるゲーム！金の丼100個で生卵1個無料
-* **[3D今昔地図](https://jikaseimen.github.io/jikaseimenkirinji/now.html)仙台市の今と昔を比べられる3D地図
-* **[麺打ち拳 ホテル木町編](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：カンフーアクションゲーム
-* **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台をドローンで飛び回るフライトゲーム
-* **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：爽快破壊アクションゲーム
-
-## 🛠️ オリジナル厨房Webアプリ・ツール（無料）（登録なし）（広告なし）
-* **[Hands-Free Kitchen Timer](https://jikaseimen.github.io/jikaseimenkirinji/timer-lp.html)**：声だけで動くキッチンタイマー
-* **[ラーメン原価図鑑](https://jikaseimen.github.io/jikaseimenkirinji/ramen-genka-all.html)**：ラーメンの原価とカロリーを計算できるツール
-* **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：ラーメン写真をAI画像にする無料プロンプト172種
-
-
-
-
-
-
-
-
----
-
+待ち時間や暇つぶしにすぐ遊べるオリジナルゲームです。高スコア達成でお店のトッピング特典も！
+* **[麺打ち拳 冒険編](https://jikaseimen.github.io/jikaseimenkirinji/bouken.html)**：突き・蹴り・必殺技を駆使して戦う本格アクションゲーム
+* **[あぶらかすキャッチ](https://jikaseimen.github.io/jikaseimenkirinji/game.html)**：スワイプ操作であぶらかすをキャッチ！1万点達成でお店の味玉ゲット
+* **[丼チャレンジ](https://jikaseimen.github.io/jikaseimenkirinji/donburi.html)**：バランスよく丼を積み上げるゲーム！金の丼100個達成で生卵1個無料
+* **[麺打ち拳 ホテル木町編](https://jikaseimen.github.io/jikaseimenkirinji/kirinji_kungfu.html)**：キリンジの世界観で繰り広げるカンフーアクションゲーム
+* **[仙台ドローン](https://jikaseimen.github.io/jikaseimenkirinji/drone.html)**：夜の仙台の街並みをドローンで飛び回るフライトゲーム
+* **[麺打ち拳 破壊王](https://jikaseimen.github.io/jikaseimenkirinji/hakai.html)**：ストレス発散にぴったりの爽快破壊アクションゲーム
+* **3D今昔地図**：仙台市の今と昔の街並みを立体的に見比べられる3Dマップ
   
+## 🛠️ オリジナル厨房Webアプリ・ツール（完全無料・登録なし・広告なし）
+飲食店経営や日々の調理・PRに役立つ実用ツールを公開しています。
+* **[Hands-Free Kitchen Timer](https://jikaseimen.github.io/jikaseimenkirinji/timer-lp.html)**：調理中でも声だけで操作できる音声認識キッチンタイマー(実際に店で使ってます)
+* **[ラーメン原価図鑑](https://jikaseimen.github.io/jikaseimenkirinji/ramen-genka-all.html)**：食材ごとの原価率とカロリーを瞬時に計算できるシミュレーションツール
+* **[RAMEN_PROMPT](https://jikaseimen.github.io/jikaseimenkirinji/RAMEN_PROMPT.html)**：手持ちのラーメン写真を魅力的なAI画像に変換する無料プロンプト172選
+
 
