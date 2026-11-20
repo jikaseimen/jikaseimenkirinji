@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Open Ocean — WebGPU</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;font-family:-apple-system,system-ui,"Hiragino Sans",sans-serif;color:#fff}
+  canvas{display:block;width:100vw;height:100vh;height:100dvh}
+  #ui{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);
+      display:flex;gap:18px;align-items:center;padding:10px 16px;border-radius:14px;
+      background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      font-size:12px;letter-spacing:.02em;transition:opacity .4s;white-space:nowrap}
+  #ui label{display:flex;flex-direction:column;gap:4px;opacity:.85}
+  #ui input{width:120px;accent-color:#cfe6ff}
+  #hint{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);font-size:12px;opacity:.6;transition:opacity 1.5s;pointer-events:none}
+  #wxbox{position:fixed;left:calc(12px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));display:flex;gap:10px;align-items:flex-start;
+    padding:9px 12px;border-radius:12px;background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px;line-height:1.55;max-width:calc(100vw - 24px);transition:opacity .4s}
+  #wx{display:flex;flex-direction:column}#wx b{font-weight:600;font-size:13px}#wx span{opacity:.8}
+  #mode{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+  #mode.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
+  #hint{top:auto!important;bottom:calc(84px + env(safe-area-inset-bottom))}
+  body.clean #wxbox{opacity:0;pointer-events:none}
+  #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:15px;line-height:1.7;background:#0a0d12}
+  body.clean #ui,body.clean #hint{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="wxbox"><div id="wx"></div><button id="mode">実況ON</button></div>
+<div id="hint">ドラッグで見回す ・ ピンチ／ホイールで高さ ・ WASDで漂う ・ Hで表示切替</div>
+<div id="ui">
+  <label>太陽高度<input id="sun" type="range" min="-3" max="60" step="0.1" value="6"></label>
+  <label>海面からの高さ<input id="alt" type="range" min="0.6" max="40" step="0.1" value="1.8"></label>
+  <label>波の高さ<input id="amp" type="range" min="0.3" max="5" step="0.05" value="2.2"></label>
+</div>
+<div id="err"></div>
+<script>
+"use strict";
+(async function(){
+const Q = new URLSearchParams(location.search);
+const errBox = document.getElementById('err');
+function fail(msg){ errBox.style.display='flex'; errBox.innerHTML = msg; }
+if(!navigator.gpu){ fail('このブラウザはWebGPUに対応していません。<br>Chrome / Edge 113以降、Safari 26以降でお試しください。'); return; }
+const adapter = await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
+if(!adapter){ fail('WebGPUアダプタを取得できませんでした。'); return; }
+const device = await adapter.requestDevice();
+device.lost.then(i=>fail('GPUデバイスが失われました: '+i.message));
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('webgpu');
+const presentFormat = navigator.gpu.getPreferredCanvasFormat();
+ctx.configure({device, format:presentFormat, alphaMode:'opaque', usage:GPUTextureUsage.RENDER_ATTACHMENT|(Q.has('shot')?GPUTextureUsage.COPY_SRC:0)});
+
+// ---------------------------------------------------------------- constants
+const WAVE_SCALE = 2*Math.PI/68;      // wind-sea base wavelength 68 m
+const GEO_ITERS = 18;
+const R_EARTH = 6360e3;
+
+// ---------------------------------------------------------------- WGSL
+const COMMON = /* wgsl */`
+struct U {
+  viewProj : mat4x4f,
+  camPos   : vec4f,   // xyz, w = time
+  camRight : vec4f,   // w = tanHalfFov * aspect
+  camUp    : vec4f,   // w = tanHalfFov
+  camFwd   : vec4f,   // w = exposure
+  sunDir   : vec4f,   // w = cloud coverage
+  sunCol   : vec4f,   // rgb irradiance, w = wind angle
+  res      : vec4f,
+  wave     : vec4f,   // amp, scale, mean, choppiness
+  ship     : vec4f,   // x, z, heading, length (0 = none)
+  shipModel: mat4x4f,
+  env      : vec4f,   // swell angle, swell length scale, ripple factor, whitecap factor
+  env2     : vec4f,   // haze distance, fog amount, swell amp, 0
+};
+@group(0) @binding(0) var<uniform> u : U;
+const PI = 3.14159265;
+const RG = 6360000.0;
+
+fn skyUV(d: vec3f) -> vec2f {
+  let el = asin(clamp(d.y, -1.0, 1.0));
+  let az = atan2(d.z, d.x);
+  let x = sign(el) * sqrt(abs(el) / (PI*0.5));
+  return vec2f(az/(2.0*PI) + 0.5, 0.5 - 0.5*x);
+}
+
+fn hash12(p: vec2f) -> f32 {
+  var p3 = fract(vec3f(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+fn vnoise(p: vec2f) -> f32 {
+  let i = floor(p); let f = fract(p);
+  let w = f*f*f*(f*(f*6.0-15.0)+10.0);
+  let a = hash12(i); let b = hash12(i+vec2f(1,0));
+  let c = hash12(i+vec2f(0,1)); let d = hash12(i+vec2f(1,1));
+  return mix(mix(a,b,w.x), mix(c,d,w.x), w.y);
+}
+fn fbm(p0: vec2f, oct: i32) -> f32 {
+  var p = p0; var a = 0.5; var s = 0.0;
+  let rot = mat2x2f(0.8, -0.6, 0.6, 0.8);
+  for (var i = 0; i < oct; i++) { s += a * vnoise(p); p = rot * p * 2.03 + vec2f(17.1, 9.2); a *= 0.5; }
+  return s;
+}
+
+// ---- ocean height field: sum of sharp-crested directional waves with domain drag
+fn wavesRaw(p: vec2f, iters: i32) -> f32 {
+  var pos = p * u.wave.y;
+  var freq = 1.0; var w = 1.0; var sumV = 0.0; var sumW = 0.0; var it = 0.0;
+  let t = u.camPos.w;
+  let wa = u.sunCol.w;
+  for (var i = 0; i < iters; i++) {
+    let a = wa + sin(f32(i) * 2.3999 + 0.7) * 1.25;
+    let d = vec2f(cos(a), sin(a));
+    let omega = sqrt(9.81 * freq * u.wave.y);
+    let x = dot(d, pos) * freq - omega * t;
+    let e = exp(sin(x) - 1.0);
+    let dx = e * cos(x);
+    sumV += e * w; sumW += w;
+    pos -= d * dx * w * u.wave.w / freq;
+    freq *= 1.18; w *= 0.82; it += 1232.399963;
+  }
+  return sumV / sumW;
+}
+// long swell from a distant storm, slightly off the wind direction
+fn swell(p: vec2f) -> f32 {
+  let t = u.camPos.w; var h = 0.0;
+  let L = array<f32,3>(170.0, 118.0, 86.0);
+  let A = array<f32,3>(0.95, 0.55, 0.32);
+  let D = array<f32,3>(0.55, 0.80, 0.30);
+  for (var j = 0; j < 3; j++) {
+    let a = u.env.x + (D[j] - 0.55) * 0.6;
+    let k = 2.0*PI/(L[j]*u.env.y);
+    let x = k*dot(vec2f(cos(a), sin(a)), p) - sqrt(9.81*k)*t + f32(j)*1.9;
+    h += A[j] * (2.0*exp(sin(x) - 1.0) - 0.93);
+  }
+  return h * u.env2.z * 0.5;
+}
+fn oceanH(p: vec2f, iters: i32) -> f32 { return (wavesRaw(p, iters) - u.wave.z) * u.wave.x * 1.6 + swell(p); }
+`;
+
+const FULL_VS = /* wgsl */`
+struct VO { @builtin(position) pos: vec4f, @location(0) uv: vec2f };
+@vertex fn vsFull(@builtin(vertex_index) i: u32) -> VO {
+  let p = vec2f(f32((i << 1u) & 2u), f32(i & 2u));
+  var o: VO; o.pos = vec4f(p*2.0-1.0, 0.0, 1.0); o.uv = vec2f(p.x, 1.0-p.y); return o;
+}
+`;
+
+// ---- Sky-view LUT: single scattering Rayleigh + Mie + ozone absorption, marched per texel
+const SKYLUT = COMMON + FULL_VS + /* wgsl */`
+const RT = 6460000.0;
+const BR = vec3f(5.802e-6, 13.558e-6, 33.1e-6);
+const BMS = 3.996e-6; const BME = 4.40e-6;
+const BO = vec3f(0.650e-6, 1.881e-6, 0.085e-6);
+fn rs(ro: vec3f, rd: vec3f, r: f32) -> vec2f {
+  let b = dot(ro, rd); let c = dot(ro, ro) - r*r; let h = b*b - c;
+  if (h < 0.0) { return vec2f(-1.0); }
+  let s = sqrt(h); return vec2f(-b - s, -b + s);
+}
+fn ext(h: f32) -> vec3f {
+  let dr = exp(-h/8000.0); let dm = exp(-h/1200.0); let dO = max(0.0, 1.0 - abs(h-25000.0)/15000.0);
+  return BR*dr + vec3f(BME*dm) + BO*dO;
+}
+fn sunT(p: vec3f, L: vec3f) -> vec3f {
+  let g = rs(p, L, RG);
+  if (g.x > 0.0) { return vec3f(0.0); }
+  let tm = rs(p, L, RT).y;
+  let n = 12; var od = vec3f(0.0); let dt = tm / f32(n);
+  for (var i = 0; i < n; i++) { let q = p + L*(f32(i)+0.5)*dt; od += ext(length(q)-RG)*dt; }
+  return exp(-od);
+}
+@fragment fn fsLut(@location(0) uv: vec2f) -> @location(0) vec4f {
+  let x = 1.0 - 2.0*uv.y;
+  let el = max(sign(x)*x*x*PI*0.5, 0.0);
+  let az = (uv.x - 0.5)*2.0*PI;
+  let rd = vec3f(cos(el)*cos(az), sin(el), cos(el)*sin(az));
+  let ro = vec3f(0.0, RG + 2.0, 0.0);
+  let L = u.sunDir.xyz;
+  var tMax = rs(ro, rd, RT).y;
+  let g = rs(ro, rd, RG);
+  if (g.x > 0.0) { tMax = g.x; }
+  let mu = dot(rd, L);
+  let phR = 3.0/(16.0*PI)*(1.0+mu*mu);
+  let gg = 0.80;
+  let phM = 3.0/(8.0*PI)*((1.0-gg*gg)*(1.0+mu*mu))/((2.0+gg*gg)*pow(1.0+gg*gg-2.0*gg*mu, 1.5));
+  let n = 48;
+  var T = vec3f(1.0); var S = vec3f(0.0); var tPrev = 0.0;
+  for (var i = 0; i < n; i++) {
+    let f = (f32(i)+0.5)/f32(n);
+    let t = tMax * f*f;
+    let dt = tMax * ((f32(i)+1.0)*(f32(i)+1.0) - f32(i)*f32(i)) / f32(n*n);
+    let p = ro + rd*t; let h = length(p) - RG;
+    let dr = exp(-h/8000.0); let dm = exp(-h/1200.0);
+    let e = ext(h);
+    let up = p / length(p);
+    let ts = sunT(p, L);
+    let scat = BR*dr*phR + vec3f(BMS*dm)*phM;
+    // cheap isotropic multiple-scattering term
+    let ms = (BR*dr + vec3f(BMS*dm)) * (0.10/(4.0*PI)) * smoothstep(-0.2, 0.3, dot(up, L));
+    let st = exp(-e*dt);
+    let Sint = (scat*ts + ms) ;
+    S += T * Sint * (1.0 - st) / e;
+    T *= st;
+  }
+  return vec4f(S * 22.0, 1.0);
+}
+`;
+
+const SKYFN = /* wgsl */`
+@group(0) @binding(1) var skyTex: texture_2d<f32>;
+@group(0) @binding(2) var samp: sampler;
+fn skyL(d: vec3f) -> vec3f {
+  let dd = normalize(vec3f(d.x, max(d.y, 0.0), d.z));
+  return textureSampleLevel(skyTex, samp, skyUV(dd), 0.0).rgb;
+}
+// cloud layer on a spherical shell, returns (rgb, alpha)
+fn clouds(d: vec3f, oct: i32, soft: f32) -> vec4f {
+  if (d.y <= 0.0) { return vec4f(0.0); }
+  let camY = u.camPos.y;
+  let H = 2200.0;
+  let ro = vec3f(0.0, RG + camY, 0.0);
+  let r = RG + H;
+  let b = dot(ro, d); let c = dot(ro, ro) - r*r;
+  let t = -b + sqrt(b*b - c);
+  let p = u.camPos.xz + d.xz * t;
+  let tm = u.camPos.w;
+  let wind = vec2f(cos(u.sunCol.w), sin(u.sunCol.w)) * tm * 6.0;
+  let q = (p + wind) * 0.00030;
+  let cov = u.sunDir.w;
+  let warp = vec2f(fbm(q*0.6 + 3.1, 3), fbm(q*0.6 - 7.7, 3));
+  var n = fbm(q + warp*1.6, oct);
+  n = n * 1.2 - 0.08;
+  // erode edges with high-frequency detail
+  let det = fbm(q*7.0 + warp*3.0 - wind*0.0004, max(oct-2, 2));
+  n -= (det - 0.5) * 0.22;
+  let dens = clamp((n - (1.0 - cov)) / max(cov*0.7*soft, 0.05), 0.0, 1.0);
+  if (dens <= 0.001) { return vec4f(0.0); }
+  let L = u.sunDir.xyz;
+  let q2 = q + normalize(L.xz + 1e-4) * 0.35 * (1.0 - L.y);
+  let warp2 = vec2f(fbm(q2*0.6 + 3.1, 3), fbm(q2*0.6 - 7.7, 3));
+  let n2 = fbm(q2 + warp2*1.6, max(oct-2, 2)) * 1.2 - 0.08;
+  let dens2 = clamp((n2 - (1.0 - cov)) / max(cov*0.7, 0.05), 0.0, 1.0);
+  let mu = dot(d, L);
+  let hg = 0.45 * (1.0 - 0.7*0.7) / pow(1.0 + 0.49 - 1.4*mu, 1.5) / (4.0*PI) + 0.55/(4.0*PI);
+  let beer = mix(exp(-dens2 * 2.6), 1.0, 0.15);
+  let powder = 1.0 - exp(-dens * 6.0);
+  let sunC = u.sunCol.rgb;
+  let amb = skyL(vec3f(0.0, 1.0, 0.0)) * 0.9 + skyL(normalize(vec3f(d.x, 0.15, d.z))) * 0.4;
+  let rim = pow(max(mu, 0.0), 24.0) * (1.0 - dens) * (1.0 - dens) * 4.0;
+  var col = sunC * (hg * 6.0 * beer * mix(1.0, powder, 0.6) + rim * 0.15) + amb * (0.45 + 0.5*(1.0-dens));
+  let alpha = (1.0 - exp(-dens * 5.0));
+  // aerial perspective fade
+  let fade = exp(-t / 70000.0);
+  let horizon = skyL(d);
+  col = mix(horizon, col, fade);
+  return vec4f(col, alpha * smoothstep(0.0, 0.04, d.y));
+}
+`;
+
+const SCENE = COMMON + FULL_VS + SKYFN + /* wgsl */`
+fn sunDisk(d: vec3f) -> vec3f {
+  let L = u.sunDir.xyz;
+  let c = dot(d, L);
+  let r = 0.0065;
+  let cr = cos(r);
+  if (c < cos(r*1.6)) { return vec3f(0.0); }
+  let x = clamp(acos(clamp(c,-1.0,1.0)) / r, 0.0, 1.6);
+  let limb = pow(max(1.0 - x*x, 0.0), 0.35);
+  let edge = 1.0 - smoothstep(0.92, 1.08, x);
+  return u.sunCol.rgb * 1800.0 * u.env2.w * u.env2.w * vec3f(limb) * edge * vec3f(1.0, 0.98, 0.95);
+}
+fn skyFull(d: vec3f, oct: i32, withSun: bool) -> vec3f {
+  var c = skyL(d);
+  if (withSun) { c += sunDisk(d); }
+  let cl = clouds(d, oct, select(1.0, 2.2, !withSun));
+  return mix(c, cl.rgb, cl.a);
+}
+
+@fragment fn fsSky(@location(0) uv: vec2f) -> @location(0) vec4f {
+  let ndc = vec2f(uv.x*2.0-1.0, 1.0-uv.y*2.0);
+  let d = normalize(u.camFwd.xyz + u.camRight.xyz*ndc.x*u.camRight.w + u.camUp.xyz*ndc.y*u.camUp.w);
+  var c = skyFull(d, 6, true);
+  if (u.env2.y > 0.0) {
+    let hz = skyL(normalize(vec3f(d.x, 0.02, d.z)));
+    let g = vec3f(dot(hz, vec3f(0.3333))) * 1.05;
+    c = mix(c, g, u.env2.y * exp(-max(d.y, 0.0) * mix(14.0, 2.5, u.env2.y)));
+  }
+  // below the geometric horizon (rarely visible): blend to sea haze
+  return vec4f(min(c, vec3f(60000.0)), 1.0);
+}
+
+struct OO {
+  @builtin(position) pos: vec4f,
+  @location(0) wp: vec3f,
+  @location(1) hgeo: f32,
+};
+@vertex fn vsOcean(@location(0) off: vec2f) -> OO {
+  let xz = u.camPos.xz + off;
+  let h = oceanH(xz, ${GEO_ITERS});
+  let drop = dot(off, off) / (2.0 * RG);
+  let wp = vec3f(xz.x, h - drop, xz.y);
+  var o: OO;
+  o.pos = u.viewProj * vec4f(wp, 1.0);
+  o.wp = wp; o.hgeo = h;
+  return o;
+}
+
+// capillary / short-gravity ripples: analytic slopes, faded by pixel footprint (variance moved into roughness)
+fn ripples(p: vec2f, fp: f32) -> vec3f {
+  var g = vec2f(0.0); var vr = 0.0;
+  var k = 2.0*PI/2.4; var s = 0.030 * u.env.z;
+  let t = u.camPos.w;
+  // wind gusts: patchy ripple strength drifting downwind (cat's paws)
+  let wdir = vec2f(cos(u.sunCol.w), sin(u.sunCol.w));
+  let gust = 0.55 + 0.9 * fbm(p*0.010 - wdir*t*0.05, 4);
+  for (var i = 0; i < 22; i++) {
+    let fi = f32(i);
+    let a = u.sunCol.w + sin(fi*12.9898 + 1.3) * 1.6;
+    let d = vec2f(cos(a), sin(a));
+    let om = sqrt(9.81*k + 7.4e-5*k*k*k);
+    let ph = k*dot(d, p) - om*t + fi*2.39;
+    let lam = 2.0*PI/k;
+    let fade = 1.0 - smoothstep(0.5, 1.5, fp*6.0/lam);
+    let si = s * gust * (0.7 + 0.6*fract(sin(fi*78.233)*43758.5));
+    g += d * si * cos(ph) * fade;
+    vr += 0.5*si*si*(1.0 - fade);
+    k *= 1.17 + 0.08*fract(sin(fi*39.425)*24634.6); s *= 0.95;
+  }
+  return vec3f(g, vr);
+}
+
+fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
+  let H = normalize(V + L);
+  let NdH = max(dot(N, H), 0.0);
+  let NdL = max(dot(N, L), 0.0);
+  let NdV = max(dot(N, V), 1e-3);
+  let a = rough*rough; let a2 = a*a;
+  let dd = NdH*NdH*(a2-1.0)+1.0;
+  let D = a2 / (PI*dd*dd);
+  let k = a*0.5;
+  let G = (NdL/(NdL*(1.0-k)+k)) * (NdV/(NdV*(1.0-k)+k));
+  let F = 0.02 + 0.98*pow(1.0 - max(dot(V,H),0.0), 5.0);
+  return D*G*F/(4.0*NdV) ;
+}
+
+@fragment fn fsOcean(i: OO, @builtin(front_facing) ff: bool) -> @location(0) vec4f {
+  let cam = u.camPos.xyz;
+  let toCam = cam - i.wp;
+  let dist = length(toCam);
+  let V = toCam / dist;
+  let L = u.sunDir.xyz;
+
+  // pixel footprint on the surface (stretched at grazing angles)
+  let pixA = 2.0 * u.camUp.w * u.res.w;
+  let fp = dist * pixA / sqrt(max(V.y, 0.015));
+  let nMax = log((2.0*PI/u.wave.y) / (5.0*fp)) / log(1.18);
+  let iters = i32(clamp(nMax, 5.0, 40.0));
+  let e = clamp(fp*1.0, 0.03, 80.0);
+  let p = i.wp.xz;
+  let h0 = oceanH(p, iters);
+  let hx = oceanH(p + vec2f(e, 0.0), iters);
+  let hz = oceanH(p + vec2f(0.0, e), iters);
+  let rp = ripples(p, fp);
+  var N = normalize(vec3f(-(hx - h0)/e - rp.x, 1.0, -(hz - h0)/e - rp.y));
+  // slope variance of the octaves we dropped
+  let waveVar = 0.016 * (1.0 - clamp(f32(iters)/40.0, 0.0, 1.0)) * clamp(u.wave.x/2.0, 0.3, 2.0);
+  // unresolved detail: flatten the normal and move the lost slope into roughness (Toksvig-style)
+  let flat = smoothstep(0.12, 2.5, fp);
+  N = normalize(mix(N, vec3f(0.0, 1.0, 0.0), 0.65*flat));
+  let slopeVar = rp.z + waveVar + 0.02*flat;
+  let NdV = max(dot(N, V), 0.0);
+  var R = reflect(-V, N);
+  R.y = abs(R.y) + 0.002;
+  R = normalize(R);
+  let F = 0.02 + 0.98*pow(1.0 - NdV, 5.0);
+
+  let refl = skyFull(R, select(3, 5, dist < 600.0), false);
+
+
+  // sun glitter
+  let alpha = sqrt(0.0025 + 2.0*slopeVar);
+  let spec = min(ggx(N, V, L, sqrt(alpha)) * max(dot(N, L), 0.0), 4000.0);
+  let sunVis = smoothstep(-0.02, 0.02, L.y);
+
+  // body color: deep scattering + subsurface light through crests
+  let amb = skyL(vec3f(0.0,1.0,0.0)) * 0.6 + skyL(normalize(vec3f(-L.x, 0.2, -L.z))) * 0.4;
+  let A = u.wave.x;
+  let hrel = clamp(i.hgeo / (A*2.2) + 0.5, 0.0, 1.0);
+  let LH = normalize(vec3f(L.x, max(L.y, 0.0) * 0.4, L.z));
+  let back = pow(max(dot(-V, LH), 0.0), 4.0);
+  let sssK = pow(hrel, 2.2) * back * pow(clamp(0.5 - 0.5*dot(L, N), 0.0, 1.0), 2.0) * 3.5
+           + pow(NdV, 2.0) * 0.12 * max(L.y, 0.0);
+  let sssCol = vec3f(0.02, 0.32, 0.30);
+  let Ed = u.sunCol.rgb * max(L.y, 0.0) + amb * PI;          // downwelling irradiance
+  let Rrs = vec3f(0.0030, 0.0135, 0.0290);                   // deep blue ocean (sr^-1)
+  let nearTeal = mix(vec3f(0.75, 1.25, 1.1), vec3f(1.0), smoothstep(3.0, 60.0, dist));
+  var water = Ed * Rrs * nearTeal * (0.8 + 0.5*hrel) + sssCol * sssK * u.sunCol.rgb * 0.22 * sunVis;
+
+  // whitecaps: sharp crests broken up by noise
+  let crest = wavesRaw(p, 18);
+  let fn0 = fbm(p * 0.35 + vec2f(u.camPos.w*0.05, 0.0), 4);
+  let fn1 = fbm(p * 1.9 - vec2f(0.0, u.camPos.w*0.08), 3);
+  let wc = u.env.w;
+  var foam = smoothstep(0.64 - 0.13*wc, 0.75 - 0.13*wc, crest + 0.10*(fn0-0.5)) * smoothstep(0.36 - 0.08*wc, 0.56 - 0.08*wc, fn1);
+  let fn2 = fbm(p * 7.0 + vec2f(u.camPos.w*0.3, -u.camPos.w*0.2), 3);
+  foam *= mix(0.35, 1.0, smoothstep(0.35, 0.65, fn2));
+  foam = pow(foam, 0.7);
+  foam *= smoothstep(0.0, 0.3, wc) * 0.95 * (1.0 - smoothstep(300.0, 1500.0, dist));
+  // ship wake: turbulent centre wake + Kelvin arms (19.5°) + hull wash
+  let sh = u.ship;
+  if (sh.w > 0.0) {
+    let fw = vec2f(sin(sh.z), cos(sh.z)); let rt = vec2f(cos(sh.z), -sin(sh.z));
+    let rel = p - sh.xy;
+    let along = -dot(rel, fw) - sh.w*0.5;
+    let side = dot(rel, rt);
+    let aside = abs(side);
+    let Bw = sh.w*0.15;
+    if (along > -sh.w*1.1 && along < 2500.0) {
+      let a = max(along, 0.0);
+      let wn = fbm(vec2f(a*0.07, side*0.22) + vec2f(u.camPos.w*0.15, 0.0), 4);
+      var wk = 0.0;
+      let cw = Bw*0.55 + a*0.045;
+      wk += exp(-side*side/(cw*cw)) * exp(-a/650.0) * smoothstep(0.22, 0.62, wn) * step(0.0, along);
+      let arm = a*0.354 + Bw*0.5;
+      let aw = 1.2 + a*0.02;
+      wk += exp(-pow((aside - arm)/aw, 2.0)) * exp(-a/420.0) * 0.7 * smoothstep(0.3, 0.65, wn) * step(0.0, along);
+      if (along < 0.0) { wk += exp(-pow((aside - Bw*0.5)/(1.0+Bw*0.08), 2.0)) * smoothstep(-sh.w*1.05, -sh.w*0.8, along) * 0.9 * smoothstep(0.25, 0.6, wn); }
+      foam = max(foam, clamp(wk, 0.0, 1.0) * (1.0 - smoothstep(2500.0, 6000.0, dist)));
+    }
+  }
+  let foamLit = vec3f(0.95) * (u.sunCol.rgb * max(dot(N, L), 0.0) * 0.30 * sunVis + amb * 1.35);
+
+  var col = water * (1.0 - F) + refl * F + spec * u.sunCol.rgb * sunVis;
+  col = mix(col, foamLit, foam);
+
+  // aerial perspective toward the horizon colour
+  let vd = -V;
+  let haze = skyL(normalize(vec3f(vd.x, 0.004, vd.z)));
+  let fogA = 1.0 - exp(-dist / u.env2.x);
+  let hazeG = mix(haze, vec3f(dot(haze, vec3f(0.3333)))*1.05, u.env2.y);
+  col = mix(col, hazeG, fogA);
+
+  return vec4f(min(col, vec3f(60000.0)), 1.0);
+}
+`;
+
+const OBJ = COMMON + SKYFN + /* wgsl */`
+fn litObject(wp: vec3f, n0: vec3f, albedo: vec3f, gloss: f32) -> vec3f {
+  let cam = u.camPos.xyz;
+  let toC = cam - wp; let dist = length(toC); let V = toC / dist;
+  var n = n0; if (dot(n, V) < 0.0) { n = -n; }
+  let L = u.sunDir.xyz; let sunVis = smoothstep(-0.02, 0.02, L.y);
+  let amb = skyL(vec3f(0.0, 1.0, 0.0)) * 0.6 + skyL(normalize(vec3f(n.x, max(n.y, 0.05), n.z))) * 0.4;
+  let bounce = skyL(normalize(vec3f(-L.x, 0.1, -L.z))) * 0.08;
+  let ndl = max(dot(n, L), 0.0);
+  var col = albedo / PI * (u.sunCol.rgb * ndl * sunVis + amb * PI * (0.72 + 0.28*n.y) + bounce * PI * max(-n.y, 0.0) * 3.0);
+  let H = normalize(L + V);
+  col += u.sunCol.rgb * sunVis * pow(max(dot(n, H), 0.0), 80.0) * gloss * ndl;
+  let haze = skyL(normalize(vec3f(-V.x, 0.004, -V.z)));
+  let hazeG = mix(haze, vec3f(dot(haze, vec3f(0.3333)))*1.05, u.env2.y);
+  return mix(col, hazeG, 1.0 - exp(-dist / u.env2.x));
+}
+struct SO { @builtin(position) pos: vec4f, @location(0) wp: vec3f, @location(1) n: vec3f, @location(2) col: vec3f };
+@vertex fn vsShip(@location(0) p: vec3f, @location(1) n: vec3f, @location(2) c: vec3f) -> SO {
+  var w = (u.shipModel * vec4f(p, 1.0)).xyz;
+  let off = w.xz - u.camPos.xz; w.y -= dot(off, off) / (2.0*RG);
+  var o: SO; o.pos = u.viewProj * vec4f(w, 1.0); o.wp = w;
+  o.n = (u.shipModel * vec4f(n, 0.0)).xyz; o.col = c; return o;
+}
+@fragment fn fsShip(i: SO) -> @location(0) vec4f { return vec4f(litObject(i.wp, normalize(i.n), i.col, 0.12), 1.0); }
+
+@vertex fn vsBird(@location(0) p: vec3f, @location(1) c: vec3f, @location(2) ip: vec4f, @location(3) ib: vec4f) -> SO {
+  let ax = abs(p.x); let sg = select(-1.0, 1.0, p.x >= 0.0);
+  let ang1 = sin(ib.x) * 0.62 + 0.06;
+  let ang2 = sin(ib.x - 0.7) * 0.38;
+  let inner = clamp(ax - 0.05, 0.0, 0.17); let outer = max(ax - 0.22, 0.0);
+  var q = p;
+  if (ax > 0.05) {
+    q.x = sg * (0.05 + inner*cos(ang1) + outer*cos(ang1 + ang2));
+    q.y = p.y + inner*sin(ang1) + outer*sin(ang1 + ang2);
+  }
+  let a = select(select(ang1, ang1 + ang2, ax > 0.22), 0.0, ax <= 0.05);
+  var n = vec3f(-sg*sin(a), cos(a), 0.0);
+  let cam = u.camPos.xyz;
+  let d = distance(ip.xyz, cam);
+  let pa = 2.0 * u.camUp.w * u.res.w;
+  let sc = max(ib.y, 2.4 * pa * d);
+  q *= sc;
+  let cb = cos(ib.w); let sb = sin(ib.w);
+  q = vec3f(q.x*cb - q.y*sb, q.x*sb + q.y*cb, q.z);
+  n = vec3f(n.x*cb - n.y*sb, n.x*sb + n.y*cb, n.z);
+  let ch = cos(ip.w); let shh = sin(ip.w);
+  var w = ip.xyz + vec3f(q.x*ch + q.z*shh, q.y, -q.x*shh + q.z*ch);
+  let nn = vec3f(n.x*ch + n.z*shh, n.y, -n.x*shh + n.z*ch);
+  let off = w.xz - cam.xz; w.y -= dot(off, off) / (2.0*RG);
+  var o: SO; o.pos = u.viewProj * vec4f(w, 1.0); o.wp = w; o.n = nn;
+  o.col = select(c, vec3f(0.05, 0.05, 0.055), ib.z > 0.5);
+  return o;
+}
+@fragment fn fsBird(i: SO) -> @location(0) vec4f {
+  // gulls: white underside (grey only on the upper wing), black tips stay black
+  let n = normalize(i.n);
+  let below = dot(n, u.camPos.xyz - i.wp) < 0.0;
+  var c = i.col;
+  if (below && c.r > 0.3) { c = mix(c, vec3f(0.9), 0.85); }
+  return vec4f(litObject(i.wp, n, c, 0.0), 1.0);
+}
+`;
+
+const POST = COMMON + FULL_VS + /* wgsl */`
+@group(0) @binding(1) var t0: texture_2d<f32>;
+@group(0) @binding(2) var samp: sampler;
+@group(0) @binding(3) var t1: texture_2d<f32>;
+
+@fragment fn fsBright(@location(0) uv: vec2f) -> @location(0) vec4f {
+  // 16-tap Karis-weighted downsample (suppresses single-pixel fireflies from the sun / glitter)
+  let ts = 1.0 / vec2f(textureDimensions(t0));
+  var c = vec3f(0.0); var wsum = 0.0;
+  for (var y = -2; y < 2; y++) { for (var x = -2; x < 2; x++) {
+    let s = textureSampleLevel(t0, samp, uv + ts*(vec2f(f32(x), f32(y)) + 0.5) * 1.0, 0.0).rgb * u.camFwd.w;
+    let l = dot(s, vec3f(0.2126, 0.7152, 0.0722));
+    let k = max(l - 1.0, 0.0) / max(l, 1e-4);
+    let w = 1.0 / (1.0 + l*0.25);
+    c += s * k * w; wsum += w;
+  } }
+  return vec4f(min(c / wsum, vec3f(60.0)), 1.0);
+}
+fn blur(uv: vec2f, dir: vec2f) -> vec4f {
+  let ts = dir / vec2f(textureDimensions(t0));
+  let w = array<f32,5>(0.2270270270, 0.3162162162, 0.0702702703, 0.0, 0.0);
+  var c = textureSampleLevel(t0, samp, uv, 0.0).rgb * 0.2270270270;
+  c += (textureSampleLevel(t0, samp, uv + ts*1.3846153846, 0.0).rgb + textureSampleLevel(t0, samp, uv - ts*1.3846153846, 0.0).rgb) * 0.3162162162;
+  c += (textureSampleLevel(t0, samp, uv + ts*3.2307692308, 0.0).rgb + textureSampleLevel(t0, samp, uv - ts*3.2307692308, 0.0).rgb) * 0.0702702703;
+  return vec4f(c, 1.0);
+}
+@fragment fn fsBlurH(@location(0) uv: vec2f) -> @location(0) vec4f { return blur(uv, vec2f(1.0, 0.0)); }
+@fragment fn fsBlurV(@location(0) uv: vec2f) -> @location(0) vec4f { return blur(uv, vec2f(0.0, 1.0)); }
+
+fn aces(x: vec3f) -> vec3f {
+  // Stephen Hill fit
+  let m1 = mat3x3f(vec3f(0.59719,0.07600,0.02840), vec3f(0.35458,0.90834,0.13383), vec3f(0.04823,0.01566,0.83777));
+  let m2 = mat3x3f(vec3f(1.60475,-0.10208,-0.00327), vec3f(-0.53108,1.10813,-0.07276), vec3f(-0.07367,-0.00605,1.07602));
+  let v = m1 * x;
+  let a = v*(v + 0.0245786) - 0.000090537;
+  let b = v*(0.983729*v + 0.4329510) + 0.238081;
+  return clamp(m2 * (a / b), vec3f(0.0), vec3f(1.0));
+}
+fn toSRGB(c: vec3f) -> vec3f {
+  return select(1.055*pow(c, vec3f(1.0/2.4)) - 0.055, c*12.92, c <= vec3f(0.0031308));
+}
+@fragment fn fsComposite(@location(0) uv: vec2f, @builtin(position) fc: vec4f) -> @location(0) vec4f {
+  let hdr = textureSampleLevel(t0, samp, uv, 0.0).rgb * u.camFwd.w;
+  let bl = textureSampleLevel(t1, samp, uv, 0.0).rgb;
+  var c = hdr + bl * 0.22;
+  let q = uv - 0.5;
+  c *= 1.0 - 0.28 * dot(q, q) * 1.6;
+  c = aces(c);
+  c = toSRGB(c);
+  let n = hash12(fc.xy + fract(u.camPos.w)*97.0) - 0.5;
+  c += n / 255.0;
+  return vec4f(c, 1.0);
+}
+`;
+
+// ---------------------------------------------------------------- resources
+const UBO_SIZE = 64 + 16*9 + 64 + 32;
+const ubo = device.createBuffer({size:UBO_SIZE, usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+const uData = new Float32Array(UBO_SIZE/4);
+const sampLin = device.createSampler({magFilter:'linear', minFilter:'linear', addressModeU:'repeat', addressModeV:'clamp-to-edge'});
+const sampClamp = device.createSampler({magFilter:'linear', minFilter:'linear', addressModeU:'clamp-to-edge', addressModeV:'clamp-to-edge'});
+
+const VF = GPUShaderStage.VERTEX|GPUShaderStage.FRAGMENT;
+const bglU = device.createBindGroupLayout({entries:[{binding:0, visibility:VF, buffer:{}}]});
+const bglScene = device.createBindGroupLayout({entries:[
+  {binding:0, visibility:VF, buffer:{}},
+  {binding:1, visibility:VF, texture:{sampleType:'float'}},
+  {binding:2, visibility:VF, sampler:{}},
+]});
+const bglPost = device.createBindGroupLayout({entries:[
+  {binding:0, visibility:VF, buffer:{}},
+  {binding:1, visibility:VF, texture:{sampleType:'float'}},
+  {binding:2, visibility:VF, sampler:{}},
+  {binding:3, visibility:VF, texture:{sampleType:'float'}},
+]});
+
+async function mod(code, label){
+  const m = device.createShaderModule({code, label});
+  const info = await m.getCompilationInfo();
+  for(const msg of info.messages){ console.log(label, msg.type, msg.lineNum+':'+msg.linePos, msg.message); }
+  if(info.messages.some(x=>x.type==='error')) { fail('シェーダーのコンパイルに失敗しました ('+label+')'); throw new Error('shader'); }
+  return m;
+}
+const mLut = await mod(SKYLUT, 'skylut');
+const mScene = await mod(SCENE, 'scene');
+const mPost = await mod(POST, 'post');
+const mObj = await mod(OBJ, 'objects');
+
+const HDR = 'rgba16float';
+const LUT_W = 256, LUT_H = 128;
+const lutTex = device.createTexture({size:[LUT_W, LUT_H], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
+
+const lutPipe = device.createRenderPipeline({
+  layout: device.createPipelineLayout({bindGroupLayouts:[bglU]}),
+  vertex:{module:mLut, entryPoint:'vsFull'},
+  fragment:{module:mLut, entryPoint:'fsLut', targets:[{format:HDR}]},
+  primitive:{topology:'triangle-list'},
+});
+const lutBG = device.createBindGroup({layout:bglU, entries:[{binding:0, resource:{buffer:ubo}}]});
+
+const DEPTH = 'depth32float';
+const sceneLayout = device.createPipelineLayout({bindGroupLayouts:[bglScene]});
+const skyPipe = device.createRenderPipeline({
+  layout: sceneLayout,
+  vertex:{module:mScene, entryPoint:'vsFull'},
+  fragment:{module:mScene, entryPoint:'fsSky', targets:[{format:HDR}]},
+  primitive:{topology:'triangle-list'},
+  depthStencil:{format:DEPTH, depthWriteEnabled:false, depthCompare:'always'},
+});
+const oceanPipe = device.createRenderPipeline({
+  layout: sceneLayout,
+  vertex:{module:mScene, entryPoint:'vsOcean', buffers:[{arrayStride:8, attributes:[{shaderLocation:0, offset:0, format:'float32x2'}]}]},
+  fragment:{module:mScene, entryPoint:'fsOcean', targets:[{format:HDR}]},
+  primitive:{topology:'triangle-list', cullMode:'none'},
+  depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+});
+const shipPipe = device.createRenderPipeline({
+  layout: sceneLayout,
+  vertex:{module:mObj, entryPoint:'vsShip', buffers:[{arrayStride:36, attributes:[
+    {shaderLocation:0, offset:0, format:'float32x3'}, {shaderLocation:1, offset:12, format:'float32x3'}, {shaderLocation:2, offset:24, format:'float32x3'}]}]},
+  fragment:{module:mObj, entryPoint:'fsShip', targets:[{format:HDR}]},
+  primitive:{topology:'triangle-list', cullMode:'none'},
+  depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+});
+const birdPipe = device.createRenderPipeline({
+  layout: sceneLayout,
+  vertex:{module:mObj, entryPoint:'vsBird', buffers:[
+    {arrayStride:24, attributes:[{shaderLocation:0, offset:0, format:'float32x3'}, {shaderLocation:1, offset:12, format:'float32x3'}]},
+    {arrayStride:32, stepMode:'instance', attributes:[{shaderLocation:2, offset:0, format:'float32x4'}, {shaderLocation:3, offset:16, format:'float32x4'}]}]},
+  fragment:{module:mObj, entryPoint:'fsBird', targets:[{format:HDR}]},
+  primitive:{topology:'triangle-list', cullMode:'none'},
+  depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+});
+const sceneBG = device.createBindGroup({layout:bglScene, entries:[
+  {binding:0, resource:{buffer:ubo}}, {binding:1, resource:lutTex.createView()}, {binding:2, resource:sampLin}]});
+
+const postLayout = device.createPipelineLayout({bindGroupLayouts:[bglPost]});
+function postPipe(entry, fmt){
+  return device.createRenderPipeline({layout:postLayout, vertex:{module:mPost, entryPoint:'vsFull'},
+    fragment:{module:mPost, entryPoint:entry, targets:[{format:fmt}]}, primitive:{topology:'triangle-list'}});
+}
+const brightPipe = postPipe('fsBright', HDR);
+const blurHPipe = postPipe('fsBlurH', HDR);
+const blurVPipe = postPipe('fsBlurV', HDR);
+const compPipe = postPipe('fsComposite', presentFormat);
+
+// ---- ocean mesh: camera-centred polar grid, exponential ring spacing out to ~28 km
+function buildMesh(){
+  const NR = 380, NS = 512, rMin = 0.18, rMax = 28000;
+  const q = Math.pow(rMax/rMin, 1/(NR-2));
+  const verts = new Float32Array((1 + (NR-1)*NS) * 2);
+  let k = 2; // centre vertex at 0,0
+  for(let i=1;i<NR;i++){
+    const r = rMin*Math.pow(q, i-1);
+    for(let j=0;j<NS;j++){ const a = j/NS*Math.PI*2; verts[k++] = Math.cos(a)*r; verts[k++] = Math.sin(a)*r; }
+  }
+  const idx = new Uint32Array(NS*3 + (NR-2)*NS*6);
+  let m = 0;
+  for(let j=0;j<NS;j++){ idx[m++]=0; idx[m++]=1+j; idx[m++]=1+(j+1)%NS; }
+  for(let i=1;i<NR-1;i++){
+    const a0 = 1+(i-1)*NS, a1 = 1+i*NS;
+    for(let j=0;j<NS;j++){
+      const j1=(j+1)%NS;
+      idx[m++]=a0+j; idx[m++]=a1+j; idx[m++]=a1+j1;
+      idx[m++]=a0+j; idx[m++]=a1+j1; idx[m++]=a0+j1;
+    }
+  }
+  const vb = device.createBuffer({size:verts.byteLength, usage:GPUBufferUsage.VERTEX, mappedAtCreation:true});
+  new Float32Array(vb.getMappedRange()).set(verts); vb.unmap();
+  const ib = device.createBuffer({size:idx.byteLength, usage:GPUBufferUsage.INDEX, mappedAtCreation:true});
+  new Uint32Array(ib.getMappedRange()).set(idx); ib.unmap();
+  return {vb, ib, count:idx.length};
+}
+const mesh = buildMesh();
+
+// ---- render targets (resized with the canvas)
+let W=0, H=0, hdrTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
+let renderScale = 1.0;
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, Q.has('dpr') ? +Q.get('dpr') : 1.6) * renderScale;
+  let w = Math.round(canvas.clientWidth*dpr), h = Math.round(canvas.clientHeight*dpr);
+  const maxPix = 2.6e6; const s = Math.min(1, Math.sqrt(maxPix/(w*h)));
+  w = Math.max(2, Math.round(w*s)); h = Math.max(2, Math.round(h*s));
+  if(w===W && h===H) return;
+  W=w; H=h; canvas.width=w; canvas.height=h;
+  [hdrTex, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
+  hdrTex = device.createTexture({size:[W,H], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
+  depthTex = device.createTexture({size:[W,H], format:DEPTH, usage:GPUTextureUsage.RENDER_ATTACHMENT});
+  const bw = Math.max(1, W>>2), bh = Math.max(1, H>>2);
+  bloomA = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
+  bloomB = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
+  const mk = (a,b)=>device.createBindGroup({layout:bglPost, entries:[
+    {binding:0, resource:{buffer:ubo}}, {binding:1, resource:a.createView()}, {binding:2, resource:sampClamp}, {binding:3, resource:b.createView()}]});
+  bgBright = mk(hdrTex, hdrTex); bgBlurH = mk(bloomA, bloomA); bgBlurV = mk(bloomB, bloomB); bgComp = mk(hdrTex, bloomA);
+}
+
+// ---------------------------------------------------------------- CPU mirror of the wave field (for the floating camera)
+const S = {
+  sunEl: +(Q.get('sun') ?? 6), sunAz: +(Q.get('az') ?? 0) * Math.PI/180,
+  alt: +(Q.get('h') ?? 1.8), amp: +(Q.get('amp') ?? 2.2),
+  yaw: +(Q.get('yaw') ?? 0) * Math.PI/180, pitch: +(Q.get('pitch') ?? 2) * Math.PI/180,
+  cover: +(Q.get('clouds') ?? 0.42), wind: 0.35, chop: 0.30,
+  fov: +(Q.get('fov') ?? 62),
+  waveScale: WAVE_SCALE, swellDir: 0.9, swellLen: 1, swellAmp: +(Q.get('amp') ?? 2.2), ripple: 1, whitecap: 0.85, haze: 6500, fog: 0, sunDim: 1,
+};
+let waveMean = 0.0;
+function wavesRawCPU(x, z, t, iters){
+  let px = x*S.waveScale, pz = z*S.waveScale, freq=1, w=1, sv=0, sw=0, it=0;
+  for(let i=0;i<iters;i++){
+    const a = S.wind + Math.sin(i*2.3999+0.7)*1.25, dx0=Math.cos(a), dz0=Math.sin(a);
+    const om = Math.sqrt(9.81*freq*S.waveScale);
+    const xx = (dx0*px + dz0*pz)*freq - om*t;
+    const e = Math.exp(Math.sin(xx)-1), d = e*Math.cos(xx);
+    sv += e*w; sw += w;
+    px -= dx0*d*w*S.chop/freq; pz -= dz0*d*w*S.chop/freq;
+    freq*=1.18; w*=0.82; it = Math.fround(it + 1232.399963);
+  }
+  return sv/sw;
+}
+let HS_WIND1=1, HS_SWELL1=1;
+(function calibrate(){ const N=5000, a=[], b=[]; for(let i=0;i<N;i++){ const x=Math.random()*3000, z=Math.random()*3000, t=Math.random()*200;
+    a.push(wavesRawCPU(x,z,t,GEO_ITERS)); b.push(swellRawCPU(x,z,t)); }
+  waveMean = a.reduce((p,c)=>p+c,0)/N;
+  const sd=(arr,m)=>Math.sqrt(arr.reduce((p,c)=>p+(c-m)*(c-m),0)/arr.length);
+  HS_WIND1 = 4*sd(a,waveMean)*1.6; const mb=b.reduce((p,c)=>p+c,0)/N; HS_SWELL1 = 4*sd(b,mb); })();
+function swellRawCPU(x,z,t){ const L=[170,118,86], A=[0.95,0.55,0.32], D=[0.55,0.80,0.30]; let h=0;
+  for(let j=0;j<3;j++){ const a=S.swellDir+(D[j]-0.55)*0.6, k=2*Math.PI/(L[j]*S.swellLen); const xx=k*(Math.cos(a)*x+Math.sin(a)*z)-Math.sqrt(9.81*k)*t+j*1.9; h+=A[j]*(2*Math.exp(Math.sin(xx)-1)-0.93); }
+  return h*0.5; }
+const swellCPU=(x,z,t)=>swellRawCPU(x,z,t)*S.swellAmp;
+const oceanHCPU = (x,z,t)=>(wavesRawCPU(x,z,t,GEO_ITERS)-waveMean)*S.amp*1.6 + swellCPU(x,z,t);
+
+// sun irradiance at sea level (transmittance march on CPU, same coefficients as the LUT)
+function sunColor(L){
+  const BR=[5.802e-6,13.558e-6,33.1e-6], BME=4.4e-6, BO=[0.65e-6,1.881e-6,0.085e-6];
+  const RT=6460e3; const ro=[0,R_EARTH+2,0];
+  const b = ro[1]*L[1], c = ro[1]*ro[1]-RT*RT; const tm = -b+Math.sqrt(b*b-c);
+  const n=64, dt=tm/n; const od=[0,0,0];
+  for(let i=0;i<n;i++){
+    const t=(i+.5)*dt; const p=[L[0]*t, ro[1]+L[1]*t, L[2]*t];
+    const h=Math.hypot(p[0],p[1],p[2])-R_EARTH; if(h<0){return [0,0,0];}
+    const dr=Math.exp(-h/8000), dm=Math.exp(-h/1200), dO=Math.max(0,1-Math.abs(h-25000)/15000);
+    for(let k=0;k<3;k++) od[k]+= (BR[k]*dr+BME*dm+BO[k]*dO)*dt;
+  }
+  return od.map(x=>Math.exp(-x)*22.0);
+}
+
+// ---------------------------------------------------------------- ships & birds: geometry
+function meshBuilder(){
+  const v=[];
+  const tri=(a,b,c,col)=>{ const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],wx=c[0]-a[0],wy=c[1]-a[1],wz=c[2]-a[2];
+    let nx=uy*wz-uz*wy, ny=uz*wx-ux*wz, nz=ux*wy-uy*wx; const l=Math.hypot(nx,ny,nz)||1; nx/=l;ny/=l;nz/=l;
+    for(const p of [a,b,c]) v.push(p[0],p[1],p[2],nx,ny,nz,col[0],col[1],col[2]); };
+  const quad=(a,b,c,d,col)=>{ tri(a,b,c,col); tri(a,c,d,col); };
+  const box=(cx,cy,cz,sx,sy,sz,col)=>{ const x0=cx-sx/2,x1=cx+sx/2,y0=cy,y1=cy+sy,z0=cz-sz/2,z1=cz+sz/2;
+    quad([x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],col); quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],col);
+    quad([x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],col); quad([x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],col);
+    quad([x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0],col); };
+  const hull=(L,B,Hd,T,bowLen,cTop,cBot,cDeck)=>{
+    const N=28, st=[];
+    for(let i=0;i<=N;i++){ const z=-L/2+L*i/N; let w=B/2, sheer=0;
+      const bs=L/2-bowLen; if(z>bs){ const t=(z-bs)/bowLen; w=B/2*Math.sqrt(Math.max(0.0004,1-t*t)); sheer=Hd*0.18*t*t; }
+      if(z<-L/2+L*0.06) w*=0.94;
+      st.push([[w,Hd+sheer,z],[w,0.6,z],[w*0.9,-T*0.75,z],[w*0.35,-T,z]]); }
+    const cols=[cTop,cBot,cBot];
+    for(let i=0;i<N;i++){ const A=st[i],Bn=st[i+1];
+      for(let k=0;k<3;k++){ for(const sgn of [1,-1]){ const m=p=>[p[0]*sgn,p[1],p[2]];
+        quad(m(A[k]),m(Bn[k]),m(Bn[k+1]),m(A[k+1]),cols[k]); } }
+      quad([A[3][0],-T,A[3][2]],[Bn[3][0],-T,Bn[3][2]],[-Bn[3][0],-T,Bn[3][2]],[-A[3][0],-T,A[3][2]],cBot);
+      quad([A[0][0],A[0][1],A[0][2]],[Bn[0][0],Bn[0][1],Bn[0][2]],[-Bn[0][0],Bn[0][1],Bn[0][2]],[-A[0][0],A[0][1],A[0][2]],cDeck); }
+    const s0=st[0]; for(let k=0;k<3;k++){ quad([s0[k][0],s0[k][1],s0[k][2]],[-s0[k][0],s0[k][1],s0[k][2]],[-s0[k+1][0],s0[k+1][1],s0[k+1][2]],[s0[k+1][0],s0[k+1][1],s0[k+1][2]],cols[k]); }
+  };
+  return {v,tri,quad,box,hull};
+}
+function upload(arr){ const f=new Float32Array(arr); const b=device.createBuffer({size:f.byteLength, usage:GPUBufferUsage.VERTEX, mappedAtCreation:true});
+  new Float32Array(b.getMappedRange()).set(f); b.unmap(); return b; }
+let seed=7; const srand=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+function buildCargo(){
+  const m=meshBuilder(); const L=212,B=32,Hd=11,T=10;
+  m.hull(L,B,Hd,T,48,[0.05,0.07,0.10],[0.32,0.06,0.05],[0.22,0.24,0.22]);
+  const pal=[[0.50,0.10,0.07],[0.10,0.20,0.42],[0.70,0.70,0.67],[0.12,0.34,0.20],[0.58,0.32,0.08],[0.30,0.31,0.33],[0.64,0.50,0.12],[0.06,0.30,0.36]];
+  for(let z=-L/2+36; z<L/2-46; z+=13.2){
+    let x=-B/2+1.6;
+    while(x<B/2-1.6){ const cols=Math.min(2+Math.floor(srand()*4), Math.round((B/2-1.6-x)/2.5)); if(cols<=0) break;
+      const w=cols*2.5-0.25, tiers=2+Math.floor(srand()*5);
+      m.box(x+w/2, Hd, z, w, tiers*2.6, 12.2, pal[Math.floor(srand()*pal.length)]); x+=cols*2.5; }
+  }
+  const zs=-L/2+19;
+  m.box(0,Hd,zs,B*0.82,24,13,[0.82,0.82,0.80]);
+  m.box(0,Hd+24,zs+1,B+3,2.2,6,[0.82,0.82,0.80]);
+  m.box(0,Hd+24.2,zs+3.8,B*0.8,1.6,0.3,[0.04,0.05,0.06]);
+  m.box(0,Hd+20,zs-7,6,12,7,[0.12,0.12,0.13]);
+  m.box(0,Hd+28,zs-7,6.2,2,7.2,[0.55,0.08,0.06]);
+  m.box(0,Hd+26.2,zs+1,0.6,8,0.6,[0.7,0.7,0.7]);
+  m.box(0,Hd+2,L/2-30,B*0.6,4,6,[0.22,0.24,0.22]);
+  return {buf:upload(m.v), count:m.v.length/9, L, B};
+}
+function buildFisher(){
+  const m=meshBuilder(); const L=26,B=7,Hd=2.6,T=2.2;
+  m.hull(L,B,Hd,T,9,[0.80,0.80,0.78],[0.40,0.08,0.06],[0.45,0.42,0.38]);
+  m.box(0,Hd,3,5,3.2,6.5,[0.84,0.84,0.82]);
+  m.box(0,Hd+2.1,3,5.1,0.9,6.6,[0.05,0.06,0.07]);
+  m.box(0,Hd+3.2,3.6,3.2,1.2,3.5,[0.84,0.84,0.82]);
+  m.box(0,Hd,7.5,0.35,10,0.35,[0.75,0.75,0.72]);
+  m.box(0,Hd+7,7.5,6,0.25,0.25,[0.75,0.75,0.72]);
+  m.box(0,Hd,-10,5.6,4.5,0.4,[0.30,0.30,0.32]);
+  m.box(0,Hd+4.3,-10,6.2,0.4,0.5,[0.30,0.30,0.32]);
+  m.box(0,Hd,-4,4,0.8,6,[0.18,0.25,0.40]);
+  return {buf:upload(m.v), count:m.v.length/9, L, B};
+}
+const shipCargo = buildCargo(), shipFisher = buildFisher();
+
+function buildBird(){
+  const v=[]; const W=[0.92,0.92,0.92], G1=[0.56,0.58,0.62], G2=[0.48,0.50,0.54], K=[0.04,0.04,0.045];
+  const t=(a,b,c,col)=>{ for(const p of [a,b,c]) v.push(p[0],p[1],p[2],col[0],col[1],col[2]); };
+  const N=[0,0,0.26], Sr=[0.05,0,0.05], Sl=[-0.05,0,0.05], Bk=[0,0.035,0], Be=[0,-0.03,0.02], T=[0,0,-0.18];
+  t(N,Sr,Bk,W); t(N,Bk,Sl,W); t(N,Sl,Be,W); t(N,Be,Sr,W); t(Sr,T,Bk,W); t(Sl,Bk,T,W); t(Sr,Be,T,W); t(Sl,T,Be,W);
+  t(T,[0.07,0,-0.33],[0,0,-0.30],W); t(T,[0,0,-0.30],[-0.07,0,-0.33],W);
+  for(const sg of [1,-1]){ const m=p=>[p[0]*sg,p[1],p[2]];
+    const R1=[0.05,0,0.07],R2=[0.05,0,-0.07],E1=[0.22,0.01,0.085],E2=[0.22,0,-0.085],W1=[0.46,0,0.0],P=[0.52,0,-0.08],O=[0.38,0,-0.10];
+    t(m(R1),m(E1),m(E2),G1); t(m(R1),m(E2),m(R2),G1); t(m(E1),m(W1),m(O),G2); t(m(E1),m(O),m(E2),G2); t(m(W1),m(P),m(O),K); }
+  return {buf:device.createBuffer({size:v.length*4, usage:GPUBufferUsage.VERTEX, mappedAtCreation:true}), data:new Float32Array(v), count:v.length/6};
+}
+const birdMesh = buildBird(); new Float32Array(birdMesh.buf.getMappedRange()).set(birdMesh.data); birdMesh.buf.unmap();
+const MAXB = 260;
+const birdInst = new Float32Array(MAXB*8);
+const birdBuf = device.createBuffer({size:birdInst.byteLength, usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});
+
+// ---------------------------------------------------------------- ships & birds: life
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const life={ship:null, nextShip:3, gulls:[], nextGull:6, flocks:[], nextFlock:16, clock:0};
+function viewAxes(){ const fx=Math.sin(S.yaw), fz=-Math.cos(S.yaw); return {fx,fz,rx:-fz,rz:fx}; }
+function spawnShip(frac=0, kind){
+  kind = kind || (Math.random()<0.6?'cargo':'fish');
+  const mesh = kind==='cargo'?shipCargo:shipFisher;
+  const D = kind==='cargo'?rnd(1400,2800):rnd(330,700);
+  const speed = kind==='cargo'?rnd(9,12):rnd(4,6);
+  const {fx,fz,rx,rz}=viewAxes(); const dir=Math.random()<0.5?1:-1, tl=rnd(-0.35,0.35);
+  let hx=rx*dir, hz=rz*dir; const c=Math.cos(tl), s=Math.sin(tl); [hx,hz]=[hx*c-hz*s, hx*s+hz*c];
+  const half=D*Math.tan(42*Math.PI/180), total=2*half;
+  const cx=cam.x+fx*D, cz=cam.z+fz*D;
+  life.ship={mesh, x:cx-hx*half+hx*total*frac, z:cz-hz*half+hz*total*frac, hx, hz, speed, left:total*(1-frac)+mesh.L, heave:0, pitch:0, roll:0, fresh:true};
+}
+function spawnGulls(frac=0){
+  const n=1+Math.floor(Math.random()*3); const {fx,fz,rx,rz}=viewAxes(); const dir=Math.random()<0.5?1:-1;
+  const ahead=rnd(14,45), start=rnd(80,120), y=rnd(4,16), tl=rnd(-0.45,0.45), sp=rnd(8,11);
+  let hx=rx*dir, hz=rz*dir; const c=Math.cos(tl), s=Math.sin(tl); [hx,hz]=[hx*c-hz*s, hx*s+hz*c];
+  for(let i=0;i<n;i++){
+    const ox=rnd(-8,8), oz=rnd(-6,6), path=start*2;
+    const g={x:cam.x+fx*(ahead+oz)-hx*start+ox*hx, y:y+rnd(-2,3), z:cam.z+fz*(ahead+oz)-hz*start+ox*hz,
+      a:Math.atan2(hx,hz), sp:sp*rnd(0.92,1.08), ph:rnd(0,6.28), flapT:rnd(0.5,2), glideT:0, gliding:false, want:false,
+      seed:rnd(0,100), age:0, life:path/sp+4, bank:0, freq:rnd(2.4,3.0)};
+    g.x+=Math.sin(g.a)*path*frac; g.z+=Math.cos(g.a)*path*frac; g.age=g.life*frac;
+    life.gulls.push(g);
+  }
+}
+function spawnFlock(frac=0){
+  const {fx,fz,rx,rz}=viewAxes(); const dir=Math.random()<0.5?1:-1;
+  const D=rnd(220,520), alt=rnd(45,130), sp=rnd(14,17), tl=rnd(-0.3,0.3);
+  let hx=rx*dir, hz=rz*dir; const c=Math.cos(tl), s=Math.sin(tl); [hx,hz]=[hx*c-hz*s, hx*s+hz*c];
+  const half=D*1.0, path=half*2+200;
+  const f={x:cam.x+fx*D-hx*half, y:alt, z:cam.z+fz*D-hz*half, hx, hz, sp, age:0, life:path/sp, birds:[]};
+  const groups=2+Math.floor(Math.random()*4);
+  for(let gI=0; gI<groups; gI++){
+    const gb=-gI*rnd(25,60), gs=rnd(-45,45), gu=rnd(-12,12), n=9+Math.floor(Math.random()*30), skein=Math.random()<0.3;
+    const lean=Math.random()<0.5?1:rnd(0.3,1);
+    for(let i=0;i<n;i++){
+      const rank=Math.ceil(i/2), side=(i%2?1:-1);
+      let ox,oz,oy=gu+rnd(-0.4,0.4)+rank*0.15;
+      if(skein){ ox=gs+i*1.8+Math.sin(i*0.45)*3.5; oz=gb-i*0.9; }
+      else { ox=gs+side*rank*1.9*(i%2?1:lean)+rnd(-0.5,0.5); oz=gb-rank*2.6+rnd(-0.6,0.6); }
+      f.birds.push({ox,oy,oz,ph:rank*0.55+rnd(0,0.6),freq:rnd(2.6,3.2),w:rnd(0,6)});
+    }
+  }
+  f.x+=hx*path*frac; f.z+=hz*path*frac; f.age=f.life*frac;
+  life.flocks.push(f);
+}
+function updateLife(dt, t){
+  life.clock+=dt;
+  if(!life.ship && life.clock>life.nextShip) spawnShip(0.12);
+  if(life.clock>life.nextGull){ spawnGulls(); life.nextGull=life.clock+rnd(22,48); }
+  if(life.clock>life.nextFlock){ spawnFlock(); life.nextFlock=life.clock+rnd(55,110); }
+  // ship: advance, then ride the swell (averaged over hull length)
+  const sh=life.ship;
+  if(sh){
+    sh.x+=sh.hx*sh.speed*dt; sh.z+=sh.hz*sh.speed*dt; sh.left-=sh.speed*dt;
+    if(sh.left<0 || Math.hypot(sh.x-cam.x, sh.z-cam.z)>9000){ life.ship=null; life.nextShip=life.clock+rnd(35,90); }
+    else{
+      const L=sh.mesh.L, B=sh.mesh.B, rxx=sh.hz, rzz=-sh.hx;
+      const hb=oceanHCPU(sh.x+sh.hx*L*0.4, sh.z+sh.hz*L*0.4, t), hs=oceanHCPU(sh.x-sh.hx*L*0.4, sh.z-sh.hz*L*0.4, t);
+      const hr=oceanHCPU(sh.x+rxx*B*0.5, sh.z+rzz*B*0.5, t), hl=oceanHCPU(sh.x-rxx*B*0.5, sh.z-rzz*B*0.5, t);
+      const k=sh.fresh?1:Math.min(1,dt*1.5); sh.fresh=false;
+      const damp = L>100?0.35:0.8;
+      sh.heave+=((hb+hs+hr+hl)/4*damp-sh.heave)*k;
+      sh.pitch+=(Math.atan((hb-hs)/(L*0.8))*damp-sh.pitch)*k;
+      sh.roll+=(Math.atan((hr-hl)/B)*damp*0.7-sh.roll)*k;
+    }
+  }
+  // birds
+  let n=0;
+  for(const g of life.gulls){
+    g.age+=dt;
+    const turn=Math.sin(g.age*0.45+g.seed)*0.22;
+    g.a+=turn*dt; g.bank+=(-turn*1.8-g.bank)*Math.min(1,dt*2);
+    g.x+=Math.sin(g.a)*g.sp*dt; g.z+=Math.cos(g.a)*g.sp*dt;
+    g.y+=Math.sin(g.age*0.7+g.seed)*0.6*dt + (g.gliding?-0.25:0.35)*dt;
+    if(!g.gliding){
+      const p0=Math.sin(g.ph); g.ph+=6.2832*g.freq*dt; g.flapT-=dt;
+      if(g.flapT<0) g.want=true;
+      if(g.want && p0<0.15 && Math.sin(g.ph)>=0.15){ g.ph=Math.asin(0.15); g.gliding=true; g.want=false; g.glideT=rnd(1.5,4.5); }
+    } else { g.glideT-=dt; if(g.glideT<0){ g.gliding=false; g.flapT=rnd(0.7,1.8); } }
+    if(n<MAXB){ birdInst.set([g.x,g.y,g.z,g.a, g.ph, 1.3, 0, g.bank], n*8); n++; }
+  }
+  life.gulls=life.gulls.filter(g=>g.age<g.life);
+  for(const f of life.flocks){
+    f.age+=dt; f.x+=f.hx*f.sp*dt; f.z+=f.hz*f.sp*dt;
+    const a=Math.atan2(f.hx,f.hz), rx=f.hz, rz=-f.hx;
+    for(const b of f.birds){ if(n>=MAXB) break;
+      const wob=Math.sin(f.age*0.6+b.w)*0.7;
+      const x=f.x+rx*(b.ox+wob)+f.hx*b.oz, z=f.z+rz*(b.ox+wob)+f.hz*b.oz, y=f.y+b.oy+Math.sin(f.age*0.9+b.w)*0.4;
+      birdInst.set([x,y,z,a, f.age*6.2832*b.freq+b.ph, 1.6, 1, wob*0.05], n*8); n++; }
+  }
+  life.flocks=life.flocks.filter(f=>f.age<f.life);
+  return n;
+}
+
+// ---------------------------------------------------------------- camera & input
+const cam = {x:0, y:2, z:0, vy:0, tiltX:0, tiltZ:0, vx:0, vz:0};
+const keys = {};
+addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyH') document.body.classList.toggle('clean'); });
+addEventListener('keyup', e=>{ keys[e.code]=false; });
+const pts = new Map(); let pinch0=0, alt0=0;
+canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===2){ const [a,b]=[...pts.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y); alt0=S.alt; } hideHint(); });
+canvas.addEventListener('pointermove', e=>{
+  const p = pts.get(e.pointerId); if(!p) return;
+  if(pts.size===1){
+    const k = (S.fov*Math.PI/180)/canvas.clientHeight;
+    S.yaw += (e.clientX-p.x)*k; S.pitch = Math.max(-1.2, Math.min(1.35, S.pitch + (e.clientY-p.y)*k));
+  }
+  p.x=e.clientX; p.y=e.clientY;
+  if(pts.size===2){ const [a,b]=[...pts.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y);
+    setAlt(alt0 * Math.pow(pinch0/Math.max(d,1), 1.5)); }
+});
+const up = e=>pts.delete(e.pointerId);
+canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+canvas.addEventListener('wheel', e=>{ e.preventDefault(); setAlt(S.alt*Math.exp(e.deltaY*0.0015)); }, {passive:false});
+const elSun=document.getElementById('sun'), elAlt=document.getElementById('alt'), elAmp=document.getElementById('amp');
+elSun.value=S.sunEl; elAlt.value=S.alt; elAmp.value=S.amp;
+elSun.oninput=()=>{ setManual(); S.sunEl=+elSun.value; lutDirty=true; };
+elAlt.oninput=()=>{ S.alt=+elAlt.value; };
+elAmp.oninput=()=>{ setManual(); S.amp=+elAmp.value; S.swellAmp=+elAmp.value; };
+function setAlt(v){ S.alt=Math.max(0.6, Math.min(40, v)); elAlt.value=S.alt; }
+const hint=document.getElementById('hint'); let hinted=false;
+function hideHint(){ if(!hinted){ hinted=true; hint.style.opacity=0; } }
+setTimeout(hideHint, 6000);
+if(Q.has('clean')) document.body.classList.add('clean');
+
+if(Q.has('demo')){ life.nextShip=1e9; life.nextGull=1e9; life.nextFlock=1e9; }
+var lutDirty = true;
+// ---------------------------------------------------------------- 仙台湾の実況（Open-Meteo）と太陽位置
+const SITE = {lat:38.20, lon:141.15};
+let live = !Q.has('manual') && !Q.has('sun');
+const wxEl = document.getElementById('wx'), modeBtn = document.getElementById('mode');
+function setManual(){ if(live){ live=false; renderWxPanel(); } }
+modeBtn.onclick=()=>{ live=!live; if(live){ applyAll(); } renderWxPanel(); };
+function solarPos(date, lat, lon){
+  const rad=Math.PI/180, n = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+  const L=(280.460+0.9856474*n)%360, g=(357.528+0.9856003*n)*rad;
+  const lam=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*rad, eps=(23.439-0.0000004*n)*rad;
+  const ra=Math.atan2(Math.cos(eps)*Math.sin(lam), Math.cos(lam)), dec=Math.asin(Math.sin(eps)*Math.sin(lam));
+  const gmst=((18.697374558+24.06570982441908*n)%24+24)%24;
+  const H=(gmst*15+lon)*rad-ra, ph=lat*rad;
+  const el=Math.asin(Math.sin(ph)*Math.sin(dec)+Math.cos(ph)*Math.cos(dec)*Math.cos(H));
+  const az=Math.atan2(-Math.sin(H), Math.tan(dec)*Math.cos(ph)-Math.sin(ph)*Math.cos(H));
+  return {el:el/rad, az:((az/rad)+360)%360};
+}
+const WX_JA = c => c===0?'快晴':c===1?'晴れ':c===2?'晴れ時々曇り':c===3?'曇り':(c===45||c===48)?'霧':(c>=51&&c<=57)?'霧雨':(c>=61&&c<=67)?'雨':(c>=71&&c<=77)?'雪':(c>=80&&c<=82)?'にわか雨':(c>=85&&c<=86)?'にわか雪':c>=95?'雷雨':'—';
+const DIR16=['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+const dirJa = d => d==null?'—':DIR16[Math.round(((d%360)+360)%360/22.5)%16];
+let WX = null, sunReal = null, wxErr = null;
+const num=(v,d)=> (v==null||isNaN(v))?d:v;
+function applyWeather(){
+  if(!WX) return;
+  const c=WX.cur||{}, m=WX.mar||{};
+  const cc=num(c.cloud_cover,40), ws=num(c.wind_speed_10m,5), wdir=num(c.wind_direction_10m,315), code=num(c.weather_code,1);
+  const vis=num(c.visibility,20000);
+  const rain=(code>=51&&code<=67)||(code>=80&&code<=82)||code>=95, fog=(code===45||code===48);
+  // wind sea
+  const wwh=num(m.wind_wave_height, Math.max(0.1, 0.0246*ws*ws));
+  const wwp=num(m.wind_wave_period, Math.max(1.5, 0.8*ws));
+  const wwd=num(m.wind_wave_direction, wdir);
+  S.wind = (wwd+90)*Math.PI/180;
+  S.waveScale = 2*Math.PI/Math.max(8, Math.min(120, 1.56*wwp*wwp*1.3));
+  S.amp = Math.max(0.05, Math.min(6, wwh/HS_WIND1));
+  // swell
+  const swh=num(m.swell_wave_height, 0.4), swp=num(m.swell_wave_period, 8), swd=num(m.swell_wave_direction, wwd);
+  S.swellDir = (swd+90)*Math.PI/180;
+  S.swellLen = Math.max(0.25, Math.min(2.2, 1.56*swp*swp/170));
+  S.swellAmp = Math.max(0.0, Math.min(8, swh/HS_SWELL1));
+  // surface roughness & whitecaps follow the wind (Beaufort: whitecaps from ~4 m/s)
+  S.ripple = Math.max(0.12, Math.min(1.7, ws/7)) * (rain?1.5:1);
+  S.whitecap = Math.max(0, Math.min(1, (ws-3.5)/8.5));
+  S.chop = 0.22 + 0.16*Math.min(1, ws/14);
+  // sky
+  S.cover = Math.min(0.97, 0.04 + 0.93*cc/100);
+  S.haze = fog ? 900 : Math.max(1500, Math.min(9000, vis*0.4));
+  S.fog = fog ? 0.85 : rain ? 0.45 : Math.max(0, Math.min(0.6, (12000-vis)/16000));
+  S.sunDim = (1 - 0.85*Math.pow(cc/100, 2.5)) * (rain||fog ? 0.45 : 1);
+  elAmp.value = Math.min(5, Math.max(0.3, (wwh+swh)/2));
+  lutDirty = true;
+}
+function applySun(){
+  const p = solarPos(new Date(), 38.27, 140.87);
+  sunReal = p;
+  S.sunEl = Math.max(-2.5, Math.min(60, p.el)); S.sunAz = p.az*Math.PI/180;
+  elSun.value = S.sunEl; lutDirty = true;
+}
+function applyAll(){ applySun(); applyWeather(); }
+function renderWxPanel(){
+  modeBtn.textContent = live ? '実況ON' : '手動';
+  modeBtn.classList.toggle('on', live);
+  if(!live){ wxEl.innerHTML = '<b>手動モード</b><span>「手動」を押すと仙台湾の実況に戻ります</span>'; return; }
+  if(wxErr && !WX){ wxEl.innerHTML = '<b>仙台湾</b><span>天気を取得できませんでした（'+wxErr+'）</span>'; return; }
+  if(!WX){ wxEl.innerHTML = '<b>仙台湾</b><span>実況を取得中…</span>'; return; }
+  const c=WX.cur||{}, m=WX.mar||{};
+  const t = (c.time||'').slice(11,16);
+  const night = sunReal && sunReal.el < -2.5 ? '・夜（薄明で表示）' : '';
+  const f=(v,d=1)=>v==null?'—':(+v).toFixed(d);
+  wxEl.innerHTML = '<b>仙台湾 '+t+'　'+WX_JA(c.weather_code)+'　'+f(c.temperature_2m)+'℃'+night+'</b>'+
+    '<span>風 '+dirJa(c.wind_direction_10m)+' '+f(c.wind_speed_10m)+'m/s　雲量 '+f(c.cloud_cover,0)+'%</span>'+
+    '<span>波高 '+f(m.wave_height)+'m（うねり '+f(m.swell_wave_height)+'m・'+dirJa(m.swell_wave_direction)+'・'+f(m.swell_wave_period,0)+'秒）</span>';
+}
+async function fetchWx(){
+  if(Q.has('wxtest')){
+    const tests = {
+      calm:{cur:{time:'2026-11-20T07:00',temperature_2m:8.1,cloud_cover:15,wind_speed_10m:2.0,wind_direction_10m:290,weather_code:1,visibility:30000},
+            mar:{wave_height:0.5,wind_wave_height:0.1,wind_wave_direction:290,wind_wave_period:1.8,swell_wave_height:0.45,swell_wave_direction:110,swell_wave_period:9}},
+      storm:{cur:{time:'2026-11-20T13:00',temperature_2m:6.0,cloud_cover:100,wind_speed_10m:14.5,wind_direction_10m:315,weather_code:63,visibility:5000},
+            mar:{wave_height:3.2,wind_wave_height:2.6,wind_wave_direction:315,wind_wave_period:6.5,swell_wave_height:1.8,swell_wave_direction:100,swell_wave_period:11}},
+      fog:{cur:{time:'2026-11-20T09:00',temperature_2m:11,cloud_cover:90,wind_speed_10m:3,wind_direction_10m:160,weather_code:45,visibility:800},
+            mar:{wave_height:0.8,wind_wave_height:0.2,wind_wave_direction:160,wind_wave_period:2.5,swell_wave_height:0.7,swell_wave_direction:120,swell_wave_period:8}},
+    };
+    WX = tests[Q.get('wxtest')] || tests.calm; if(live) applyWeather(); renderWxPanel(); return;
+  }
+  try{
+    const tz='&timezone=Asia%2FTokyo';
+    const wu=`https://api.open-meteo.com/v1/forecast?latitude=${SITE.lat}&longitude=${SITE.lon}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,visibility&wind_speed_unit=ms${tz}`;
+    const mv='wave_height,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
+    const mu=(la,lo)=>`https://marine-api.open-meteo.com/v1/marine?latitude=${la}&longitude=${lo}&current=${mv}${tz}`;
+    const [w, m0] = await Promise.all([fetch(wu).then(r=>r.json()), fetch(mu(SITE.lat,SITE.lon)).then(r=>r.json()).catch(()=>null)]);
+    let m = m0;
+    if(!m || !m.current || m.current.wave_height==null){ m = await fetch(mu(38.10,141.40)).then(r=>r.json()).catch(()=>null); }
+    if(!w || !w.current) throw new Error('no data');
+    WX = {cur:w.current, mar:(m&&m.current)||{}}; wxErr=null;
+    if(live) applyWeather();
+  }catch(e){ wxErr = 'オフラインまたは通信がブロックされています'; }
+  renderWxPanel();
+}
+if(live){ applySun(); if(!Q.has('yaw')) S.yaw = 110*Math.PI/180; }
+renderWxPanel(); fetchWx();
+setInterval(fetchWx, 15*60*1000);
+setInterval(()=>{ if(live) applySun(); renderWxPanel(); }, 30*1000);
+
+let sunL=[0,1,0], sunC=[1,1,1];
+function updateSun(){
+  const el = S.sunEl*Math.PI/180, az = S.sunAz;
+  sunL = [Math.cos(el)*Math.sin(az), Math.sin(el), -Math.cos(el)*Math.cos(az)];
+  sunC = sunColor(sunL).map(x=>x*S.sunDim);
+}
+
+// ---------------------------------------------------------------- math
+function norm(v){ const l=Math.hypot(v[0],v[1],v[2]); return [v[0]/l,v[1]/l,v[2]/l]; }
+function cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+function dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+function rotAround(v,k,a){ const c=Math.cos(a), s=Math.sin(a), kv=cross(k,v), d=dot(k,v);
+  return [v[0]*c+kv[0]*s+k[0]*d*(1-c), v[1]*c+kv[1]*s+k[1]*d*(1-c), v[2]*c+kv[2]*s+k[2]*d*(1-c)]; }
+function mul(a,b){ const o=new Float32Array(16); for(let c=0;c<4;c++)for(let r=0;r<4;r++){ let s=0; for(let k=0;k<4;k++) s+=a[k*4+r]*b[c*4+k]; o[c*4+r]=s; } return o; }
+
+// ---------------------------------------------------------------- frame
+const t0 = performance.now();
+const tFixed = Q.has('t') ? +Q.get('t') : null;
+let last = t0, frames = 0;
+window.__frames = 0;
+function frame(now){
+  resize();
+  const rawDt = (now-last)/1000;
+  const dt = Math.min(0.05, rawDt); last = now;
+  // dynamic resolution: keep the frame rate up on slower GPUs (phones)
+  if(!Q.has('shot') && frames > 10){
+    frame.avg = (frame.avg ?? rawDt) * 0.92 + rawDt * 0.08;
+    frame.cool = (frame.cool ?? 0) - 1;
+    if(frame.cool <= 0){
+      if(frame.avg > 0.024 && renderScale > 0.45){ renderScale *= 0.85; frame.cool = 40; }
+      else if(frame.avg < 0.0135 && renderScale < 1.0){ renderScale = Math.min(1, renderScale*1.08); frame.cool = 90; }
+    }
+  }
+  const t = tFixed!==null ? tFixed : (now-t0)/1000 + 30;
+
+  // drift
+  const sp = (keys.ShiftLeft?6:1.5);
+  const fx = Math.sin(S.yaw), fz = -Math.cos(S.yaw);
+  let mx=0,mz=0;
+  if(keys.KeyW){mx+=fx;mz+=fz;} if(keys.KeyS){mx-=fx;mz-=fz;}
+  if(keys.KeyA){mx+=fz;mz-=fx;} if(keys.KeyD){mx-=fz;mz+=fx;}
+  cam.vx += (mx*sp - cam.vx)*Math.min(1,dt*1.5); cam.vz += (mz*sp - cam.vz)*Math.min(1,dt*1.5);
+  cam.x += cam.vx*dt; cam.z += cam.vz*dt;
+
+  // float: average surface under a small footprint, spring toward it
+  const fp = 1.2 + S.alt*0.3;
+  const hC = oceanHCPU(cam.x, cam.z, t);
+  const hX1 = oceanHCPU(cam.x+fp, cam.z, t), hX0 = oceanHCPU(cam.x-fp, cam.z, t);
+  const hZ1 = oceanHCPU(cam.x, cam.z+fp, t), hZ0 = oceanHCPU(cam.x, cam.z-fp, t);
+  const hAvg = (hC*2 + hX1+hX0+hZ1+hZ0)/6;
+  const follow = 1/(1+S.alt*0.25);
+  const targetY = hAvg*follow + S.alt;
+  if(frames===0 || tFixed!==null){ cam.y = targetY; cam.vy=0; }
+  else { const k=10, c=4.5; cam.vy += ((targetY-cam.y)*k - cam.vy*c)*dt; cam.y += cam.vy*dt; }
+  cam.y = Math.max(cam.y, hC + 0.35);
+  const gx = (hX1-hX0)/(2*fp), gz = (hZ1-hZ0)/(2*fp);
+  const tl = Math.min(1, dt*3) ; const tw = follow*0.6;
+  if(frames===0 || tFixed!==null){ cam.tiltX = gx*tw; cam.tiltZ = gz*tw; }
+  else { cam.tiltX += (gx*tw - cam.tiltX)*tl; cam.tiltZ += (gz*tw - cam.tiltZ)*tl; }
+
+  // orientation
+  let fwd = [Math.sin(S.yaw)*Math.cos(S.pitch), Math.sin(S.pitch), -Math.cos(S.yaw)*Math.cos(S.pitch)];
+  let right = norm(cross(fwd,[0,1,0]));
+  // wave-induced pitch and roll
+  const slopeF = gx*Math.sin(S.yaw) - gz*Math.cos(S.yaw);
+  const slopeR = gx*Math.cos(S.yaw) + gz*Math.sin(S.yaw);
+  const pitchW = Math.atan(cam.tiltX*Math.sin(S.yaw) - cam.tiltZ*Math.cos(S.yaw));
+  const rollW  = Math.atan(cam.tiltX*Math.cos(S.yaw) + cam.tiltZ*Math.sin(S.yaw));
+  fwd = rotAround(fwd, right, pitchW);
+  let upv = norm(cross(right, fwd));
+  right = rotAround(right, fwd, -rollW); upv = rotAround(upv, fwd, -rollW);
+
+  const aspect = W/H, tanH = Math.tan(S.fov*Math.PI/360), f = 1/tanH, near = 0.05;
+  const eye=[cam.x,cam.y,cam.z];
+  const V = new Float32Array([right[0],upv[0],-fwd[0],0, right[1],upv[1],-fwd[1],0, right[2],upv[2],-fwd[2],0,
+    -dot(right,eye), -dot(upv,eye), dot(fwd,eye), 1]);
+  const P = new Float32Array([f/aspect,0,0,0, 0,f,0,0, 0,0,0,-1, 0,0,near,0]);
+  const VP = mul(P,V);
+
+  if(frames===0 && Q.has('demo')){ const k=Q.get('demo'); if(k.includes('s')) spawnShip(0.45, k.includes('f')?'fish':'cargo'); if(k.includes('g')) spawnGulls(0.42); if(k.includes('b')) spawnFlock(0.45); }
+  const birdCount = updateLife(dt, t);
+  if(lutDirty) updateSun();
+  uData.set(VP,0);
+  uData.set([cam.x,cam.y,cam.z,t], 16);
+  uData.set([...right, tanH*aspect], 20);
+  uData.set([...upv, tanH], 24);
+  const exposure = 0.55 * Math.pow(Math.max(0.05, 22/ (sunC[1]+ 4.0)), 0.35) ;
+  uData.set([...fwd, +(Q.get('exp') ?? 1)*exposure], 28);
+  uData.set([...sunL, S.cover], 32);
+  uData.set([...sunC, S.wind], 36);
+  uData.set([W,H,1/W,1/H], 40);
+  uData.set([S.amp, S.waveScale, waveMean, S.chop], 44);
+  uData.set([S.swellDir, S.swellLen, S.ripple, S.whitecap], 68);
+  uData.set([S.haze, S.fog, S.swellAmp, S.sunDim], 72);
+  const shp = life.ship;
+  if(shp){
+    const th=Math.atan2(shp.hx, shp.hz);
+    let rgt=[Math.cos(th),0,-Math.sin(th)], upw=[0,1,0], fw=[Math.sin(th),0,Math.cos(th)];
+    fw=rotAround(fw,rgt,-shp.pitch); upw=rotAround(upw,rgt,-shp.pitch);
+    rgt=rotAround(rgt,fw,shp.roll); upw=rotAround(upw,fw,shp.roll);
+    uData.set([shp.x, shp.z, th, shp.mesh.L], 48);
+    uData.set([...rgt,0, ...upw,0, ...fw,0, shp.x, shp.heave, shp.z, 1], 52);
+  } else uData.set([0,0,0,0], 48);
+  if(birdCount) device.queue.writeBuffer(birdBuf, 0, birdInst, 0, birdCount*8);
+  device.queue.writeBuffer(ubo, 0, uData);
+
+  const enc = device.createCommandEncoder();
+  if(lutDirty){
+    const p = enc.beginRenderPass({colorAttachments:[{view:lutTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}]});
+    p.setPipeline(lutPipe); p.setBindGroup(0, lutBG); p.draw(3); p.end();
+    lutDirty = false;
+  }
+  {
+    const p = enc.beginRenderPass({
+      colorAttachments:[{view:hdrTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}],
+      depthStencilAttachment:{view:depthTex.createView(), depthLoadOp:'clear', depthStoreOp:'discard', depthClearValue:0}});
+    p.setBindGroup(0, sceneBG);
+    p.setPipeline(skyPipe); p.draw(3);
+    p.setPipeline(oceanPipe); p.setVertexBuffer(0, mesh.vb); p.setIndexBuffer(mesh.ib, 'uint32'); p.drawIndexed(mesh.count);
+    if(shp){ p.setPipeline(shipPipe); p.setVertexBuffer(0, shp.mesh.buf); p.draw(shp.mesh.count); }
+    if(birdCount){ p.setPipeline(birdPipe); p.setVertexBuffer(0, birdMesh.buf); p.setVertexBuffer(1, birdBuf); p.draw(birdMesh.count, birdCount); }
+    p.end();
+  }
+  const fs = (pipe, bg, view)=>{ const p=enc.beginRenderPass({colorAttachments:[{view, loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}]});
+    p.setPipeline(pipe); p.setBindGroup(0,bg); p.draw(3); p.end(); };
+  fs(brightPipe, bgBright, bloomA.createView());
+  for(let k=0;k<4;k++){ fs(blurHPipe, bgBlurH, bloomB.createView()); fs(blurVPipe, bgBlurV, bloomA.createView()); }
+  const outTex = ctx.getCurrentTexture();
+  fs(compPipe, bgComp, outTex.createView());
+  let rb=null;
+  if(Q.has('shot') && frames===+(Q.get('shot')||3)){
+    const bpr = Math.ceil(W*4/256)*256;
+    rb = device.createBuffer({size:bpr*H, usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
+    enc.copyTextureToBuffer({texture:outTex}, {buffer:rb, bytesPerRow:bpr}, [W,H]);
+    rb.bpr=bpr;
+  }
+  device.queue.submit([enc.finish()]);
+  if(rb){ rb.mapAsync(GPUMapMode.READ).then(()=>{ const src=new Uint8Array(rb.getMappedRange());
+    const c2=document.createElement('canvas'); c2.width=W; c2.height=H; const x=c2.getContext('2d'); const img=x.createImageData(W,H);
+    const bgra = presentFormat.startsWith('bgra');
+    for(let y=0;y<H;y++) for(let i=0;i<W;i++){ const s=y*rb.bpr+i*4, d=(y*W+i)*4;
+      img.data[d]=src[s+(bgra?2:0)]; img.data[d+1]=src[s+1]; img.data[d+2]=src[s+(bgra?0:2)]; img.data[d+3]=255; }
+    x.putImageData(img,0,0); window.__png=c2.toDataURL('image/png'); }); }
+  frames++; window.__frames = frames;
+  if(Q.has('shot') && frames > +(Q.get('shot')||3)) return;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
