@@ -19,6 +19,7 @@
   #wx{display:flex;flex-direction:column}#wx b{font-weight:600;font-size:13px}#wx span{opacity:.8}
   #mode{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
   .btns{display:flex;flex-direction:column;gap:6px}
+  #qual{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
   #snd{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
   #snd.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
   #mode.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
@@ -30,7 +31,7 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="wxbox"><div id="wx"></div><div class="btns"><button id="mode">実況ON</button><button id="snd">音を出す</button></div></div>
+<div id="wxbox"><div id="wx"></div><div class="btns"><button id="mode">実況ON</button><button id="snd">音を出す</button><button id="qual">画質：最高</button></div></div>
 <div id="hint">ドラッグで見回す ・ ピンチ／ホイールで高さ ・ WASDで漂う ・ Hで表示切替</div>
 <div id="ui">
   <label>太陽高度<input id="sun" type="range" min="-3" max="60" step="0.1" value="6"></label>
@@ -74,7 +75,8 @@ struct U {
   ship     : vec4f,   // x, z, heading, length (0 = none)
   shipModel: mat4x4f,
   env      : vec4f,   // swell angle, swell length scale, ripple factor, whitecap factor
-  env2     : vec4f,   // haze distance, fog amount, swell amp, 0
+  env2     : vec4f,   // haze distance, fog amount, swell amp, sun dim
+  env3     : vec4f,   // quality (1 = volumetric clouds), 0, 0, 0
 };
 @group(0) @binding(0) var<uniform> u : U;
 const PI = 3.14159265;
@@ -215,7 +217,13 @@ const SKYFN = /* wgsl */`
 @group(0) @binding(2) var samp: sampler;
 fn skyL(d: vec3f) -> vec3f {
   let dd = normalize(vec3f(d.x, max(d.y, 0.0), d.z));
-  return textureSampleLevel(skyTex, samp, skyUV(dd), 0.0).rgb;
+  let c = textureSampleLevel(skyTex, samp, skyUV(dd), 0.0).rgb;
+  // overcast: the cloud deck turns the whole sky into a dim, neutral grey dome
+  let ovc = smoothstep(0.72, 0.96, u.sunDir.w);
+  let lum = dot(c, vec3f(0.2126, 0.7152, 0.0722));
+  let lumUp = dot(textureSampleLevel(skyTex, samp, skyUV(vec3f(0.0, 1.0, 0.0)), 0.0).rgb, vec3f(0.2126, 0.7152, 0.0722));
+  let grey = vec3f(mix(lumUp, lum, 0.25)) * vec3f(0.97, 1.0, 1.04) * (0.62 + 0.3*smoothstep(-0.05, 0.6, dd.y));
+  return mix(c, grey, ovc);
 }
 // cloud layer on a spherical shell, returns (rgb, alpha)
 fn clouds(d: vec3f, oct: i32, soft: f32) -> vec4f {
@@ -271,25 +279,97 @@ fn sunDisk(d: vec3f) -> vec3f {
   let x = clamp(acos(clamp(c,-1.0,1.0)) / r, 0.0, 1.6);
   let limb = pow(max(1.0 - x*x, 0.0), 0.35);
   let edge = 1.0 - smoothstep(0.92, 1.08, x);
-  return u.sunCol.rgb * 1800.0 * u.env2.w * u.env2.w * vec3f(limb) * edge * vec3f(1.0, 0.98, 0.95);
+  return u.sunCol.rgb * 1800.0 * u.env2.w * u.env2.w * (1.0 - smoothstep(0.72, 0.9, u.sunDir.w)) * vec3f(limb) * edge * vec3f(1.0, 0.98, 0.95);
+}
+// ---- volumetric cloud slab (1500–2700 m): flat bases, domed tops, self-shadowing, dual-lobe phase
+fn cloudShape(xz: vec2f, h: f32, oct: i32) -> f32 {
+  let tm = u.camPos.w;
+  let wind = vec2f(cos(u.sunCol.w), sin(u.sunCol.w)) * tm * 6.0;
+  let q = (xz + wind) * 0.00030;
+  let warp = vec2f(fbm(q*0.6 + 3.1, 3), fbm(q*0.6 - 7.7, 3));
+  var n = fbm(q + warp*1.6, oct) * 1.2 - 0.08;
+  let hf = clamp((h - 1500.0) / 1200.0, 0.0, 1.0);
+  let det = fbm(q*7.0 + warp*3.0 + vec2f(hf*2.7, -hf*1.9) - wind*0.0004, max(oct-2, 2));
+  n -= (det - 0.5) * (0.12 + 0.18*hf);
+  let cov = u.sunDir.w;
+  let prof = smoothstep(0.0, 0.07, hf) * pow(1.0 - smoothstep(0.15 + 0.5*cov, 1.0, hf), 0.6);
+  let thr = (1.0 - cov) + (1.0 - prof) * 0.42;
+  return clamp((n - thr) / max(cov*0.55, 0.05), 0.0, 1.0);
+}
+fn ign(p: vec2f) -> f32 { return fract(52.9829189 * fract(dot(p, vec2f(0.06711056, 0.00583715)))); }
+fn cloudsVol(d: vec3f, px: vec2f) -> vec4f {
+  if (d.y <= 0.0) { return vec4f(0.0); }
+  let camY = u.camPos.y;
+  let ro = vec3f(0.0, RG + camY, 0.0);
+  let r0 = RG + 1500.0; let r1 = RG + 2700.0;
+  let b = dot(ro, d);
+  let t0 = -b + sqrt(b*b - (dot(ro,ro) - r0*r0));
+  var t1 = -b + sqrt(b*b - (dot(ro,ro) - r1*r1));
+  t1 = min(t1, t0 + 22000.0);
+  let N = i32(mix(34.0, 14.0, smoothstep(0.02, 0.4, d.y)));
+  let dt = (t1 - t0) / f32(N);
+  let L = u.sunDir.xyz;
+  let mu = dot(d, L);
+  let hg1 = (1.0 - 0.64) / pow(1.0 + 0.64 - 1.6*mu, 1.5);
+  let hg2 = (1.0 - 0.09) / pow(1.0 + 0.09 + 0.6*mu, 1.5);
+  let phase = (0.7*hg1 + 0.3*hg2) / (4.0*PI);
+  let sunC = u.sunCol.rgb * u.env2.w;
+  let ambTop = skyL(vec3f(0.0, 1.0, 0.0)) * 1.1;
+  let ambBot = skyL(normalize(vec3f(d.x, 0.1, d.z))) * 0.85;
+  var T = 1.0; var col = vec3f(0.0);
+  let jit = ign(px);
+  for (var i = 0; i < N; i++) {
+    let t = t0 + (f32(i) + jit) * dt;
+    let pl = ro + d * t;
+    let h = length(pl) - RG;
+    let xz = u.camPos.xz + d.xz * t;
+    let dens = cloudShape(xz, h, 5);
+    if (dens > 0.01) {
+      // light march toward the sun (3 taps, growing)
+      var od = 0.0;
+      od += cloudShape(xz + L.xz*120.0, h + L.y*120.0, 3) * 120.0;
+      od += cloudShape(xz + L.xz*380.0, h + L.y*380.0, 3) * 260.0;
+      od += cloudShape(xz + L.xz*900.0, h + L.y*900.0, 2) * 520.0;
+      let sig = 0.022;
+      let beer = max(exp(-od * sig * 0.55), exp(-od * sig * 0.12) * 0.4);
+      let powder = 1.0 - exp(-dens * 8.0);
+      let hf = clamp((h - 1500.0) / 1200.0, 0.0, 1.0);
+      let amb = mix(ambBot, ambTop, hf) * (0.62 + 0.38*hf);
+      let S = sunC * phase * 14.0 * beer * mix(0.55, 1.0, powder) + amb;
+      let ext = exp(-dens * sig * dt);
+      col += T * (1.0 - ext) * S;
+      T *= ext;
+      if (T < 0.02) { break; }
+    }
+  }
+  let fade = exp(-t0 / 60000.0);
+  let a = (1.0 - T) * fade * smoothstep(0.0, 0.035, d.y);
+  let cc = select(col / max(1.0 - T, 1e-3), vec3f(0.0), T > 0.999);
+  return vec4f(mix(skyL(d), cc, fade), a);
 }
 fn skyFull(d: vec3f, oct: i32, withSun: bool) -> vec3f {
   var c = skyL(d);
   if (withSun) { c += sunDisk(d); }
-  let cl = clouds(d, oct, select(1.0, 2.2, !withSun));
+  let cl = clouds(d, oct, select(1.0, 3.2, !withSun));
   return mix(c, cl.rgb, cl.a);
 }
 
 @fragment fn fsSky(@location(0) uv: vec2f) -> @location(0) vec4f {
   let ndc = vec2f(uv.x*2.0-1.0, 1.0-uv.y*2.0);
   let d = normalize(u.camFwd.xyz + u.camRight.xyz*ndc.x*u.camRight.w + u.camUp.xyz*ndc.y*u.camUp.w);
-  var c = skyFull(d, 6, true);
+  var c: vec3f;
+  if (u.env3.x > 0.5) {
+    c = skyL(d) + sunDisk(d);
+    let cv = cloudsVol(d, uv * u.res.xy);
+    c = mix(c, cv.rgb, cv.a);
+  } else { c = skyFull(d, 6, true); }
   if (u.env2.y > 0.0) {
     let hz = skyL(normalize(vec3f(d.x, 0.02, d.z)));
     let g = vec3f(dot(hz, vec3f(0.3333))) * 1.05;
     c = mix(c, g, u.env2.y * exp(-max(d.y, 0.0) * mix(14.0, 2.5, u.env2.y)));
   }
-  // below the geometric horizon (rarely visible): blend to sea haze
+  let ovc = smoothstep(0.72, 0.96, u.sunDir.w);
+  c = mix(c, vec3f(dot(c, vec3f(0.2126, 0.7152, 0.0722))) * vec3f(0.97, 1.0, 1.04), ovc*0.9);
   return vec4f(min(c, vec3f(60000.0)), 1.0);
 }
 
@@ -369,21 +449,26 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
   // slope variance of the octaves we dropped
   let waveVar = 0.016 * (1.0 - clamp(f32(iters)/40.0, 0.0, 1.0)) * clamp(u.wave.x/2.0, 0.3, 2.0);
   // unresolved detail: flatten the normal and move the lost slope into roughness (Toksvig-style)
-  let flat = smoothstep(0.12, 2.5, fp);
-  N = normalize(mix(N, vec3f(0.0, 1.0, 0.0), 0.65*flat));
-  let slopeVar = rp.z + waveVar + 0.02*flat;
+  let flat = smoothstep(0.05, 1.6, fp);
+  N = normalize(mix(N, vec3f(0.0, 1.0, 0.0), 0.78*flat));
+  let slopeVar = rp.z + waveVar + 0.035*flat;
   let NdV = max(dot(N, V), 0.0);
   var R = reflect(-V, N);
   R.y = abs(R.y) + 0.002;
   R = normalize(R);
   let F = 0.02 + 0.98*pow(1.0 - NdV, 5.0);
 
-  let refl = skyFull(R, select(3, 5, dist < 600.0), false);
+  let refl = skyFull(R, select(3, 4, dist < 600.0), false);
 
 
   // sun glitter
   let alpha = sqrt(0.0025 + 2.0*slopeVar);
-  let spec = min(ggx(N, V, L, sqrt(alpha)) * max(dot(N, L), 0.0), 4000.0);
+  var spec = min(ggx(N, V, L, sqrt(alpha)) * max(dot(N, L), 0.0), 4000.0);
+  // micro-glints: sub-pixel facets catching the sun, twinkling
+  let gcell = floor(p * 9.0 / max(fp*3.0, 0.02));
+  let gh = hash12(gcell + floor(u.camPos.w * 14.0) * 1.37);
+  let glint = smoothstep(0.985, 1.0, gh) * smoothstep(0.02, 0.3, spec) * (1.0 - smoothstep(20.0, 120.0, dist));
+  spec += glint * 60.0 * min(spec, 30.0) * 0.1;
   let sunVis = smoothstep(-0.02, 0.02, L.y);
 
   // body color: deep scattering + subsurface light through crests
@@ -396,8 +481,8 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
            + pow(NdV, 2.0) * 0.12 * max(L.y, 0.0);
   let sssCol = vec3f(0.02, 0.32, 0.30);
   let Ed = u.sunCol.rgb * max(L.y, 0.0) + amb * PI;          // downwelling irradiance
-  let Rrs = vec3f(0.0030, 0.0135, 0.0290);                   // deep blue ocean (sr^-1)
-  let nearTeal = mix(vec3f(0.75, 1.25, 1.1), vec3f(1.0), smoothstep(3.0, 60.0, dist));
+  let Rrs = vec3f(0.0026, 0.0105, 0.0240);                   // deep blue ocean (sr^-1)
+  let nearTeal = mix(vec3f(0.85, 1.1, 1.0), vec3f(1.0), smoothstep(3.0, 60.0, dist));
   var water = Ed * Rrs * nearTeal * (0.8 + 0.5*hrel) + sssCol * sssK * u.sunCol.rgb * 0.22 * sunVis;
 
   // whitecaps: sharp crests broken up by noise
@@ -405,10 +490,10 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
   let fn0 = fbm(p * 0.35 + vec2f(u.camPos.w*0.05, 0.0), 4);
   let fn1 = fbm(p * 1.9 - vec2f(0.0, u.camPos.w*0.08), 3);
   let wc = u.env.w;
-  var foam = smoothstep(0.64 - 0.13*wc, 0.75 - 0.13*wc, crest + 0.10*(fn0-0.5)) * smoothstep(0.36 - 0.08*wc, 0.56 - 0.08*wc, fn1);
+  var foam = smoothstep(0.67 - 0.15*wc, 0.77 - 0.14*wc, crest + 0.10*(fn0-0.5)) * smoothstep(0.36 - 0.08*wc, 0.56 - 0.08*wc, fn1);
   let fn2 = fbm(p * 7.0 + vec2f(u.camPos.w*0.3, -u.camPos.w*0.2), 3);
   foam *= mix(0.35, 1.0, smoothstep(0.35, 0.65, fn2));
-  foam = pow(foam, 0.7);
+  foam = min(1.0, pow(foam, 0.7) * (1.0 + 1.4*wc));
   foam *= smoothstep(0.0, 0.3, wc) * 0.95 * (1.0 - smoothstep(300.0, 1500.0, dist));
   // ship wake: turbulent centre wake + Kelvin arms (19.5°) + hull wash
   let sh = u.ship;
@@ -434,9 +519,11 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
   }
   let foamLit = vec3f(0.95) * (u.sunCol.rgb * max(dot(N, L), 0.0) * 0.30 * sunVis + amb * 1.35);
 
-  var col = water * (1.0 - F) + refl * F + spec * u.sunCol.rgb * sunVis;
+  var col = water * (1.0 - F) + refl * F + spec * u.sunCol.rgb * sunVis * (1.0 - smoothstep(0.75, 0.95, u.sunDir.w));
   col = mix(col, foamLit, foam);
 
+  let ovc2 = smoothstep(0.72, 0.96, u.sunDir.w);
+  col = mix(col, vec3f(dot(col, vec3f(0.2126, 0.7152, 0.0722))) * vec3f(0.92, 1.0, 1.06), ovc2*0.75);
   // aerial perspective toward the horizon colour
   let vd = -V;
   let haze = skyL(normalize(vec3f(vd.x, 0.004, vd.z)));
@@ -556,6 +643,24 @@ fn toSRGB(c: vec3f) -> vec3f {
   let hdr = textureSampleLevel(t0, samp, uv, 0.0).rgb * u.camFwd.w;
   let bl = textureSampleLevel(t1, samp, uv, 0.0).rgb;
   var c = hdr + bl * 0.22;
+  // rain streaks (2 depth layers, slanted by the wind)
+  if (u.env3.y > 0.0) {
+    var r = 0.0;
+    for (var l = 0; l < 2; l++) {
+      let fl = f32(l);
+      let sz = vec2f(3.0 + fl*2.0, 70.0 + fl*50.0);
+      let sp = fc.xy + vec2f(fc.y * 0.12, 0.0);
+      let col = floor(sp.x / sz.x);
+      let off = hash12(vec2f(col, fl)) * 1000.0;
+      let yy = sp.y / sz.y - u.camPos.w * (9.0 + fl*5.0) + off;
+      let cell = floor(yy);
+      let h = hash12(vec2f(col, cell + fl*31.0));
+      let f = fract(yy);
+      r += step(1.0 - 0.035*u.env3.y, h) * smoothstep(0.0, 0.4, f) * (1.0 - smoothstep(0.6, 1.0, f)) * (0.10 - fl*0.04);
+    }
+    c = c + r * (0.6 + 0.4*dot(c, vec3f(0.33)));
+    c = mix(c, vec3f(dot(c, vec3f(0.2126,0.7152,0.0722))), 0.25*u.env3.y);
+  }
   let q = uv - 0.5;
   c *= 1.0 - 0.28 * dot(q, q) * 1.6;
   c = aces(c);
@@ -567,7 +672,7 @@ fn toSRGB(c: vec3f) -> vec3f {
 `;
 
 // ---------------------------------------------------------------- resources
-const UBO_SIZE = 64 + 16*9 + 64 + 32;
+const UBO_SIZE = 64 + 16*9 + 64 + 48;
 const ubo = device.createBuffer({size:UBO_SIZE, usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
 const uData = new Float32Array(UBO_SIZE/4);
 const sampLin = device.createSampler({magFilter:'linear', minFilter:'linear', addressModeU:'repeat', addressModeV:'clamp-to-edge'});
@@ -612,6 +717,9 @@ const lutPipe = device.createRenderPipeline({
 const lutBG = device.createBindGroup({layout:bglU, entries:[{binding:0, resource:{buffer:ubo}}]});
 
 const DEPTH = 'depth32float';
+const MSAA = 4;
+const coarse = matchMedia('(pointer:coarse)').matches;
+let hiQ = !coarse;   // 最高画質: 立体雲 + ネイティブ解像度
 const sceneLayout = device.createPipelineLayout({bindGroupLayouts:[bglScene]});
 const skyPipe = device.createRenderPipeline({
   layout: sceneLayout,
@@ -619,6 +727,7 @@ const skyPipe = device.createRenderPipeline({
   fragment:{module:mScene, entryPoint:'fsSky', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list'},
   depthStencil:{format:DEPTH, depthWriteEnabled:false, depthCompare:'always'},
+  multisample:{count:MSAA},
 });
 const oceanPipe = device.createRenderPipeline({
   layout: sceneLayout,
@@ -626,6 +735,7 @@ const oceanPipe = device.createRenderPipeline({
   fragment:{module:mScene, entryPoint:'fsOcean', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+  multisample:{count:MSAA},
 });
 const shipPipe = device.createRenderPipeline({
   layout: sceneLayout,
@@ -634,6 +744,7 @@ const shipPipe = device.createRenderPipeline({
   fragment:{module:mObj, entryPoint:'fsShip', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+  multisample:{count:MSAA},
 });
 const birdPipe = device.createRenderPipeline({
   layout: sceneLayout,
@@ -643,6 +754,7 @@ const birdPipe = device.createRenderPipeline({
   fragment:{module:mObj, entryPoint:'fsBird', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
+  multisample:{count:MSAA},
 });
 const sceneBG = device.createBindGroup({layout:bglScene, entries:[
   {binding:0, resource:{buffer:ubo}}, {binding:1, resource:lutTex.createView()}, {binding:2, resource:sampLin}]});
@@ -687,18 +799,20 @@ function buildMesh(){
 const mesh = buildMesh();
 
 // ---- render targets (resized with the canvas)
-let W=0, H=0, hdrTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
+let W=0, H=0, hdrTex, msTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
 let renderScale = 1.0;
 function resize(){
-  const dpr = Math.min(window.devicePixelRatio||1, Q.has('dpr') ? +Q.get('dpr') : 1.6) * renderScale;
+  const cap = Q.has('dpr') ? +Q.get('dpr') : (hiQ ? 3 : 1.5);
+  const dpr = Math.min(window.devicePixelRatio||1, cap) * renderScale;
   let w = Math.round(canvas.clientWidth*dpr), h = Math.round(canvas.clientHeight*dpr);
-  const maxPix = 2.6e6; const s = Math.min(1, Math.sqrt(maxPix/(w*h)));
+  const maxPix = hiQ ? 8.3e6 : 2.2e6; const s = Math.min(1, Math.sqrt(maxPix/(w*h)));
   w = Math.max(2, Math.round(w*s)); h = Math.max(2, Math.round(h*s));
   if(w===W && h===H) return;
   W=w; H=h; canvas.width=w; canvas.height=h;
-  [hdrTex, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
+  [hdrTex, msTex, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
+  msTex = device.createTexture({size:[w,h], format:HDR, sampleCount:MSAA, usage:GPUTextureUsage.RENDER_ATTACHMENT});
   hdrTex = device.createTexture({size:[W,H], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
-  depthTex = device.createTexture({size:[W,H], format:DEPTH, usage:GPUTextureUsage.RENDER_ATTACHMENT});
+  depthTex = device.createTexture({size:[W,H], format:DEPTH, sampleCount:MSAA, usage:GPUTextureUsage.RENDER_ATTACHMENT});
   const bw = Math.max(1, W>>2), bh = Math.max(1, H>>2);
   bloomA = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
   bloomB = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
@@ -714,7 +828,7 @@ const S = {
   yaw: +(Q.get('yaw') ?? 0) * Math.PI/180, pitch: +(Q.get('pitch') ?? 2) * Math.PI/180,
   cover: +(Q.get('clouds') ?? 0.42), wind: 0.35, chop: 0.30,
   fov: +(Q.get('fov') ?? 62),
-  waveScale: WAVE_SCALE, swellDir: 0.9, swellLen: 1, swellAmp: +(Q.get('amp') ?? 2.2), ripple: 1, whitecap: 0.85, windSpeed: 6, haze: 6500, fog: 0, sunDim: 1,
+  waveScale: WAVE_SCALE, swellDir: 0.9, swellLen: 1, swellAmp: +(Q.get('amp') ?? 2.2), ripple: 1, whitecap: 0.35, rain: 0, windSpeed: 6, haze: 6500, fog: 0, sunDim: 1,
 };
 let waveMean = 0.0;
 function wavesRawCPU(x, z, t, iters){
@@ -1037,6 +1151,9 @@ const Sound = {
   },
 };
 window.__snd = Sound;
+const qualBtn=document.getElementById('qual');
+const showQ=()=>{ qualBtn.textContent = hiQ ? '画質：最高' : '画質：軽量'; };
+showQ(); qualBtn.onclick=()=>{ hiQ=!hiQ; renderScale=1; W=0; showQ(); };
 const sndBtn=document.getElementById('snd');
 sndBtn.onclick=()=>Sound.toggle();
 document.addEventListener('visibilitychange',()=>{ if(!Sound.ctx) return; if(document.hidden) Sound.ctx.suspend(); else if(Sound.on) Sound.ctx.resume(); });
@@ -1103,6 +1220,7 @@ function applyWeather(){
   const cc=num(c.cloud_cover,40), ws=num(c.wind_speed_10m,5), wdir=num(c.wind_direction_10m,315), code=num(c.weather_code,1);
   const vis=num(c.visibility,20000);
   S.windSpeed = ws;
+  S.rain = (code>=61&&code<=67)||(code>=80&&code<=82)||code>=95 ? ((code===65||code===67||code===82||code>=95)?1:0.6) : (code>=51&&code<=57?0.25:0);
   const rain=(code>=51&&code<=67)||(code>=80&&code<=82)||code>=95, fog=(code===45||code===48);
   // wind sea
   const wwh=num(m.wind_wave_height, Math.max(0.1, 0.0246*ws*ws));
@@ -1209,8 +1327,9 @@ function frame(now){
     frame.avg = (frame.avg ?? rawDt) * 0.92 + rawDt * 0.08;
     frame.cool = (frame.cool ?? 0) - 1;
     if(frame.cool <= 0){
-      if(frame.avg > 0.024 && renderScale > 0.45){ renderScale *= 0.85; frame.cool = 40; }
-      else if(frame.avg < 0.0135 && renderScale < 1.0){ renderScale = Math.min(1, renderScale*1.08); frame.cool = 90; }
+      const slow = hiQ ? 0.030 : 0.024, fast = hiQ ? 0.018 : 0.0135;
+      if(frame.avg > slow && renderScale > 0.4){ renderScale *= 0.85; frame.cool = 40; }
+      else if(frame.avg < fast && renderScale < 1.0){ renderScale = Math.min(1, renderScale*1.08); frame.cool = 90; }
     }
   }
   const t = tFixed!==null ? tFixed : (now-t0)/1000 + 30;
@@ -1267,7 +1386,8 @@ function frame(now){
   uData.set([cam.x,cam.y,cam.z,t], 16);
   uData.set([...right, tanH*aspect], 20);
   uData.set([...upv, tanH], 24);
-  const exposure = 0.55 * Math.pow(Math.max(0.05, 22/ (sunC[1]+ 4.0)), 0.35) ;
+  const ovcJ = Math.min(1, Math.max(0, (S.cover-0.72)/0.24));
+  const exposure = 0.55 * Math.pow(Math.max(0.05, 22/ (sunC[1]+ 4.0)), 0.35) * (1 + 1.3*ovcJ);
   uData.set([...fwd, +(Q.get('exp') ?? 1)*exposure], 28);
   uData.set([...sunL, S.cover], 32);
   uData.set([...sunC, S.wind], 36);
@@ -1275,6 +1395,7 @@ function frame(now){
   uData.set([S.amp, S.waveScale, waveMean, S.chop], 44);
   uData.set([S.swellDir, S.swellLen, S.ripple, S.whitecap], 68);
   uData.set([S.haze, S.fog, S.swellAmp, S.sunDim], 72);
+  uData.set([Q.has('q') ? +Q.get('q') : (hiQ?1:0), S.rain, 0, 0], 76);
   const shp = life.ship;
   if(shp){
     const th=Math.atan2(shp.hx, shp.hz);
@@ -1295,7 +1416,7 @@ function frame(now){
   }
   {
     const p = enc.beginRenderPass({
-      colorAttachments:[{view:hdrTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}],
+      colorAttachments:[{view:msTex.createView(), resolveTarget:hdrTex.createView(), loadOp:'clear', storeOp:'discard', clearValue:[0,0,0,1]}],
       depthStencilAttachment:{view:depthTex.createView(), depthLoadOp:'clear', depthStoreOp:'discard', depthClearValue:0}});
     p.setBindGroup(0, sceneBG);
     p.setPipeline(skyPipe); p.draw(3);
