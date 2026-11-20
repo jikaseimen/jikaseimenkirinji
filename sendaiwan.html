@@ -25,6 +25,15 @@
   #mode.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
   #hint{top:auto!important;bottom:calc(84px + env(safe-area-inset-bottom))}
   body.clean #wxbox{opacity:0;pointer-events:none}
+  @media (max-width:600px){
+    #ui{left:8px;right:8px;transform:none;gap:10px;padding:8px 10px;justify-content:space-between}
+    #ui label{flex:1 1 0;min-width:0;font-size:11px}
+    #ui input{width:100%}
+    #wxbox{left:8px;right:8px;max-width:none;padding:7px 10px;font-size:11px;gap:8px}
+    #wx b{font-size:12px}
+    .btns{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;gap:5px}
+    #mode,#snd,#qual{padding:3px 8px;font-size:10.5px}
+  }
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:15px;line-height:1.7;background:#0a0d12}
   body.clean #ui,body.clean #hint{opacity:0;pointer-events:none}
 </style>
@@ -495,7 +504,8 @@ struct OO {
 };
 @vertex fn vsOcean(@location(0) off: vec2f) -> OO {
   let xz = u.camPos.xz + off;
-  let h = oceanH(xz, ${GEO_ITERS});
+  let gi = i32(mix(f32(${GEO_ITERS}), 6.0, smoothstep(150.0, 5000.0, length(off))));
+  let h = oceanH(xz, gi);
   let drop = dot(off, off) / (2.0 * RG);
   let wp = vec3f(xz.x, h - drop, xz.y);
   var o: OO;
@@ -571,8 +581,8 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
   var N = normalize(vec3f(-(hg.y + slopeD.x), 1.0, -(hg.z + slopeD.y)));
   let waveVar = 0.012 * (1.0 - clamp(f32(iters)/16.0, 0.0, 1.0)) * clamp(u.wave.x/2.0, 0.3, 2.0);
   let flat = smoothstep(0.4, 4.0, fp);
-  N = normalize(mix(N, vec3f(0.0, 1.0, 0.0), 0.5*flat));
-  let slopeVar = varD + waveVar + 0.012*flat;
+  N = normalize(mix(N, vec3f(0.0, 1.0, 0.0), 0.5*flat + 0.4*smoothstep(8.0, 60.0, fp)));
+  let slopeVar = varD + waveVar + 0.012*flat + 0.02*smoothstep(8.0, 60.0, fp);
   let NdV = max(dot(N, V), 0.0);
   // reflect with a slightly smoothed normal so cloud reflections don't flip per pixel
   let Nr = normalize(mix(N, normalize(vec3f(-hg.y, 1.0, -hg.z)), 0.35));
@@ -1553,7 +1563,7 @@ function frame(now){
     frame.cool = (frame.cool ?? 0) - 1;
     if(frame.cool <= 0){
       const slow = hiQ ? 0.030 : 0.024, fast = hiQ ? 0.018 : 0.0135;
-      if(frame.avg > slow && renderScale > 0.4){ renderScale *= 0.85; frame.cool = 40; }
+      if(frame.avg > slow && renderScale > 0.6){ renderScale *= 0.85; frame.cool = 40; }
       else if(frame.avg < fast && renderScale < 1.0){ renderScale = Math.min(1, renderScale*1.08); frame.cool = 90; }
     }
   }
