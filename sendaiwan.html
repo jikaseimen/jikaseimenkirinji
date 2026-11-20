@@ -45,11 +45,19 @@
 const Q = new URLSearchParams(location.search);
 const errBox = document.getElementById('err');
 function fail(msg){ errBox.style.display='flex'; errBox.innerHTML = msg; }
+window.addEventListener('error', e=>fail('エラー: '+(e.message||e)+'<br><small>この画面を撮って送ってください</small>'));
+window.addEventListener('unhandledrejection', e=>fail('エラー: '+((e.reason&&e.reason.message)||e.reason)+'<br><small>この画面を撮って送ってください</small>'));
+setTimeout(()=>{ if(!(window.__frames>0)) fail('描画が始まりません（WebGPUが動いていない可能性）。<br>ブラウザ名とバージョンを教えてください。<br><small>'+navigator.userAgent+'</small>'); }, 8000);
 if(!navigator.gpu){ fail('このブラウザはWebGPUに対応していません。<br>Chrome / Edge 113以降、Safari 26以降でお試しください。'); return; }
 const adapter = await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
 if(!adapter){ fail('WebGPUアダプタを取得できませんでした。'); return; }
 const device = await adapter.requestDevice();
-device.lost.then(i=>fail('GPUデバイスが失われました: '+i.message));
+device.lost.then(i=>{
+  if(!(location.hash.includes('lite'))){ location.hash='lite'; location.reload(); return; }
+  fail('GPUが処理を中断しました（'+(i.message||i.reason||'device lost')+'）。<br>ページを再読み込みしてください。');
+});
+device.addEventListener('uncapturederror', e=>{ console.warn('WebGPU error:', e.error && e.error.message);
+  if(window.__dropQ) window.__dropQ('error'); });
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('webgpu');
 const presentFormat = navigator.gpu.getPreferredCanvasFormat();
@@ -717,36 +725,40 @@ const lutPipe = device.createRenderPipeline({
 const lutBG = device.createBindGroup({layout:bglU, entries:[{binding:0, resource:{buffer:ubo}}]});
 
 const DEPTH = 'depth32float';
-const MSAA = 4;
+const LITE = location.hash.includes('lite') || Q.has('lite');
 const coarse = matchMedia('(pointer:coarse)').matches;
-let hiQ = !coarse;   // 最高画質: 立体雲 + ネイティブ解像度
+let hiQ = Q.has('hq') && !LITE;   // 最高画質: 立体雲 + MSAA + 高解像度
+const sampleCount = ()=> hiQ ? 4 : 1;
 const sceneLayout = device.createPipelineLayout({bindGroupLayouts:[bglScene]});
-const skyPipe = device.createRenderPipeline({
+const pipeCache = {};
+function scenePipes(sc){
+  if(pipeCache[sc]) return pipeCache[sc];
+  const sky = device.createRenderPipeline({
   layout: sceneLayout,
   vertex:{module:mScene, entryPoint:'vsFull'},
   fragment:{module:mScene, entryPoint:'fsSky', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list'},
   depthStencil:{format:DEPTH, depthWriteEnabled:false, depthCompare:'always'},
-  multisample:{count:MSAA},
+  multisample:{count:sc},
 });
-const oceanPipe = device.createRenderPipeline({
+  const ocean = device.createRenderPipeline({
   layout: sceneLayout,
   vertex:{module:mScene, entryPoint:'vsOcean', buffers:[{arrayStride:8, attributes:[{shaderLocation:0, offset:0, format:'float32x2'}]}]},
   fragment:{module:mScene, entryPoint:'fsOcean', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
-  multisample:{count:MSAA},
+  multisample:{count:sc},
 });
-const shipPipe = device.createRenderPipeline({
+  const ship = device.createRenderPipeline({
   layout: sceneLayout,
   vertex:{module:mObj, entryPoint:'vsShip', buffers:[{arrayStride:36, attributes:[
     {shaderLocation:0, offset:0, format:'float32x3'}, {shaderLocation:1, offset:12, format:'float32x3'}, {shaderLocation:2, offset:24, format:'float32x3'}]}]},
   fragment:{module:mObj, entryPoint:'fsShip', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
-  multisample:{count:MSAA},
+  multisample:{count:sc},
 });
-const birdPipe = device.createRenderPipeline({
+  const bird = device.createRenderPipeline({
   layout: sceneLayout,
   vertex:{module:mObj, entryPoint:'vsBird', buffers:[
     {arrayStride:24, attributes:[{shaderLocation:0, offset:0, format:'float32x3'}, {shaderLocation:1, offset:12, format:'float32x3'}]},
@@ -754,8 +766,10 @@ const birdPipe = device.createRenderPipeline({
   fragment:{module:mObj, entryPoint:'fsBird', targets:[{format:HDR}]},
   primitive:{topology:'triangle-list', cullMode:'none'},
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
-  multisample:{count:MSAA},
+  multisample:{count:sc},
 });
+  return pipeCache[sc] = {sky, ocean, ship, bird};
+}
 const sceneBG = device.createBindGroup({layout:bglScene, entries:[
   {binding:0, resource:{buffer:ubo}}, {binding:1, resource:lutTex.createView()}, {binding:2, resource:sampLin}]});
 
@@ -799,20 +813,21 @@ function buildMesh(){
 const mesh = buildMesh();
 
 // ---- render targets (resized with the canvas)
-let W=0, H=0, hdrTex, msTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
+let curSC=0, W=0, H=0, hdrTex, msTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
 let renderScale = 1.0;
 function resize(){
-  const cap = Q.has('dpr') ? +Q.get('dpr') : (hiQ ? 3 : 1.5);
+  const cap = Q.has('dpr') ? +Q.get('dpr') : (hiQ ? 2 : 1.5);
   const dpr = Math.min(window.devicePixelRatio||1, cap) * renderScale;
   let w = Math.round(canvas.clientWidth*dpr), h = Math.round(canvas.clientHeight*dpr);
-  const maxPix = hiQ ? 8.3e6 : 2.2e6; const s = Math.min(1, Math.sqrt(maxPix/(w*h)));
+  const maxPix = hiQ ? 3.7e6 : 2.0e6; const s = Math.min(1, Math.sqrt(maxPix/(w*h)));
   w = Math.max(2, Math.round(w*s)); h = Math.max(2, Math.round(h*s));
-  if(w===W && h===H) return;
+  if(w===W && h===H && curSC===sampleCount()) return;
+  curSC = sampleCount();
   W=w; H=h; canvas.width=w; canvas.height=h;
   [hdrTex, msTex, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
-  msTex = device.createTexture({size:[w,h], format:HDR, sampleCount:MSAA, usage:GPUTextureUsage.RENDER_ATTACHMENT});
+  msTex = curSC>1 ? device.createTexture({size:[w,h], format:HDR, sampleCount:curSC, usage:GPUTextureUsage.RENDER_ATTACHMENT}) : null;
   hdrTex = device.createTexture({size:[W,H], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
-  depthTex = device.createTexture({size:[W,H], format:DEPTH, sampleCount:MSAA, usage:GPUTextureUsage.RENDER_ATTACHMENT});
+  depthTex = device.createTexture({size:[W,H], format:DEPTH, sampleCount:curSC, usage:GPUTextureUsage.RENDER_ATTACHMENT});
   const bw = Math.max(1, W>>2), bh = Math.max(1, H>>2);
   bloomA = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
   bloomB = device.createTexture({size:[bw,bh], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
@@ -1154,6 +1169,7 @@ window.__snd = Sound;
 const qualBtn=document.getElementById('qual');
 const showQ=()=>{ qualBtn.textContent = hiQ ? '画質：最高' : '画質：軽量'; };
 showQ(); qualBtn.onclick=()=>{ hiQ=!hiQ; renderScale=1; W=0; showQ(); };
+window.__dropQ=(why)=>{ if(!hiQ) return; hiQ=false; renderScale=1; W=0; showQ(); console.warn('quality dropped:', why); };
 const sndBtn=document.getElementById('snd');
 sndBtn.onclick=()=>Sound.toggle();
 document.addEventListener('visibilitychange',()=>{ if(!Sound.ctx) return; if(document.hidden) Sound.ctx.suspend(); else if(Sound.on) Sound.ctx.resume(); });
@@ -1322,6 +1338,11 @@ function frame(now){
   resize();
   const rawDt = (now-last)/1000;
   const dt = Math.min(0.05, rawDt); last = now;
+  // watchdog: 最高画質が重すぎる端末では自動で軽量へ
+  if(hiQ && !Q.has('shot') && frames > 5){
+    frame.slowT = (rawDt > 0.12) ? (frame.slowT||0) + rawDt : 0;
+    if(frame.slowT > 1.5) window.__dropQ('slow');
+  }
   // dynamic resolution: keep the frame rate up on slower GPUs (phones)
   if(!Q.has('shot') && frames > 10){
     frame.avg = (frame.avg ?? rawDt) * 0.92 + rawDt * 0.08;
@@ -1416,13 +1437,15 @@ function frame(now){
   }
   {
     const p = enc.beginRenderPass({
-      colorAttachments:[{view:msTex.createView(), resolveTarget:hdrTex.createView(), loadOp:'clear', storeOp:'discard', clearValue:[0,0,0,1]}],
+      colorAttachments:[msTex ? {view:msTex.createView(), resolveTarget:hdrTex.createView(), loadOp:'clear', storeOp:'discard', clearValue:[0,0,0,1]}
+                              : {view:hdrTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}],
       depthStencilAttachment:{view:depthTex.createView(), depthLoadOp:'clear', depthStoreOp:'discard', depthClearValue:0}});
+    const PP = scenePipes(curSC);
     p.setBindGroup(0, sceneBG);
-    p.setPipeline(skyPipe); p.draw(3);
-    p.setPipeline(oceanPipe); p.setVertexBuffer(0, mesh.vb); p.setIndexBuffer(mesh.ib, 'uint32'); p.drawIndexed(mesh.count);
-    if(shp){ p.setPipeline(shipPipe); p.setVertexBuffer(0, shp.mesh.buf); p.draw(shp.mesh.count); }
-    if(birdCount){ p.setPipeline(birdPipe); p.setVertexBuffer(0, birdMesh.buf); p.setVertexBuffer(1, birdBuf); p.draw(birdMesh.count, birdCount); }
+    p.setPipeline(PP.sky); p.draw(3);
+    p.setPipeline(PP.ocean); p.setVertexBuffer(0, mesh.vb); p.setIndexBuffer(mesh.ib, 'uint32'); p.drawIndexed(mesh.count);
+    if(shp){ p.setPipeline(PP.ship); p.setVertexBuffer(0, shp.mesh.buf); p.draw(shp.mesh.count); }
+    if(birdCount){ p.setPipeline(PP.bird); p.setVertexBuffer(0, birdMesh.buf); p.setVertexBuffer(1, birdBuf); p.draw(birdMesh.count, birdCount); }
     p.end();
   }
   const fs = (pipe, bg, view)=>{ const p=enc.beginRenderPass({colorAttachments:[{view, loadOp:'clear', storeOp:'store', clearValue:[0,0,0,1]}]});
