@@ -18,6 +18,9 @@
     padding:9px 12px;border-radius:12px;background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px;line-height:1.55;max-width:calc(100vw - 24px);transition:opacity .4s}
   #wx{display:flex;flex-direction:column}#wx b{font-weight:600;font-size:13px}#wx span{opacity:.8}
   #mode{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+  .btns{display:flex;flex-direction:column;gap:6px}
+  #snd{font:inherit;font-size:11px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+  #snd.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
   #mode.on{background:rgba(120,190,255,.35);border-color:rgba(160,210,255,.7)}
   #hint{top:auto!important;bottom:calc(84px + env(safe-area-inset-bottom))}
   body.clean #wxbox{opacity:0;pointer-events:none}
@@ -27,7 +30,7 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="wxbox"><div id="wx"></div><button id="mode">実況ON</button></div>
+<div id="wxbox"><div id="wx"></div><div class="btns"><button id="mode">実況ON</button><button id="snd">音を出す</button></div></div>
 <div id="hint">ドラッグで見回す ・ ピンチ／ホイールで高さ ・ WASDで漂う ・ Hで表示切替</div>
 <div id="ui">
   <label>太陽高度<input id="sun" type="range" min="-3" max="60" step="0.1" value="6"></label>
@@ -711,7 +714,7 @@ const S = {
   yaw: +(Q.get('yaw') ?? 0) * Math.PI/180, pitch: +(Q.get('pitch') ?? 2) * Math.PI/180,
   cover: +(Q.get('clouds') ?? 0.42), wind: 0.35, chop: 0.30,
   fov: +(Q.get('fov') ?? 62),
-  waveScale: WAVE_SCALE, swellDir: 0.9, swellLen: 1, swellAmp: +(Q.get('amp') ?? 2.2), ripple: 1, whitecap: 0.85, haze: 6500, fog: 0, sunDim: 1,
+  waveScale: WAVE_SCALE, swellDir: 0.9, swellLen: 1, swellAmp: +(Q.get('amp') ?? 2.2), ripple: 1, whitecap: 0.85, windSpeed: 6, haze: 6500, fog: 0, sunDim: 1,
 };
 let waveMean = 0.0;
 function wavesRawCPU(x, z, t, iters){
@@ -933,6 +936,111 @@ function updateLife(dt, t){
   return n;
 }
 
+// ---------------------------------------------------------------- sound: 波・風・うねりをWeb Audioで合成（音源ファイルなし）
+const Sound = {
+  ctx:null, on:false, prevH:0, prevDh:0, trough:0, slapT:0, gust:0, gustV:0, lastUpd:0,
+  init(){
+    const ctx = this.ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const sr = ctx.sampleRate, len = sr*6;
+    const mk = (pink)=>{ const b = ctx.createBuffer(2, len, sr);
+      for(let ch=0; ch<2; ch++){ const d=b.getChannelData(ch); let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+        for(let i=0;i<len;i++){ const w=Math.random()*2-1;
+          if(!pink){ d[i]=w; continue; }
+          b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+          b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; } }
+      return b; };
+    this.white = mk(false); this.pink = mk(true);
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=3; comp.attack.value=0.02; comp.release.value=0.4;
+    this.master = ctx.createGain(); this.master.gain.value = 0;
+    this.master.connect(comp); comp.connect(ctx.destination);
+    const loop=(buf)=>{ const s=ctx.createBufferSource(); s.buffer=buf; s.loop=true; s.start(0, Math.random()*5); return s; };
+    const chain=(...n)=>{ for(let i=0;i<n.length-1;i++) n[i].connect(n[i+1]); return n[n.length-1]; };
+    // 風: 広帯域の吹き抜け + 狭帯域の笛鳴り
+    this.windBP = ctx.createBiquadFilter(); this.windBP.type='bandpass'; this.windBP.Q.value=0.7;
+    this.windG = ctx.createGain(); this.windG.gain.value=0;
+    chain(loop(this.pink), this.windBP, this.windG, this.master);
+    this.whisBP = ctx.createBiquadFilter(); this.whisBP.type='bandpass'; this.whisBP.Q.value=9;
+    this.whisG = ctx.createGain(); this.whisG.gain.value=0;
+    chain(loop(this.white), this.whisBP, this.whisG, this.master);
+    // 沖の波: 遠くで砕ける波の重なり（ざわめき）
+    this.seaLP = ctx.createBiquadFilter(); this.seaLP.type='lowpass'; this.seaLP.frequency.value=900;
+    this.seaHP = ctx.createBiquadFilter(); this.seaHP.type='highpass'; this.seaHP.frequency.value=120;
+    this.seaG = ctx.createGain(); this.seaG.gain.value=0;
+    chain(loop(this.pink), this.seaHP, this.seaLP, this.seaG, this.master);
+    // うねり: 低い唸り。カメラが持ち上げられる速さで膨らむ
+    this.swLP = ctx.createBiquadFilter(); this.swLP.type='lowpass'; this.swLP.frequency.value=140; this.swLP.Q.value=0.9;
+    this.swG = ctx.createGain(); this.swG.gain.value=0;
+    chain(loop(this.pink), this.swLP, this.swG, this.master);
+  },
+  // 足元の波: 打ち寄せ・崩れ・ちゃぷちゃぷを一発ずつ合成
+  splash(intensity, big){
+    const ctx=this.ctx, t=ctx.currentTime;
+    const src=ctx.createBufferSource(); src.buffer=this.white;
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=0.6+Math.random()*0.6;
+    const g=ctx.createGain(), pan=ctx.createStereoPanner?ctx.createStereoPanner():null;
+    const att = big? 0.25+Math.random()*0.35 : 0.02+Math.random()*0.05;
+    const dur = big? 1.4+Math.random()*1.6 : 0.18+Math.random()*0.35;
+    const f0 = big? 2200+Math.random()*1200 : 900+Math.random()*1800;
+    bp.frequency.setValueAtTime(f0*0.5, t);
+    bp.frequency.linearRampToValueAtTime(f0, t+att);
+    bp.frequency.exponentialRampToValueAtTime(big?500:f0*0.6, t+att+dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, intensity), t+att);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+att+dur);
+    src.connect(bp); bp.connect(g);
+    if(pan){ pan.pan.value=(Math.random()*2-1)*0.85; g.connect(pan); pan.connect(this.master); } else g.connect(this.master);
+    src.start(t, Math.random()*5, att+dur+0.1);
+    if(big){ // 崩れる時の低い「どぅん」
+      const s2=ctx.createBufferSource(); s2.buffer=this.pink;
+      const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=260;
+      const g2=ctx.createGain(); g2.gain.setValueAtTime(0.0001,t); g2.gain.exponentialRampToValueAtTime(Math.max(0.0002,intensity*1.6), t+att*0.8);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t+att+dur*0.7);
+      s2.connect(lp); lp.connect(g2); g2.connect(this.master); s2.start(t, Math.random()*5, att+dur);
+    }
+  },
+  async toggle(){
+    if(!this.ctx) this.init();
+    this.on=!this.on;
+    if(this.on){ await this.ctx.resume(); this.master.gain.setTargetAtTime(0.9, this.ctx.currentTime, 0.6); }
+    else this.master.gain.setTargetAtTime(0, this.ctx.currentTime, 0.25);
+    sndBtn.textContent=this.on?'消音':'音を出す'; sndBtn.classList.toggle('on', this.on);
+  },
+  update(dt, hSurf, camVy){
+    if(!this.ctx || !this.on || dt<=0) return;
+    const ctx=this.ctx, now=ctx.currentTime;
+    const ws=S.windSpeed, near=1/(1+S.alt*0.12);
+    const Hs=Math.max(0.05, S.amp*HS_WIND1), Hsw=Math.max(0, S.swellAmp*HS_SWELL1);
+    // 突風: ゆっくりした乱数歩行
+    this.gustV += (Math.random()-0.5)*dt*1.6 - this.gustV*dt*0.6; this.gust = Math.max(-1, Math.min(1, this.gust + this.gustV*dt));
+    if(now-this.lastUpd>0.05){ this.lastUpd=now;
+      const altWind = 1+Math.log1p(S.alt)*0.12;
+      const wv = Math.min(1, Math.pow(ws/16, 1.6))*altWind;
+      this.windG.gain.setTargetAtTime(0.02+0.55*wv*(0.65+0.35*this.gust), now, 0.3);
+      this.windBP.frequency.setTargetAtTime(220+ws*38+this.gust*160, now, 0.4);
+      this.whisG.gain.setTargetAtTime(Math.max(0, (ws-8)/12)*0.05*(0.5+0.5*Math.max(0,this.gust)), now, 0.3);
+      this.whisBP.frequency.setTargetAtTime(700+ws*30+this.gust*250, now, 0.5);
+      this.seaG.gain.setTargetAtTime(0.03+Math.min(0.35, Hs*0.10 + S.whitecap*0.18), now, 0.8);
+      this.seaLP.frequency.setTargetAtTime(600+S.whitecap*900, now, 1);
+      const surge = Math.min(1, Math.abs(camVy)/Math.max(0.3, Hsw*0.8+0.2));
+      this.swG.gain.setTargetAtTime(Math.min(0.9, Hsw*0.25+Hs*0.08)*(0.35+0.65*surge), now, 0.25);
+    }
+    // 足元: 波の山が通り過ぎた瞬間に打ち寄せ音
+    const dh=(hSurf-this.prevH)/dt;
+    if(this.prevDh>0 && dh<=0){ const amp=hSurf-this.trough;
+      if(amp>0.08) this.splash(Math.min(0.9, (0.12+amp*0.22)*near*(0.6+0.6*S.whitecap)), true); }
+    if(this.prevDh<0 && dh>=0) this.trough=hSurf;
+    this.prevH=hSurf; this.prevDh=dh;
+    // ちゃぷちゃぷ: 風速に比例する頻度
+    this.slapT-=dt;
+    if(this.slapT<0){ this.slapT = -Math.log(Math.random())/(0.8+ws*0.35);
+      this.splash((0.02+Math.random()*0.06)*near*(0.5+Math.min(1,ws/10)), false); }
+  },
+};
+window.__snd = Sound;
+const sndBtn=document.getElementById('snd');
+sndBtn.onclick=()=>Sound.toggle();
+document.addEventListener('visibilitychange',()=>{ if(!Sound.ctx) return; if(document.hidden) Sound.ctx.suspend(); else if(Sound.on) Sound.ctx.resume(); });
+
 // ---------------------------------------------------------------- camera & input
 const cam = {x:0, y:2, z:0, vy:0, tiltX:0, tiltZ:0, vx:0, vz:0};
 const keys = {};
@@ -958,7 +1066,7 @@ const elSun=document.getElementById('sun'), elAlt=document.getElementById('alt')
 elSun.value=S.sunEl; elAlt.value=S.alt; elAmp.value=S.amp;
 elSun.oninput=()=>{ setManual(); S.sunEl=+elSun.value; lutDirty=true; };
 elAlt.oninput=()=>{ S.alt=+elAlt.value; };
-elAmp.oninput=()=>{ setManual(); S.amp=+elAmp.value; S.swellAmp=+elAmp.value; };
+elAmp.oninput=()=>{ setManual(); S.amp=+elAmp.value; S.swellAmp=+elAmp.value; S.windSpeed=2+S.amp*3.5; S.whitecap=Math.min(1,Math.max(0,(S.windSpeed-3.5)/8.5)); };
 function setAlt(v){ S.alt=Math.max(0.6, Math.min(40, v)); elAlt.value=S.alt; }
 const hint=document.getElementById('hint'); let hinted=false;
 function hideHint(){ if(!hinted){ hinted=true; hint.style.opacity=0; } }
@@ -994,6 +1102,7 @@ function applyWeather(){
   const c=WX.cur||{}, m=WX.mar||{};
   const cc=num(c.cloud_cover,40), ws=num(c.wind_speed_10m,5), wdir=num(c.wind_direction_10m,315), code=num(c.weather_code,1);
   const vis=num(c.visibility,20000);
+  S.windSpeed = ws;
   const rain=(code>=51&&code<=67)||(code>=80&&code<=82)||code>=95, fog=(code===45||code===48);
   // wind sea
   const wwh=num(m.wind_wave_height, Math.max(0.1, 0.0246*ws*ws));
@@ -1127,6 +1236,7 @@ function frame(now){
   else { const k=10, c=4.5; cam.vy += ((targetY-cam.y)*k - cam.vy*c)*dt; cam.y += cam.vy*dt; }
   cam.y = Math.max(cam.y, hC + 0.35);
   const gx = (hX1-hX0)/(2*fp), gz = (hZ1-hZ0)/(2*fp);
+  Sound.update(dt, hC, cam.vy);
   const tl = Math.min(1, dt*3) ; const tw = follow*0.6;
   if(frames===0 || tFixed!==null){ cam.tiltX = gx*tw; cam.tiltZ = gz*tw; }
   else { cam.tiltX += (gx*tw - cam.tiltX)*tl; cam.tiltZ += (gz*tw - cam.tiltZ)*tl; }
