@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Open Ocean — WebGPU</title>
+<title>仙台湾ライブ</title>
+<meta name="description" content="いまの仙台湾の天気・波・太陽の位置をそのまま3DCGの海に。ブラウザで見られる仙台湾ライブ。">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;font-family:-apple-system,system-ui,"Hiragino Sans",sans-serif;color:#fff}
   canvas{display:block;width:100vw;height:100vh;height:100dvh}
@@ -30,11 +31,54 @@
   }
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:15px;line-height:1.7;background:#0a0d12}
   body.clean #ui,body.clean #hint{opacity:0;pointer-events:none}
+  /* 共有 */
+  #shareBtn{position:fixed;right:calc(12px + env(safe-area-inset-right));top:calc(12px + env(safe-area-inset-top));
+    font:inherit;font-size:14px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;
+    padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+    background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .4s}
+  #shareBtn svg{width:16px;height:16px}
+  body.clean #shareBtn{opacity:0;pointer-events:none}
+  #share{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);z-index:10}
+  #share.open{display:flex}
+  #share .box{width:min(420px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:16px;border-radius:18px;
+    background:rgba(16,22,30,.92);border:1px solid rgba(255,255,255,.15);display:flex;flex-direction:column;gap:10px}
+  #share .head{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600}
+  #share .x{font:inherit;font-size:22px;line-height:1;color:#fff;background:none;border:0;cursor:pointer;padding:4px 8px}
+  #share img{width:100%;max-height:42dvh;object-fit:contain;border-radius:10px;background:#000}
+  #share textarea{font:inherit;font-size:13px;line-height:1.5;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;padding:8px 10px;resize:none;height:92px}
+  #share .b{font:inherit;font-size:14px;font-weight:600;color:#fff;cursor:pointer;padding:12px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+  #share .b.main{background:#2f7fd6;border-color:#2f7fd6}
+  #share .b.xb{background:#000;border-color:rgba(255,255,255,.35)}
+  #share .b.line{background:#06c755;border-color:#06c755}
+  #share .row{display:flex;gap:8px} #share .row .b{flex:1}
+  #share .note{font-size:11px;opacity:.7;line-height:1.5}
+  #share .msg{font-size:12px;color:#9fd4ff;min-height:1em}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<button id="bay"><b>仙台湾</b><small></small></button>
+<button id="bay"><b>仙台湾ライブ</b><small></small></button>
+<button id="shareBtn" aria-label="今の仙台湾を共有"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>共有</button>
+<div id="share" role="dialog" aria-modal="true" aria-label="共有">
+  <div class="box">
+    <div class="head"><span>今の仙台湾を送る</span><button class="x" id="shClose" aria-label="閉じる">×</button></div>
+    <img id="shImg" alt="今の仙台湾の画像">
+    <textarea id="shText" aria-label="投稿する文章"></textarea>
+    <button class="b main" id="shNative">画像つきで送る（X・LINE など）</button>
+    <div class="row">
+      <a class="b xb" id="shX" target="_blank" rel="noopener">X に投稿</a>
+      <a class="b line" id="shLine" target="_blank" rel="noopener">LINE で送る</a>
+    </div>
+    <div class="row">
+      <button class="b" id="shCopy">画像をコピー</button>
+      <a class="b" id="shSave" download="sendaiwan.jpg">画像を保存</a>
+    </div>
+    <div class="msg" id="shMsg"></div>
+    <div class="note" id="shNote"></div>
+  </div>
+</div>
 <div id="hint">ドラッグで見回す ・ ピンチ／ホイールで高さ ・ WASDで漂う ・ Hで表示切替</div>
 <div id="ui">
   <label>太陽高度<input id="sun" type="range" min="-3" max="60" step="0.1" value="6"></label>
@@ -51,7 +95,7 @@ const errBox = document.getElementById('err');
 function fail(msg){ errBox.style.display='flex'; errBox.innerHTML = msg; }
 window.addEventListener('error', e=>fail('エラー: '+(e.message||e)+'<br><small>この画面を撮って送ってください</small>'));
 window.addEventListener('unhandledrejection', e=>fail('エラー: '+((e.reason&&e.reason.message)||e.reason)+'<br><small>この画面を撮って送ってください</small>'));
-setTimeout(()=>{ if(!(window.__frames>0)) fail('描画が始まりません（WebGPUが動いていない可能性）。<br>ブラウザ名とバージョンを教えてください。<br><small>'+navigator.userAgent+'</small>'); }, 8000);
+setTimeout(()=>{ if(!(window.__frames>0) && errBox.style.display!=='flex') fail('描画が始まりません（WebGPUが動いていない可能性）。<br>ブラウザ名とバージョンを教えてください。<br><small>'+navigator.userAgent+'</small>'); }, 8000);
 if(!navigator.gpu){ fail('このブラウザはWebGPUに対応していません。<br>Chrome / Edge 113以降、Safari 26以降でお試しください。'); return; }
 const adapter = await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
 if(!adapter){ fail('WebGPUアダプタを取得できませんでした。'); return; }
@@ -1524,6 +1568,98 @@ renderWxPanel(); fetchWx();
 setInterval(fetchWx, 15*60*1000);
 setInterval(()=>{ if(live) applySun(); renderWxPanel(); }, 30*1000);
 
+// ---------------------------------------------------------------- 共有：今の画面に日時と実況を入れて X / LINE へ
+var shotWaiters = [];   // 次の描画の直後に画面を受け取る
+const $ = id => document.getElementById(id);
+const shBox=$('share'), shImg=$('shImg'), shText=$('shText'), shMsg=$('shMsg'), shNote=$('shNote');
+let shFile=null, shUrl=null;
+const pad2 = n => String(n).padStart(2,'0');
+const pageUrl = /^https?:/.test(location.protocol) ? location.origin + location.pathname : '';
+function wxLine(){
+  if(!live || !WX) return null;
+  const c=WX.cur||{}, m=WX.mar||{}, parts=[WX_JA(c.weather_code)];
+  if(c.wind_speed_10m!=null) parts.push(dirJa(c.wind_direction_10m)+'の風 '+(+c.wind_speed_10m).toFixed(1)+'m/s');
+  if(m.wave_height!=null) parts.push('波 '+(+m.wave_height).toFixed(1)+'m');
+  if(c.temperature_2m!=null) parts.push('気温 '+(+c.temperature_2m).toFixed(1)+'℃');
+  return parts.join('・');
+}
+function buildText(d){
+  const when = (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+  const w = wxLine();
+  return (w ? 'いまの仙台湾（'+when+'）\n'+w : '仙台湾の海（波と太陽を自分で調整）') + '\n#仙台湾ライブ #仙台湾 #仙台';
+}
+async function makeCard(blob, d){
+  const src = await createImageBitmap(blob);
+  const k = Math.min(1, 1600/Math.max(src.width, src.height));
+  const W2 = Math.round(src.width*k), H2 = Math.round(src.height*k);
+  const c = document.createElement('canvas'); c.width=W2; c.height=H2;
+  const x = c.getContext('2d'); x.drawImage(src, 0, 0, W2, H2);
+  const u = Math.max(W2, H2*0.75)/1000;               // 文字の基準サイズ
+  const g = x.createLinearGradient(0, H2-260*u, 0, H2);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.62)');
+  x.fillStyle=g; x.fillRect(0, H2-260*u, W2, 260*u);
+  const F='-apple-system,system-ui,"Hiragino Sans","Yu Gothic",sans-serif', L=40*u;
+  x.fillStyle='#fff'; x.textBaseline='alphabetic'; x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=8*u;
+  const w = wxLine();
+  x.font='700 '+Math.round(54*u)+'px '+F;
+  x.fillText(w ? 'いまの仙台湾' : '仙台湾', L, H2-122*u);
+  x.font='600 '+Math.round(26*u)+'px '+F;
+  const when = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+  x.fillText(when+(w ? '　'+w : '　波と太陽を自分で調整'), L, H2-74*u, W2-2*L);
+  x.font='400 '+Math.round(17*u)+'px '+F; x.globalAlpha=.75;
+  const dt = w && WX.cur.time ? (WX.cur.time.slice(11,16)+' 時点の') : '';
+  x.fillText(w ? '天気・波は '+dt+'Open-Meteo（予報モデル）の値　太陽の位置は計算値' : 'リアルタイムに描いた3DCG', L, H2-38*u, W2-2*L);
+  x.globalAlpha=1;
+  x.font='700 '+Math.round(22*u)+'px '+F; x.textAlign='right';
+  x.fillText('仙台湾ライブ', W2-L, H2-122*u);
+  x.textAlign='left';
+  return new Promise(r=>c.toBlob(r, 'image/jpeg', 0.9));
+}
+async function openShare(){
+  shMsg.textContent='画像を作っています…'; shBox.classList.add('open');
+  const d = new Date();
+  const blob = await new Promise(r=>shotWaiters.push(r));
+  if(!blob){ shMsg.textContent='画像を作れませんでした。もう一度お試しください。'; return; }
+  const jpg = await makeCard(blob, d);
+  const name = 'sendaiwan_'+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())+'.jpg';
+  shFile = new File([jpg], name, {type:'image/jpeg'});
+  if(shUrl) URL.revokeObjectURL(shUrl);
+  shUrl = URL.createObjectURL(jpg);
+  shImg.src = shUrl; $('shSave').href = shUrl; $('shSave').download = name;
+  shText.value = buildText(d); updateLinks();
+  const canFiles = !!(navigator.canShare && navigator.canShare({files:[shFile]}));
+  $('shNative').style.display = canFiles ? '' : 'none';
+  $('shCopy').style.display = (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) ? '' : 'none';
+  shNote.textContent = canFiles
+    ? '「画像つきで送る」で X や LINE を選ぶと、この画像が付きます。下のボタンは文章だけを送ります。'
+    : 'X・LINE のボタンは文章だけを送ります。画像は「画像をコピー」して投稿画面に貼り付けるか、「画像を保存」してから添付してください。';
+  shMsg.textContent='';
+}
+function updateLinks(){
+  const t = shText.value;
+  $('shX').href = 'https://x.com/intent/post?text='+encodeURIComponent(t)+(pageUrl?'&url='+encodeURIComponent(pageUrl):'');
+  $('shLine').href = 'https://line.me/R/share?text='+encodeURIComponent(t+(pageUrl?'\n'+pageUrl:''));
+}
+shText.addEventListener('input', updateLinks);
+$('shareBtn').onclick = openShare;
+$('shClose').onclick = ()=>shBox.classList.remove('open');
+shBox.addEventListener('click', e=>{ if(e.target===shBox) shBox.classList.remove('open'); });
+shBox.addEventListener('keydown', e=>{ e.stopPropagation(); if(e.key==='Escape') shBox.classList.remove('open'); });
+shBox.addEventListener('keyup', e=>e.stopPropagation());
+$('shNative').onclick = async ()=>{
+  const data = {files:[shFile], text: shText.value + (pageUrl?'\n'+pageUrl:'')};
+  try{ await navigator.share(data); }
+  catch(e){ if(e.name!=='AbortError') shMsg.textContent='送れませんでした（'+e.message+'）'; }
+};
+$('shCopy').onclick = async ()=>{
+  try{
+    const png = await createImageBitmap(shFile).then(b=>{ const c=document.createElement('canvas'); c.width=b.width; c.height=b.height;
+      c.getContext('2d').drawImage(b,0,0); return new Promise(r=>c.toBlob(r,'image/png')); });
+    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
+    shMsg.textContent='画像をコピーしました。X や LINE の投稿画面で貼り付けてください。';
+  }catch(e){ shMsg.textContent='コピーできませんでした。「画像を保存」をお使いください。'; }
+};
+
 let sunL=[0,1,0], sunC=[1,1,1];
 function updateSun(){
   const el = S.sunEl*Math.PI/180, az = S.sunAz;
@@ -1684,6 +1820,7 @@ function frame(now){
     rb.bpr=bpr;
   }
   device.queue.submit([enc.finish()]);
+  if(shotWaiters.length){ const ws=shotWaiters.splice(0); canvas.toBlob(b=>ws.forEach(f=>f(b)), 'image/png'); }
   if(Q.has('fixed')){ const g0=performance.now(); device.queue.onSubmittedWorkDone().then(()=>{ const d=performance.now()-g0; window.__gpuN=(window.__gpuN||0)+1; if(window.__gpuN>8) window.__gpu=(window.__gpu||d)*0.85+d*0.15; }); }
   if(rb){ rb.mapAsync(GPUMapMode.READ).then(()=>{ const src=new Uint8Array(rb.getMappedRange());
     const c2=document.createElement('canvas'); c2.width=W; c2.height=H; const x=c2.getContext('2d'); const img=x.createImageData(W,H);
