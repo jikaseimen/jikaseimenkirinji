@@ -10,7 +10,7 @@
 
 ## 📰 最新ニュース
 
-* **2026年12月**：テイクアウトのウーバーイーツ化サイト開設しました（[テイクアウト注文サイトを見る](takeout.html)）
+* **2026年12月**：テイクアウト注文サイト開設しました（[テイクアウト注文サイトを見る](takeout.html)）<br>※テイクアウトのご注文は営業時間外も受け付けています。注文の確認とご連絡は営業時間内に行います。
 * **2026年11月**：公式サイト移設しました
 * **2023年1月**：TikTok開設しました（[TikTok](https://www.tiktok.com/@jikaseimenkirinji)）
 * **2020年3月**：ウーバーイーツはじめました（[ウーバーイーツ](https://www.ubereats.com/store-browse-uuid/3da01a20-e74a-4f64-a9f1-dcd158757c9c?diningMode=DELIVERY)）
@@ -34,16 +34,22 @@
 * **創業**：2006年12月
 * **こだわり**：自家製麺と旨味が凝縮されたあぶらかすの相性抜群な一杯をご提供しています。
 * 2009年11月からは「あぶらかす」のテイクアウトも実施しています。
+* **テイクアウト注文**：[注文サイト](takeout.html)から24時間受付（営業時間外のご注文は、営業時間内に確認してご連絡します）
 
 ## 📍 店舗情報・アクセス
 * **住所**：宮城県仙台市青葉区二日町15-15 第2石原ビル 101
 * **営業時間**：11:00〜14:00／17:00〜20:00
 * **定休日**：木曜日
 * **お支払い**：現金のみ
-* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約3分（約360m）
-* **道案内マップ**：[アクセスマップを見る](https://jikaseimen.github.io/jikaseimenkirinji/3dmap.html)
+* **アクセス**：仙台市地下鉄南北線「北四番丁駅」南1出入口より徒歩約2分（約360m）
+* **道案内マップ**：[3Dマップを全画面で見る](3dmap.html)
 * **電話**：なし
 * **Contact**：jikaseimen@gmail.com
+
+<div style="position:relative;width:100%;height:600px;margin:1em 0;border-radius:8px;overflow:hidden;background:#14181e;">
+  <p style="position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;color:#cfd6e0;font-size:14px;">地図を読み込み中…</p>
+  <iframe src="3dmap.html" title="仙台・二日町 3D街案内｜自家製麺キリンジ" style="position:relative;width:100%;height:100%;border:0;"></iframe>
+</div>
 
 **🎥 お店までの案内動画**
 
