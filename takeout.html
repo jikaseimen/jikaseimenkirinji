@@ -136,6 +136,12 @@ h1{font-family:"Noto Serif JP",serif;font-size:42px;line-height:1.05;margin:8px 
 .sa-btn{min-height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;text-decoration:none;font-size:14px;cursor:pointer;border:2px solid var(--ink);background:var(--surface);color:var(--ink)}
 .sa-primary{background:var(--red);border-color:var(--red);color:#fff}
 .sa-wide{grid-column:1/-1}
+.choice-sheet{padding-bottom:28px}
+.choice-item{margin:6px 0 14px;font-weight:900;font-size:16px}
+.choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.choice-btn{min-height:64px;border-radius:14px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:900;font-size:17px;cursor:pointer;font-family:inherit}
+.choice-btn:active,.choice-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
+.choice-cancel{margin-top:12px;width:100%}
 .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:900;padding-top:12px}
 .empty-cart{text-align:center;padding:28px 0;color:var(--ink2)}
 .copy-msg{text-align:center;font-weight:700;color:var(--red);min-height:20px;margin-top:10px}
@@ -301,6 +307,7 @@ h1{font-family:"Noto Serif JP",serif;font-size:42px;line-height:1.05;margin:8px 
       <div>
         <h2 class="sec-title" id="full-title">券売機メニュー</h2>
         <p class="sec-desc">店内券売機の並び順そのままに掲載しています。</p>
+        <p class="sec-desc"><strong>ラーメン・汁無し・油そばは、追加するときに「ニンニク」「生姜」「辛味噌」から1つ選べます。</strong></p>
       </div>
       <span class="badge badge-black">券売機どおり</span>
     </div>
@@ -417,6 +424,19 @@ h1{font-family:"Noto Serif JP",serif;font-size:42px;line-height:1.05;margin:8px 
   </div>
   <button class="ob-btn btn-clear" id="clearBtn">クリア</button>
   <button class="ob-btn btn-view" id="viewBtn">メモを見る</button>
+</div>
+
+<div class="drawer" id="choiceDrawer" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+  <div class="sheet choice-sheet">
+    <h3 class="sheet-title" id="choiceTitle">薬味を選んでください</h3>
+    <p class="choice-item" id="choiceItem"></p>
+    <div class="choice-grid">
+      <button class="choice-btn" type="button" data-choice="ニンニク">ニンニク</button>
+      <button class="choice-btn" type="button" data-choice="生姜">生姜</button>
+      <button class="choice-btn" type="button" data-choice="辛味噌">辛味噌</button>
+    </div>
+    <button class="sa-btn choice-cancel" type="button" id="choiceCancel">やめる</button>
+  </div>
 </div>
 
 <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="注文メモ">
@@ -688,6 +708,21 @@ function addToCart(name, price){
   cart[name].qty++;
   renderBar();
 }
+// Ramen, 汁無し and 油そば ask for one condiment (ニンニク / 生姜 / 辛味噌)
+// before going into the cart. The choice becomes part of the cart name,
+// e.g. 「こってり（生姜）」, so it shows in the memo and the order mail.
+var CHOICE_ITEMS = /こってり|あっさり|汁無し|油そば/;
+var pendingChoice = null;
+function needsChoice(name){ return CHOICE_ITEMS.test(name) && name.indexOf('チャーシューライス') === -1; }
+function openChoice(name, price, btn){
+  pendingChoice = {name:name, price:price, btn:btn};
+  document.getElementById('choiceItem').textContent = name + '（' + fmt(price) + '円）';
+  document.getElementById('choiceDrawer').classList.add('drawer-open');
+}
+function closeChoice(){
+  pendingChoice = null;
+  document.getElementById('choiceDrawer').classList.remove('drawer-open');
+}
 function flashButton(btn){
   if(!btn || btn.getAttribute('data-flashing')){ return; }
   btn.setAttribute('data-flashing','1');
@@ -713,7 +748,7 @@ function actionEl(target){
   var node = target;
   var depth = 0;
   while(node && node.nodeType === 1 && depth < 8){
-    if(node.hasAttribute('data-add') || node.hasAttribute('data-inc') || node.hasAttribute('data-dec') || node.hasAttribute('data-reco')){
+    if(node.hasAttribute('data-choice') || node.hasAttribute('data-add') || node.hasAttribute('data-inc') || node.hasAttribute('data-dec') || node.hasAttribute('data-reco')){
       return node;
     }
     node = node.parentNode;
@@ -728,8 +763,21 @@ function actionEl(target){
 document.addEventListener('click',function(e){
   var el = actionEl(e.target);
   if(!el){ return; }
+  if(el.hasAttribute('data-choice')){
+    if(pendingChoice){
+      var pc = pendingChoice;
+      addToCart(pc.name + '（' + el.getAttribute('data-choice') + '）', pc.price);
+      closeChoice();
+      flashButton(pc.btn);
+      pulseBar();
+    }
+    return;
+  }
   if(el.hasAttribute('data-add')){
-    addToCart(el.getAttribute('data-add'), parseInt(el.getAttribute('data-price'),10));
+    var an = el.getAttribute('data-add');
+    var ap = parseInt(el.getAttribute('data-price'),10);
+    if(needsChoice(an)){ openChoice(an, ap, el); return; }
+    addToCart(an, ap);
     flashButton(el);
     pulseBar();
   } else if(el.hasAttribute('data-reco')){
@@ -778,6 +826,10 @@ function init(){
     renderCart();
     updatePickupUI();
     document.getElementById('drawer').classList.add('drawer-open');
+  });
+  on('choiceCancel','click',closeChoice);
+  on('choiceDrawer','click',function(e){
+    if(e.target === this){ closeChoice(); }
   });
   on('closeBtn','click',function(){
     document.getElementById('drawer').classList.remove('drawer-open');
