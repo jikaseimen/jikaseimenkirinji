@@ -465,12 +465,14 @@ h1{font-family:"Noto Serif JP",serif;font-size:42px;line-height:1.05;margin:8px 
         <div class="pickup-field">
           <label for="pickupDate"><span class="step-num" aria-hidden="true">3</span>受け取り日<span class="req">必須</span></label>
           <input type="date" id="pickupDate">
-          <p class="field-hint">来店する日を選んでください。</p>
+          <p class="field-hint">来店する日を選んでください。木曜日は定休日です。</p>
+          <p class="field-warn" id="dateBlockWarn" hidden>木曜日は定休日のため注文できません。別の日を選んでください。</p>
         </div>
         <div class="pickup-field">
           <label for="pickupTime"><span class="step-num" aria-hidden="true">4</span>受け取り時刻<span class="req">必須</span></label>
-          <input type="time" id="pickupTime" step="300">
-          <p class="field-hint">来店する時刻を選んでください。日付だけでは受け取り時刻が分かりません。</p>
+          <input type="time" id="pickupTime" step="300" min="11:00" max="20:00">
+          <p class="field-hint">来店する時刻を選んでください（11:00〜20:00）。日付だけでは受け取り時刻が分かりません。</p>
+          <p class="field-warn" id="timeBlockWarn" hidden>営業時間外は注文できません。11:00〜20:00の時刻を選んでください。</p>
           <p class="field-warn" id="timeWarn">時刻が未入力です。時刻を選んでください。未入力のまま送ると、メール本文に「【希望の時刻をここに書いてください】」と入ります。</p>
         </div>
       </div>
@@ -511,6 +513,24 @@ function pickupParts(){
   }
   return {date:ds, time:t, hasDate:!!d, hasTime:!!t};
 }
+// Orders are refused (copy and mail both stop) when the pickup time is
+// outside 11:00-20:00 or the pickup date is a Thursday (定休日).
+function pickupBlock(){
+  var dEl = document.getElementById('pickupDate');
+  var tEl = document.getElementById('pickupTime');
+  var d = dEl ? dEl.value : '';
+  var t = tEl ? tEl.value : '';
+  var r = {thursday:false, outside:false, msg:''};
+  if(d){
+    var ps = d.split('-');
+    var dt = new Date(parseInt(ps[0],10), parseInt(ps[1],10) - 1, parseInt(ps[2],10));
+    if(dt.getDay() === 4){ r.thursday = true; }
+  }
+  if(t && (t < '11:00' || t > '20:00')){ r.outside = true; }
+  if(r.outside){ r.msg = '営業時間外は注文できません。受け取り時刻は11:00〜20:00で選んでください。'; }
+  if(r.thursday){ r.msg = (r.msg ? r.msg + ' ' : '') + '木曜日は定休日のため注文できません。別の日を選んでください。'; }
+  return r;
+}
 function pickupText(){
   var p = pickupParts();
   if(!p.hasDate && !p.hasTime){ return ''; }
@@ -531,6 +551,17 @@ function updatePickupUI(){
   mark(document.getElementById('pickupTime'), !pp.hasTime);
   var warn = document.getElementById('timeWarn');
   if(warn){ warn.hidden = pp.hasTime; }
+  var bk = pickupBlock();
+  mark(document.getElementById('pickupDate'), !pp.hasDate || bk.thursday);
+  mark(document.getElementById('pickupTime'), !pp.hasTime || bk.outside);
+  var dw = document.getElementById('dateBlockWarn');
+  if(dw){ dw.hidden = !bk.thursday; }
+  var tw = document.getElementById('timeBlockWarn');
+  if(tw){ tw.hidden = !bk.outside; }
+  ['copyBtn','mailBtn'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b){ b.style.opacity = bk.msg ? '0.45' : ''; }
+  });
   var check = document.getElementById('pickupCheck');
   if(check){
     var missing = [];
@@ -538,7 +569,11 @@ function updatePickupUI(){
     if(!ci.phone){ missing.push('電話番号'); }
     if(!pp.hasDate){ missing.push('受け取り日'); }
     if(!pp.hasTime){ missing.push('受け取り時刻'); }
-    if(missing.length){
+    if(bk.msg){
+      check.textContent = bk.msg;
+      check.classList.add('pickup-check-warn');
+      check.classList.remove('pickup-check-ok');
+    } else if(missing.length){
       check.textContent = '未入力があります：' + missing.join('・') + '。すべて入れると、そのままメール本文に入ります。';
       check.classList.add('pickup-check-warn');
       check.classList.remove('pickup-check-ok');
@@ -629,7 +664,15 @@ function renderBar(){
   // bar update or the add-to-cart flow that called renderBar().
   try{
     var mailLink = document.getElementById('mailOpenLink');
-    if(mailLink){ mailLink.href = buildMailtoUrl(buildOrderText()); }
+    if(mailLink){
+      if(pickupBlock().msg){
+        mailLink.href = 'mailto:takeout@muse.ai';
+        var fb = document.getElementById('mailFallback');
+        if(fb){ fb.hidden = true; }
+      } else {
+        mailLink.href = buildMailtoUrl(buildOrderText());
+      }
+    }
   }catch(err){ /* ignore: the mail button rebuilds the link when pressed */ }
 }
 function buildMailtoUrl(text){
@@ -840,6 +883,8 @@ function init(){
   on('copyBtn','click',function(){
     var msgEl = document.getElementById('copyMsg');
     if(!Object.keys(cart).length){ msgEl.textContent = '先にメニューを追加してください'; return; }
+    var bkc = pickupBlock();
+    if(bkc.msg){ msgEl.textContent = bkc.msg; return; }
     var text = buildOrderText();
     copyText(text, function(ok){
       if(ok && !pickupParts().hasTime){
@@ -852,6 +897,13 @@ function init(){
   on('mailBtn','click',function(){
     var msgEl = document.getElementById('copyMsg');
     if(!Object.keys(cart).length){ msgEl.textContent = '先にメニューを追加してください'; return; }
+    var bkm = pickupBlock();
+    if(bkm.msg){
+      msgEl.textContent = bkm.msg;
+      var fbm = document.getElementById('mailFallback');
+      if(fbm){ fbm.hidden = true; }
+      return;
+    }
     var text = buildOrderText();
     var mailto = buildMailtoUrl(text);
     var link = document.getElementById('mailOpenLink');
@@ -891,10 +943,13 @@ function init(){
   var now = new Date();
   function pad(n){ return (n < 10 ? '0' : '') + n; }
   var iso = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  var def = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if(def.getDay() === 4){ def.setDate(def.getDate() + 1); }
+  var defIso = def.getFullYear() + '-' + pad(def.getMonth() + 1) + '-' + pad(def.getDate());
   var dateEl = document.getElementById('pickupDate');
   if(dateEl){
     dateEl.min = iso;
-    if(!dateEl.value){ dateEl.value = iso; }
+    if(!dateEl.value){ dateEl.value = defIso; }
   }
   renderBar();
 }
