@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Open Ocean — WebGPU</title>
+<title>仙台湾ライブ</title>
+<meta name="description" content="仙台湾ライブ：仙台湾の今の天気・波・太陽の位置をそのまま3DCGの海に。ブラウザで見られます。">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none;font-family:-apple-system,system-ui,"Hiragino Sans",sans-serif;color:#fff}
   canvas{display:block;width:100vw;height:100vh;height:100dvh}
@@ -14,20 +15,14 @@
   #ui label{display:flex;flex-direction:column;gap:4px;opacity:.85}
   #ui input{width:120px;accent-color:#cfe6ff}
   #hint{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);font-size:12px;opacity:.6;transition:opacity 1.5s;pointer-events:none}
-  #place{position:fixed;left:calc(12px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:5px;transition:opacity .4s}
-  #place .seg{display:flex;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.35);background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-  #place button{font:inherit;font-size:14px;font-weight:600;color:#fff;background:transparent;border:0;padding:10px 16px;cursor:pointer;letter-spacing:.04em}
-  #place button.on{background:rgba(70,140,220,.55)}
-  #place.manual button.on{background:rgba(255,255,255,.18)}
-  #place small{font-size:11px;opacity:.9;padding-left:8px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
-  body.clean #place,body.clean #share{opacity:0;pointer-events:none}
-  #share{position:fixed;right:calc(12px + env(safe-area-inset-right));top:calc(12px + env(safe-area-inset-top));
-    font:inherit;font-size:14px;font-weight:600;color:#fff;cursor:pointer;padding:12px 18px;border-radius:999px;
-    border:1px solid rgba(255,255,255,.35);background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-  #live{position:fixed;left:28px;bottom:26px;display:none;flex-direction:column;gap:2px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);pointer-events:none}
-  #live b{font-size:26px;letter-spacing:.06em}#live span{font-size:17px;opacity:.92}
-  body.stream #live{display:flex}
-  #toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:12px 18px;border-radius:12px;background:rgba(10,14,20,.7);font-size:14px;display:none;text-align:center}
+  #bay{position:fixed;left:calc(12px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
+    font:inherit;color:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;
+    padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+    background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .4s}
+  #bay b{font-size:14px;font-weight:600;letter-spacing:.04em}
+  #bay small{font-size:11px;opacity:.85}
+  #bay.on{background:rgba(70,140,220,.45);border-color:rgba(170,215,255,.8)}
+  body.clean #bay{opacity:0;pointer-events:none}
   #hint{top:auto!important;bottom:calc(84px + env(safe-area-inset-bottom))}
   @media (max-width:600px){
     #ui{left:8px;right:8px;transform:none;gap:10px;padding:8px 10px;justify-content:space-between}
@@ -36,14 +31,77 @@
   }
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:15px;line-height:1.7;background:#0a0d12}
   body.clean #ui,body.clean #hint{opacity:0;pointer-events:none}
+  /* 制作表示 */
+  #ui{bottom:calc(24px + env(safe-area-inset-bottom))}
+  #hint{bottom:calc(94px + env(safe-area-inset-bottom))!important}
+  #credit{position:fixed;left:0;right:0;bottom:calc(5px + env(safe-area-inset-bottom));text-align:center;
+    font-size:10px;letter-spacing:.06em;opacity:.6;pointer-events:none;z-index:5;transition:opacity .4s;
+    text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  body.clean #credit{opacity:0}
+  body.litemode #ui label:last-child{display:none}
+  /* 共有 */
+  #topR{position:fixed;right:calc(12px + env(safe-area-inset-right));top:calc(12px + env(safe-area-inset-top));
+    display:flex;gap:8px;align-items:center;transition:opacity .4s}
+  body.clean #topR{opacity:0;pointer-events:none}
+  #riseBtn{font:inherit;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;
+    padding:6px 11px 6px 9px;border-radius:999px;border:1px solid rgba(255,200,140,.45);
+    background:rgba(40,22,10,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);text-align:left}
+  #riseBtn svg{width:16px;height:16px;flex:none;color:#ffc98a}
+  #riseBtn span{display:flex;flex-direction:column;line-height:1.15}
+  #riseBtn small{font-size:9.5px;opacity:.8;letter-spacing:.04em}
+  #riseBtn b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  #riseBtn.on{background:rgba(200,110,40,.5);border-color:rgba(255,210,160,.9)}
+  #riseBtn i{font-style:normal}
+  @media (max-width:600px){ #shareBtn{padding:11px 12px} #shareBtn em{display:none} #riseBtn{padding:5px 9px 5px 7px} #riseBtn i{display:none} }
+  #shareBtn{
+    font:inherit;font-size:14px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;
+    padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+    background:rgba(10,14,20,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .4s}
+  #shareBtn svg{width:16px;height:16px}
+  #share{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);z-index:10}
+  #share.open{display:flex}
+  #share .box{width:min(420px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:16px;border-radius:18px;
+    background:rgba(16,22,30,.92);border:1px solid rgba(255,255,255,.15);display:flex;flex-direction:column;gap:10px}
+  #share .head{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:600}
+  #share .x{font:inherit;font-size:22px;line-height:1;color:#fff;background:none;border:0;cursor:pointer;padding:4px 8px}
+  #share img{width:100%;max-height:42dvh;object-fit:contain;border-radius:10px;background:#000}
+  #share textarea{font:inherit;font-size:13px;line-height:1.5;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;padding:8px 10px;resize:none;height:92px}
+  #share .b{font:inherit;font-size:14px;font-weight:600;color:#fff;cursor:pointer;padding:12px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+  #share .b.main{background:#2f7fd6;border-color:#2f7fd6}
+  #share .b.xb{background:#000;border-color:rgba(255,255,255,.35)}
+  #share .b.line{background:#06c755;border-color:#06c755}
+  #share .row{display:flex;gap:8px} #share .row .b{flex:1}
+  #share .note{font-size:11px;opacity:.7;line-height:1.5}
+  #share .msg{font-size:12px;color:#9fd4ff;min-height:1em}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="place"><div class="seg"><button data-p="sendai">仙台湾</button><button data-p="matsushima">松島</button></div><small id="placeSub"></small></div>
-<button id="share">投稿</button>
-<div id="live"><b>仙台湾ライブ</b><span id="liveSub">実際の天気と波を再現</span></div>
-<div id="toast"></div>
+<button id="bay"><b>仙台湾ライブ</b><small></small></button>
+<div id="topR">
+<button id="riseBtn" aria-label="日の出までの時間（タップで日の出の海を見る）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18h18"/><path d="M7 18a5 5 0 0 1 10 0"/><path d="M12 6v3"/><path d="M5.6 10.6l1.8 1.4"/><path d="M18.4 10.6l-1.8 1.4"/><path d="M8 21h8"/></svg><span><small>日の出まで</small><b>--:--</b></span></button>
+<button id="shareBtn" aria-label="仙台湾ライブを共有"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><em style="font-style:normal">共有</em></button>
+</div>
+<div id="share" role="dialog" aria-modal="true" aria-label="共有">
+  <div class="box">
+    <div class="head"><span>仙台湾ライブを送る</span><button class="x" id="shClose" aria-label="閉じる">×</button></div>
+    <img id="shImg" alt="仙台湾ライブの画像">
+    <textarea id="shText" aria-label="投稿する文章"></textarea>
+    <button class="b main" id="shNative">画像つきで送る（X・LINE など）</button>
+    <div class="row">
+      <a class="b xb" id="shX" target="_blank" rel="noopener">X に投稿</a>
+      <a class="b line" id="shLine" target="_blank" rel="noopener">LINE で送る</a>
+    </div>
+    <div class="row">
+      <button class="b" id="shCopy">画像をコピー</button>
+      <a class="b" id="shSave" download="sendaiwan.jpg">画像を保存</a>
+    </div>
+    <div class="msg" id="shMsg"></div>
+    <div class="note" id="shNote"></div>
+  </div>
+</div>
 <div id="hint">ドラッグで見回す ・ ピンチ／ホイールで高さ ・ WASDで漂う ・ Hで表示切替</div>
 <div id="ui">
   <label>太陽高度<input id="sun" type="range" min="-3" max="60" step="0.1" value="6"></label>
@@ -52,6 +110,457 @@
   <label>音量<input id="vol" type="range" min="0" max="1" step="0.01" value="0.6"></label>
 </div>
 <div id="err"></div>
+<div id="credit">制作-カスラーメン自家製麺キリンジ</div>
+<script>
+// ================================================================ 日の出カウントダウン（仙台・海の水平線、計算値）
+"use strict";
+(function(){
+  const LAT = 38.27, LON = 140.87;
+  function sunEl(date){
+    const rad=Math.PI/180, n = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+    const L=(280.460+0.9856474*n)%360, g=(357.528+0.9856003*n)*rad;
+    const lam=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*rad, eps=(23.439-0.0000004*n)*rad;
+    const ra=Math.atan2(Math.cos(eps)*Math.sin(lam), Math.cos(lam)), dec=Math.asin(Math.sin(eps)*Math.sin(lam));
+    const gmst=((18.697374558+24.06570982441908*n)%24+24)%24;
+    const H=(gmst*15+LON)*rad-ra, ph=LAT*rad;
+    const el=Math.asin(Math.sin(ph)*Math.sin(dec)+Math.cos(ph)*Math.cos(dec)*Math.cos(H));
+    const az=Math.atan2(-Math.sin(H), Math.tan(dec)*Math.cos(ph)-Math.sin(ph)*Math.cos(H));
+    return {el:el/rad, az:((az/rad)+360)%360};
+  }
+  const H0 = -0.833;   // 太陽の上の縁が水平線に出る高さ（大気の屈折を含む）
+  function nextSunrise(from){
+    let t = from.getTime(), prev = sunEl(new Date(t)).el;
+    for(let i=0;i<800;i++){   // 2分きざみで最大約27時間先まで
+      const t2 = t + 120000, e2 = sunEl(new Date(t2)).el;
+      if(prev < H0 && e2 >= H0){
+        let a=t, b=t2; for(let k=0;k<14;k++){ const m=(a+b)/2; if(sunEl(new Date(m)).el < H0) a=m; else b=m; }
+        return new Date(b);
+      }
+      t = t2; prev = e2;
+    }
+    return null;
+  }
+  const btn = document.getElementById('riseBtn'), lab = btn.querySelector('small'), val = btn.querySelector('b');
+  const hm = d => d.toLocaleTimeString('ja-JP', {hour:'numeric', minute:'2-digit', timeZone:'Asia/Tokyo'});
+  let rise = null;
+  function update(){
+    const now = new Date();
+    if(!rise || now - rise > 30*60000) rise = nextSunrise(new Date(now.getTime() - 30*60000));
+    if(!rise){ val.textContent = '--:--'; return; }
+    const diff = rise - now;
+    if(diff <= 0){                       // 日の出から30分までは「日の出から○分」
+      lab.innerHTML = '日の出<i> '+hm(rise)+' </i>から';
+      val.textContent = Math.floor(-diff/60000)+'分';
+    } else {
+      const m = Math.ceil(diff/60000), h = Math.floor(m/60), mm = m%60;
+      lab.innerHTML = '日の出<i> '+hm(rise)+' </i>まで';
+      val.textContent = h > 0 ? h+'時間'+String(mm).padStart(2,'0')+'分' : (m <= 10 ? Math.ceil(diff/1000/60)+'分 まもなく' : mm+'分');
+    }
+    btn.title = '仙台の日の出 '+hm(rise)+'（計算値。雲で見えないこともあります）';
+  }
+  update(); setInterval(update, 15000);
+  // タップ：日の出の瞬間の海を先に見る（もう一度押すか、左上のボタンで実況に戻る）
+  btn.onclick = ()=>{
+    if(!rise) return;
+    if(btn.classList.contains('on')){ btn.classList.remove('on'); document.getElementById('bay').click(); return; }
+    const p = sunEl(new Date(rise.getTime() + 4*60000));
+    if(window.__showSun){ window.__showSun(Math.max(0.4, p.el), p.az); btn.classList.add('on'); }
+  };
+  document.getElementById('bay').addEventListener('click', ()=>btn.classList.remove('on'));
+  window.__riseOff = ()=>btn.classList.remove('on');
+})();
+</script>
+<script>
+// ================================================================ スマホ用の軽い海（WebGL版）
+// WebGPU が無い・止まった端末で自動的に使う。実況・太陽・共有は本体と同じ考え方。
+"use strict";
+window.__startLite = function(reason){
+  if(window.__liteOn) return; window.__liteOn = true;
+  const Q = new URLSearchParams(location.search);
+  const $ = id => document.getElementById(id);
+  const errBox = $('err'); errBox.style.display = 'none';
+  const old = $('c'); old.style.display = 'none';
+  const cv = document.createElement('canvas'); cv.id = 'c2'; old.after(cv);
+  const gl = cv.getContext('webgl', {antialias:false, alpha:false, depth:false, stencil:false, preserveDrawingBuffer:false, powerPreference:'high-performance'})
+          || cv.getContext('experimental-webgl');
+  if(!gl){ errBox.style.display='flex'; errBox.innerHTML='この端末では3D表示ができません。<br><small>'+navigator.userAgent+'</small>'; return; }
+  document.body.classList.add('litemode');
+
+  // ------------------------------------------------------------ shader
+  const VS = 'attribute vec2 p; varying vec2 v; void main(){ v=p; gl_Position=vec4(p,0.,1.); }';
+  const FS = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v;
+uniform vec3 uPos, uF, uR, uU, uSun, uSunCol;
+uniform vec2 uTan, uCloud;
+uniform float uT;
+uniform vec4 uW[16];     // xy = 波数ベクトル, z = 振幅, w = 角速度
+uniform vec4 uEnv;       // 雲量, 霞の距離, 白波, 基準振幅
+uniform vec4 uEnv2;      // 露出, 1画素の角度, 雨, さざ波
+
+float hash(vec2 p){ p = fract(p*vec2(0.1031, 0.1030)); p += dot(p, p.yx+33.33); return fract((p.x+p.y)*p.x); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x), mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x), f.y); }
+float fbm(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*noise(p); p=p*2.03+vec2(1.7,9.2); a*=.5; } return s; }
+
+float dayF(){ return smoothstep(-0.06, 0.45, uSun.y); }
+float lowF(){ return smoothstep(-0.16, 0.0, uSun.y)*(1.0-smoothstep(0.02, 0.40, uSun.y)); }
+
+vec3 skyBase(vec3 d){
+  float day = dayF(), low = lowF(), dy = max(d.y, 0.0);
+  vec3 zen = mix(vec3(0.006,0.010,0.030), vec3(0.09,0.25,0.60), day);
+  vec3 hor = mix(vec3(0.030,0.040,0.075), vec3(0.60,0.72,0.86), day);
+  vec3 c = mix(hor, zen, pow(dy, 0.45));
+  float sd = max(dot(d, uSun), 0.0);
+  float az = max(dot(normalize(d.xz+1e-4), normalize(uSun.xz+1e-4)), 0.0);
+  c += vec3(1.0,0.36,0.08)*low*(0.9*pow(sd,6.0) + 0.30*pow(1.0-dy,6.0)*(0.15+0.85*az*az));
+  c += vec3(0.30,0.18,0.30)*low*0.25*pow(1.0-dy,3.0);
+  c += uSunCol*pow(sd, 90.0)*0.35*day;
+  vec3 gray = vec3(0.52,0.56,0.61)*(0.025+0.975*day);
+  return mix(c, gray*mix(0.85,1.0,dy), uEnv.x*uEnv.x*0.85);
+}
+vec3 sky(vec3 d, bool disk){
+  vec3 c = skyBase(d);
+  float m = 0.0;
+  if(d.y > 0.0){
+    vec2 uv = d.xz/(d.y+0.08)*1.1 + uCloud;
+    float n = fbm(uv);
+    float cov = uEnv.x;
+    m = smoothstep(0.70-0.45*cov, 0.95-0.35*cov, n) * smoothstep(0.0, 0.10, d.y);
+    float day = dayF(), low = lowF();
+    vec3 cc = mix(vec3(0.016,0.018,0.03), vec3(0.93,0.94,0.96), day);
+    cc = mix(cc, vec3(1.0,0.55,0.34), low*0.75);
+    cc *= 1.0 - 0.45*cov*smoothstep(0.55, 1.0, n);
+    float sl = pow(max(dot(d, uSun), 0.0), 8.0);
+    cc += uSunCol*sl*0.5*(1.0-cov);
+    c = mix(c, cc, m*0.95);
+  }
+  if(disk) c += uSunCol*smoothstep(0.99984, 0.99992, dot(d, uSun))*25.0*(1.0-m)*(1.0-0.9*uEnv.x);
+  return c;
+}
+float waves(vec2 p, float dist, out vec2 g){
+  float h = 0.0; g = vec2(0.0);
+  for(int i=0;i<16;i++){
+    vec4 w = uW[i];
+    float k = length(w.xy);
+    float fade = clamp(1.0 - k*dist*uEnv2.y*1.6, 0.0, 1.0);   // 遠くの細かい波はちらつくので消す
+    float ph = dot(w.xy, p) - w.w*uT + float(i)*1.7;
+    float s = sin(ph), c = cos(ph);
+    h += w.z*s;
+    g += w.z*c*w.xy*fade;
+  }
+  // さざ波：規則的な模様にならないよう、流れるノイズで面の向きを乱す
+  float fd = clamp(1.0 - dist*uEnv2.y*10.0, 0.0, 1.0);
+  if(fd > 0.0){
+    vec2 q1 = p*0.75 + vec2(uT*0.30, uT*0.18), q2 = p*2.1 - vec2(uT*0.45, uT*0.55);
+    float e = 0.12;
+    float a1 = noise(q1), a2 = noise(q2);
+    vec2 d1 = vec2(noise(q1+vec2(e,0.0))-a1, noise(q1+vec2(0.0,e))-a1)/e;
+    vec2 d2 = vec2(noise(q2+vec2(e,0.0))-a2, noise(q2+vec2(0.0,e))-a2)/e;
+    g += uEnv2.w*fd*(d1*0.055 + d2*0.03);
+  }
+  return h;
+}
+void main(){
+  vec3 rd = normalize(uF + v.x*uTan.x*uR + v.y*uTan.y*uU);
+  vec3 col;
+  float day = dayF();
+  if(rd.y >= -0.0004){
+    col = sky(rd, true);
+  } else {
+    float t = -uPos.y/rd.y;
+    vec3 p = uPos + rd*t;
+    vec2 g; float h = waves(p.xz, t, g);
+    vec3 n = normalize(vec3(-g.x, 1.0, -g.y));
+    n = normalize(mix(n, vec3(0.0,1.0,0.0), smoothstep(1500.0, 9000.0, t)*0.5));
+    vec3 r = reflect(rd, n); r.y = abs(r.y);
+    float F = 0.02 + 0.98*pow(1.0 - max(dot(n, -rd), 0.0), 5.0);
+    vec3 refl = sky(r, false);
+    float lit = (0.08 + 0.92*day) * (1.0 - 0.5*uEnv.x);
+    float crest = clamp(h/max(uEnv.w, 0.05)*0.5 + 0.5, 0.0, 1.0);
+    vec3 water = vec3(0.004,0.028,0.045)*lit + vec3(0.015,0.11,0.10)*lit*crest*crest*max(dot(n, uSun)*0.5+0.5, 0.0);
+    col = mix(water, refl, F);
+    float sunUp = smoothstep(-0.02, 0.03, uSun.y)*(1.0-0.92*uEnv.x);
+    float rs = max(dot(r, uSun), 0.0);
+    col += uSunCol*sunUp*(pow(rs, 900.0)*60.0 + pow(rs, 90.0)*0.6);
+    // 白波
+    float fo = uEnv.z * smoothstep(0.62, 1.0, crest + 0.35*(fbm(p.xz*0.22 + vec2(uT*0.04, 0.0)) - 0.5));
+    col = mix(col, vec3(0.80,0.85,0.88)*lit, fo*0.75*exp(-t/700.0));
+    // 霞（遠くほど空の色に）
+    vec3 hz = skyBase(normalize(vec3(rd.x, 0.0, rd.z)));
+    col = mix(col, hz, 1.0 - exp(-t/uEnv.y));
+  }
+  // 雨の日は少し白っぽく暗く
+  col = mix(col, vec3(dot(col, vec3(0.33)))*0.8, uEnv2.z*0.35);
+  col *= uEnv2.x;
+  col = 1.0 - exp(-col*1.6);
+  gl_FragColor = vec4(pow(col, vec3(1.0/2.2)), 1.0);
+}`;
+  function sh(type, src){ const s=gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('lite shader: '+gl.getShaderInfoLog(s)); return s; }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.bindAttribLocation(prog, 0, 'p'); gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('lite link: '+gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+  const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const U = {}; ['uPos','uF','uR','uU','uSun','uSunCol','uTan','uCloud','uT','uW','uEnv','uEnv2'].forEach(n=>U[n]=gl.getUniformLocation(prog, n));
+
+  // ------------------------------------------------------------ 状態
+  const S = { sunEl:+(Q.get('sun') ?? 6), sunAz:110, alt:+(Q.get('h') ?? 1.8),
+    yaw:110*Math.PI/180, pitch:2*Math.PI/180, fov:62,
+    windH:0.5, windL:14, windDir:315, swellH:0.6, swellL:90, swellDir:110,
+    cover:0.42, haze:6500, whitecap:0.2, ripple:1, rain:0, sunDim:1 };
+  let live = !Q.has('manual') && !Q.has('sun');
+  let WX = null, wxErr = null;
+  const W = new Float32Array(64);
+  window.__lite = {S, rebuild:()=>buildWaves()};   // 確認用
+  function buildWaves(){
+    const g = 9.81, comps = [];
+    const add = (H, L, dir, list) => {   // Hs から各成分の振幅（Σa² = Hs²/8）
+      const ws = list.map(c=>c[2]); const norm = Math.sqrt(ws.reduce((a,b)=>a+b*b, 0));
+      list.forEach(([lm, dd, w])=>{
+        const Lw = Math.max(0.6, L*lm), k = 2*Math.PI/Lw, d = (dir+dd)*Math.PI/180;
+        comps.push([-Math.sin(d)*k, Math.cos(d)*k, H/Math.sqrt(8)*w/norm, Math.sqrt(g*k)]);
+      });
+    };
+    const wl = Math.max(S.windL, S.windH*25);            // 風浪の険しさは 1/25 程度まで
+    add(S.swellH, S.swellL, S.swellDir, [[1,0,1],[0.83,13,0.6],[1.22,-9,0.5],[0.68,-20,0.3]]);
+    add(S.windH, wl, S.windDir, [[1,0,1],[0.77,23,0.75],[0.61,-31,0.6],[1.27,-12,0.6],[0.43,41,0.4],[0.52,-52,0.35],[0.33,17,0.3],[0.27,-27,0.25]]);
+    const r = 0.012*S.ripple;
+    [[3.3,35,1],[2.3,-48,0.8],[1.6,70,0.6],[1.1,-15,0.5]].forEach(([L,dd,w])=>{
+      const k=2*Math.PI/L, d=(S.windDir+dd)*Math.PI/180; comps.push([-Math.sin(d)*k, Math.cos(d)*k, r*w, Math.sqrt(g*k)]); });
+    comps.forEach((c,i)=>W.set(c, i*4));
+  }
+  function heightAt(x, z, t){ let h=0; for(let i=0;i<12;i++){ const o=i*4; h += W[o+2]*Math.sin(W[o]*x + W[o+1]*z - W[o+3]*t + i*1.7); } return h; }
+
+  // ------------------------------------------------------------ 太陽・実況
+  function solarPos(date, lat, lon){
+    const rad=Math.PI/180, n = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+    const L=(280.460+0.9856474*n)%360, gg=(357.528+0.9856003*n)*rad;
+    const lam=(L+1.915*Math.sin(gg)+0.020*Math.sin(2*gg))*rad, eps=(23.439-0.0000004*n)*rad;
+    const ra=Math.atan2(Math.cos(eps)*Math.sin(lam), Math.cos(lam)), dec=Math.asin(Math.sin(eps)*Math.sin(lam));
+    const gmst=((18.697374558+24.06570982441908*n)%24+24)%24;
+    const H=(gmst*15+lon)*rad-ra, ph=lat*rad;
+    const el=Math.asin(Math.sin(ph)*Math.sin(dec)+Math.cos(ph)*Math.cos(dec)*Math.cos(H));
+    const az=Math.atan2(-Math.sin(H), Math.tan(dec)*Math.cos(ph)-Math.sin(ph)*Math.cos(H));
+    return {el:el/rad, az:((az/rad)+360)%360};
+  }
+  const WX_JA = c => c===0?'快晴':c===1?'晴れ':c===2?'晴れ時々曇り':c===3?'曇り':(c===45||c===48)?'霧':(c>=51&&c<=57)?'霧雨':(c>=61&&c<=67)?'雨':(c>=71&&c<=77)?'雪':(c>=80&&c<=82)?'にわか雨':(c>=85&&c<=86)?'にわか雪':c>=95?'雷雨':'—';
+  const DIR16=['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+  const dirJa = d => d==null?'—':DIR16[Math.round(((d%360)+360)%360/22.5)%16];
+  const num=(v,d)=> (v==null||isNaN(v))?d:v;
+  const elSun=$('sun'), elAlt=$('alt'), elAmp=$('amp');
+  function applySun(){ const p = solarPos(new Date(), 38.27, 140.87); S.sunEl = Math.max(-18, Math.min(60, p.el)); S.sunAz = p.az; elSun.value = Math.max(-3, S.sunEl); }
+  function applyWeather(){
+    if(!WX) return;
+    const c=WX.cur||{}, m=WX.mar||{};
+    const cc=num(c.cloud_cover,40), ws=num(c.wind_speed_10m,5), wdir=num(c.wind_direction_10m,315), code=num(c.weather_code,1), vis=num(c.visibility,20000);
+    const rain=(code>=51&&code<=67)||(code>=80&&code<=82)||code>=95, fog=(code===45||code===48);
+    S.windH = num(m.wind_wave_height, Math.max(0.1, 0.0246*ws*ws));
+    S.windL = Math.max(4, Math.min(120, 1.56*Math.pow(num(m.wind_wave_period, Math.max(1.5, 0.8*ws)), 2)));
+    S.windDir = num(m.wind_wave_direction, wdir);
+    S.swellH = num(m.swell_wave_height, 0.4);
+    S.swellL = Math.max(20, Math.min(300, 1.56*Math.pow(num(m.swell_wave_period, 8), 2)));
+    S.swellDir = num(m.swell_wave_direction, S.windDir);
+    S.ripple = Math.max(0.3, Math.min(1.8, ws/6)) * (rain?1.4:1);
+    S.whitecap = Math.max(0, Math.min(1, (ws-3.5)/8.5));
+    S.cover = Math.min(0.97, 0.04 + 0.93*cc/100);
+    S.haze = fog ? 900 : Math.max(1500, Math.min(9000, vis*0.4));
+    S.rain = rain ? 1 : 0;
+    S.sunDim = (1 - 0.85*Math.pow(cc/100, 2.5)) * (rain||fog ? 0.45 : 1);
+    elAmp.value = Math.min(5, Math.max(0.3, num(m.wave_height, S.windH+S.swellH)));
+    buildWaves();
+  }
+  const bayBtn=$('bay'), baySub=bayBtn.querySelector('small');
+  function renderWxPanel(){
+    bayBtn.classList.toggle('on', live);
+    if(!live){ baySub.textContent = 'タップで実況に戻す'; return; }
+    if(wxErr && !WX){ baySub.textContent = '天気を取得できません'; return; }
+    if(!WX){ baySub.textContent = '実況を取得中…'; return; }
+    const c=WX.cur||{}, m=WX.mar||{}, f=(v,d=1)=>v==null?'—':(+v).toFixed(d);
+    baySub.textContent = (c.time||'').slice(11,16)+' '+WX_JA(c.weather_code)+' 風'+f(c.wind_speed_10m)+'m 波'+f(m.wave_height)+'m';
+  }
+  async function fetchWx(){
+    try{
+      const tz='&timezone=Asia%2FTokyo', lat=38.20, lon=141.15;
+      const wu=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,visibility&wind_speed_unit=ms${tz}`;
+      const mv='wave_height,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
+      const mu=(la,lo)=>`https://marine-api.open-meteo.com/v1/marine?latitude=${la}&longitude=${lo}&current=${mv}${tz}`;
+      const [w, m0] = await Promise.all([fetch(wu).then(r=>r.json()), fetch(mu(lat,lon)).then(r=>r.json()).catch(()=>null)]);
+      let m = m0;
+      if(!m || !m.current || m.current.wave_height==null) m = await fetch(mu(38.10,141.40)).then(r=>r.json()).catch(()=>null);
+      if(!w || !w.current) throw new Error('no data');
+      WX = {cur:w.current, mar:(m&&m.current)||{}}; wxErr = null;
+      if(live) applyWeather();
+    }catch(e){ wxErr = 'offline'; }
+    renderWxPanel();
+  }
+  function setManual(){ if(live){ live=false; renderWxPanel(); } }
+  bayBtn.onclick = ()=>{ live=true; applySun(); applyWeather(); if(!WX) fetchWx(); renderWxPanel(); };
+  elSun.oninput = ()=>{ setManual(); S.sunEl = +elSun.value; if(window.__riseOff) window.__riseOff(); };
+  window.__showSun = (el, az)=>{ setManual(); S.sunEl = el; S.sunAz = az; elSun.value = el; S.yaw = az*Math.PI/180; S.pitch = 2*Math.PI/180; };
+  elAlt.oninput = ()=>{ S.alt = +elAlt.value; };
+  elAmp.oninput = ()=>{ setManual(); const a=+elAmp.value; S.windH=a*0.6; S.swellH=a*0.75; S.whitecap=Math.max(0,Math.min(1,(a-0.8)/2.5)); buildWaves(); };
+  elSun.value = S.sunEl; elAlt.value = S.alt;
+  buildWaves();
+  if(live) applySun();
+  renderWxPanel(); fetchWx();
+  setInterval(fetchWx, 15*60*1000);
+  setInterval(()=>{ if(live) applySun(); renderWxPanel(); }, 30*1000);
+
+  // ------------------------------------------------------------ 操作
+  const pts = new Map(); let pinch0=0, alt0=0;
+  const setAlt = v => { S.alt = Math.max(0.6, Math.min(40, v)); elAlt.value = S.alt; };
+  cv.addEventListener('pointerdown', e=>{ cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pts.size===2){ const [a,b]=[...pts.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y); alt0=S.alt; } });
+  cv.addEventListener('pointermove', e=>{ const p=pts.get(e.pointerId); if(!p) return;
+    if(pts.size===1){ const k=(S.fov*Math.PI/180)/cv.clientHeight; S.yaw += (e.clientX-p.x)*k; S.pitch = Math.max(-1.2, Math.min(1.35, S.pitch+(e.clientY-p.y)*k)); }
+    p.x=e.clientX; p.y=e.clientY;
+    if(pts.size===2){ const [a,b]=[...pts.values()]; setAlt(alt0*Math.pow(pinch0/Math.max(Math.hypot(a.x-b.x,a.y-b.y),1), 1.5)); } });
+  const up = e=>pts.delete(e.pointerId);
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('wheel', e=>{ e.preventDefault(); setAlt(S.alt*Math.exp(e.deltaY*0.0015)); }, {passive:false});
+  if(!window.__keyH) addEventListener('keydown', e=>{ if(e.code==='KeyH' && !e.target.closest('#share')) document.body.classList.toggle('clean'); });
+  if(Q.has('clean')) document.body.classList.add('clean');
+  $('hint').textContent = 'ドラッグで見回す ・ ピンチ／ホイールで高さ（軽量版）';
+
+  // ------------------------------------------------------------ 描画
+  let q = Math.min(window.devicePixelRatio||1, 2) * (matchMedia('(pointer:coarse)').matches ? 0.6 : 0.8);
+  let hiShot = false, shotWaiters = [];
+  function resize(){
+    const k = hiShot ? Math.min(window.devicePixelRatio||1, 2) : q;
+    const w = Math.max(2, Math.round(cv.clientWidth*k)), h = Math.max(2, Math.round(cv.clientHeight*k));
+    if(cv.width!==w || cv.height!==h){ cv.width=w; cv.height=h; }
+  }
+  const t0 = performance.now(); let last = t0, frames = 0, acc = 0, accN = 0, camY = S.alt;
+  function draw(now){
+    resize();
+    const t = (now - t0)/1000, dt = Math.min(0.05, (now-last)/1000); last = now;
+    const el = S.sunEl*Math.PI/180, az = S.sunAz*Math.PI/180;
+    const sun = [Math.cos(el)*Math.sin(az), Math.sin(el), -Math.cos(el)*Math.cos(az)];
+    const sy = sun[1], warm = Math.min(1, Math.max(0, sy/0.3)), vis = Math.min(1, Math.max(0, (sy+0.05)/0.1));
+    const sunCol = [1.0, 0.5+0.46*warm, 0.22+0.68*warm].map(c=>c*vis*S.sunDim*1.6);
+    const target = S.alt + heightAt(0, 0, t)*0.85;
+    camY += (target - camY)*Math.min(1, dt*6);
+    const cy=Math.cos(S.yaw), sY=Math.sin(S.yaw), cp=Math.cos(S.pitch), sp=Math.sin(S.pitch);
+    const F=[sY*cp, sp, -cy*cp], R=[cy, 0, sY], Uv=[-sY*sp, cp, cy*sp];
+    const tanH = Math.tan(S.fov*Math.PI/360), asp = cv.width/cv.height;
+    const exposure = 1.0 + 1.2*(1 - Math.min(1, Math.max(0, (sy+0.2)/0.2)));   // 夜は少しだけ持ち上げる（明るくしすぎない）
+    gl.viewport(0, 0, cv.width, cv.height);
+    gl.uniform3f(U.uPos, 0, Math.max(0.3, camY), 0);
+    gl.uniform3fv(U.uF, F); gl.uniform3fv(U.uR, R); gl.uniform3fv(U.uU, Uv);
+    gl.uniform3fv(U.uSun, sun); gl.uniform3fv(U.uSunCol, sunCol);
+    gl.uniform2f(U.uTan, tanH*asp, tanH);
+    const wr = S.windDir*Math.PI/180;
+    gl.uniform2f(U.uCloud, -Math.sin(wr)*t*0.004, Math.cos(wr)*t*0.004);
+    gl.uniform1f(U.uT, t);
+    gl.uniform4fv(U.uW, W);
+    gl.uniform4f(U.uEnv, S.cover, S.haze, S.whitecap, Math.max(0.1, (S.windH+S.swellH)/2));
+    gl.uniform4f(U.uEnv2, exposure, 2*tanH/cv.height, S.rain, S.ripple);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if(shotWaiters.length){ const ws = shotWaiters.splice(0); hiShot = false; cv.toBlob(b=>ws.forEach(f=>f(b)), 'image/png'); }
+    frames++; window.__frames = frames;
+    // 重い端末では解像度を下げる
+    acc += dt; accN++;
+    if(accN >= 45){ const ms = acc/accN*1000; acc = 0; accN = 0;
+      const base = Math.min(window.devicePixelRatio||1, 2);
+      if(ms > 26 && q > 0.35) q *= 0.85; else if(ms < 15 && q < base) q = Math.min(base, q*1.1); }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  // ------------------------------------------------------------ 共有（本体と同じ画像と文章）
+  const shBox=$('share'), shImg=$('shImg'), shText=$('shText'), shMsg=$('shMsg'), shNote=$('shNote');
+  let shFile=null, shUrl=null;
+  const pad2 = n => String(n).padStart(2,'0');
+  const pageUrl = /^https?:/.test(location.protocol) ? location.origin + location.pathname : '';
+  function wxLine(){
+    if(!live || !WX) return null;
+    const c=WX.cur||{}, m=WX.mar||{}, parts=[WX_JA(c.weather_code)];
+    if(c.wind_speed_10m!=null) parts.push(dirJa(c.wind_direction_10m)+'の風 '+(+c.wind_speed_10m).toFixed(1)+'m/s');
+    if(m.wave_height!=null) parts.push('波 '+(+m.wave_height).toFixed(1)+'m');
+    if(c.temperature_2m!=null) parts.push('気温 '+(+c.temperature_2m).toFixed(1)+'℃');
+    return parts.join('・');
+  }
+  function buildText(d){
+    const when = (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    const w = wxLine();
+    return (w ? '仙台湾ライブ（'+when+'）\n'+w : '仙台湾ライブ（波と太陽を自分で調整）') + '\n#仙台湾ライブ #仙台湾 #仙台';
+  }
+  async function makeCard(blob, d){
+    const src = await createImageBitmap(blob);
+    const k = Math.min(1, 1600/Math.max(src.width, src.height));
+    const W2 = Math.round(src.width*k), H2 = Math.round(src.height*k);
+    const c = document.createElement('canvas'); c.width=W2; c.height=H2;
+    const x = c.getContext('2d'); x.drawImage(src, 0, 0, W2, H2);
+    const u = Math.max(W2, H2*0.75)/1000;
+    const g = x.createLinearGradient(0, H2-260*u, 0, H2);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.62)');
+    x.fillStyle=g; x.fillRect(0, H2-260*u, W2, 260*u);
+    const Fn='-apple-system,system-ui,"Hiragino Sans","Yu Gothic",sans-serif', L=40*u;
+    x.fillStyle='#fff'; x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=8*u;
+    const w = wxLine();
+    x.font='700 '+Math.round(54*u)+'px '+Fn; x.fillText('仙台湾ライブ', L, H2-122*u);
+    x.font='600 '+Math.round(26*u)+'px '+Fn;
+    const when = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+    x.fillText(when+(w ? '　'+w : '　波と太陽を自分で調整'), L, H2-74*u, W2-2*L);
+    x.font='400 '+Math.round(17*u)+'px '+Fn; x.globalAlpha=.75;
+    const dt = w && WX.cur.time ? (WX.cur.time.slice(11,16)+' 時点の') : '';
+    x.fillText(w ? '天気・波は '+dt+'Open-Meteo（予報モデル）の値　太陽の位置は計算値' : 'リアルタイムに描いた3DCG', L, H2-38*u, W2-2*L);
+    x.globalAlpha=1;
+    return new Promise(r=>c.toBlob(r, 'image/jpeg', 0.9));
+  }
+  function updateLinks(){
+    const t = shText.value;
+    $('shX').href = 'https://x.com/intent/post?text='+encodeURIComponent(t)+(pageUrl?'&url='+encodeURIComponent(pageUrl):'');
+    $('shLine').href = 'https://line.me/R/share?text='+encodeURIComponent(t+(pageUrl?'\n'+pageUrl:''));
+  }
+  $('shareBtn').onclick = async ()=>{
+    shMsg.textContent='画像を作っています…'; shBox.classList.add('open');
+    const d = new Date();
+    hiShot = true;
+    const blob = await new Promise(r=>shotWaiters.push(r));
+    if(!blob){ shMsg.textContent='画像を作れませんでした。もう一度お試しください。'; return; }
+    const jpg = await makeCard(blob, d);
+    const name = 'sendaiwan_'+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())+'.jpg';
+    shFile = new File([jpg], name, {type:'image/jpeg'});
+    if(shUrl) URL.revokeObjectURL(shUrl);
+    shUrl = URL.createObjectURL(jpg);
+    shImg.src = shUrl; $('shSave').href = shUrl; $('shSave').download = name;
+    shText.value = buildText(d); updateLinks();
+    const canFiles = !!(navigator.canShare && navigator.canShare({files:[shFile]}));
+    $('shNative').style.display = canFiles ? '' : 'none';
+    $('shCopy').style.display = (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) ? '' : 'none';
+    shNote.textContent = canFiles
+      ? '「画像つきで送る」で X や LINE を選ぶと、この画像が付きます。下のボタンは文章だけを送ります。'
+      : 'X・LINE のボタンは文章だけを送ります。画像は「画像をコピー」して投稿画面に貼り付けるか、「画像を保存」してから添付してください。';
+    shMsg.textContent='';
+  };
+  shText.oninput = updateLinks;
+  $('shClose').onclick = ()=>shBox.classList.remove('open');
+  shBox.onclick = e=>{ if(e.target===shBox) shBox.classList.remove('open'); };
+  shBox.onkeydown = e=>{ e.stopPropagation(); if(e.key==='Escape') shBox.classList.remove('open'); };
+  $('shNative').onclick = async ()=>{
+    try{ await navigator.share({files:[shFile], text: shText.value + (pageUrl?'\n'+pageUrl:'')}); }
+    catch(e){ if(e.name!=='AbortError') shMsg.textContent='送れませんでした（'+e.message+'）'; }
+  };
+  $('shCopy').onclick = async ()=>{
+    try{
+      const png = await createImageBitmap(shFile).then(b=>{ const c=document.createElement('canvas'); c.width=b.width; c.height=b.height;
+        c.getContext('2d').drawImage(b,0,0); return new Promise(r=>c.toBlob(r,'image/png')); });
+      await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
+      shMsg.textContent='画像をコピーしました。X や LINE の投稿画面で貼り付けてください。';
+    }catch(e){ shMsg.textContent='コピーできませんでした。「画像を保存」をお使いください。'; }
+  };
+};
+</script>
 <script>
 "use strict";
 (async function(){
@@ -60,13 +569,16 @@ const errBox = document.getElementById('err');
 function fail(msg){ errBox.style.display='flex'; errBox.innerHTML = msg; }
 window.addEventListener('error', e=>fail('エラー: '+(e.message||e)+'<br><small>この画面を撮って送ってください</small>'));
 window.addEventListener('unhandledrejection', e=>fail('エラー: '+((e.reason&&e.reason.message)||e.reason)+'<br><small>この画面を撮って送ってください</small>'));
-setTimeout(()=>{ if(!(window.__frames>0)) fail('描画が始まりません（WebGPUが動いていない可能性）。<br>ブラウザ名とバージョンを教えてください。<br><small>'+navigator.userAgent+'</small>'); }, 8000);
-if(!navigator.gpu){ fail('このブラウザはWebGPUに対応していません。<br>Chrome / Edge 113以降、Safari 26以降でお試しください。'); return; }
-const adapter = await navigator.gpu.requestAdapter({powerPreference:'high-performance'});
-if(!adapter){ fail('WebGPUアダプタを取得できませんでした。'); return; }
-const device = await adapter.requestDevice();
+// WebGPU が使えない・止まった時は、スマホ向けの軽い海（WebGL版）に切り替える
+setTimeout(()=>{ if(!(window.__frames>0) && !window.__liteOn && errBox.style.display!=='flex') window.__startLite('timeout'); }, 8000);
+if(!navigator.gpu || Q.has('gl')){ window.__startLite('nogpu'); return; }
+const adapter = await navigator.gpu.requestAdapter({powerPreference:'high-performance'}).catch(()=>null);
+if(!adapter){ window.__startLite('noadapter'); return; }
+let device; try{ device = await adapter.requestDevice(); }catch(e){ window.__startLite('nodevice'); return; }
 device.lost.then(i=>{
+  if(window.__liteOn) return;
   if(!(location.hash.includes('lite'))){ location.hash='lite'; location.reload(); return; }
+  if(window.__startLite){ window.__startLite('lost'); return; }
   fail('GPUが処理を中断しました（'+(i.message||i.reason||'device lost')+'）。<br>ページを再読み込みしてください。');
 });
 device.addEventListener('uncapturederror', e=>{ console.warn('WebGPU error:', e.error && e.error.message);
@@ -74,7 +586,7 @@ device.addEventListener('uncapturederror', e=>{ console.warn('WebGPU error:', e.
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('webgpu');
 const presentFormat = navigator.gpu.getPreferredCanvasFormat();
-ctx.configure({device, format:presentFormat, alphaMode:'opaque', usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.COPY_SRC});
+ctx.configure({device, format:presentFormat, alphaMode:'opaque', usage:GPUTextureUsage.RENDER_ATTACHMENT|(Q.has('shot')?GPUTextureUsage.COPY_SRC:0)});
 
 // ---------------------------------------------------------------- constants
 const WAVE_SCALE = 2*Math.PI/68;      // wind-sea base wavelength 68 m
@@ -343,7 +855,6 @@ const SCENE = COMMON + FULL_VS + SKYFN + /* wgsl */`
 @group(0) @binding(5) var envTex: texture_2d<f32>;
 @group(0) @binding(6) var envSamp: sampler;
 @group(0) @binding(7) var skyHalf: texture_2d<f32>;
-@group(0) @binding(8) var reflTex: texture_2d<f32>;
 fn sunDisk(d: vec3f) -> vec3f {
   let L = u.sunDir.xyz;
   let c = dot(d, L);
@@ -597,11 +1108,7 @@ fn ggx(N: vec3f, V: vec3f, L: vec3f, rough: f32) -> f32 {
   let F = 0.02 + 0.98*pow(1.0 - NdV, 5.0);
 
   let rlod = clamp(1.6 + log2(1.0 + slopeVar * 600.0), 1.6, 5.0);
-  var refl = textureSampleLevel(envTex, envSamp, skyUV(R), rlod).rgb;
-  // planar reflection of the islands (松島), distorted by the surface normal
-  let ruv = clamp(i.pos.xy * u.res.zw + vec2f(N.x, N.z) * vec2f(0.06, 0.10), vec2f(0.001), vec2f(0.999));
-  let rr = textureSampleLevel(reflTex, envSamp, ruv, 0.0);
-  refl = mix(refl, rr.rgb, rr.a);
+  let refl = textureSampleLevel(envTex, envSamp, skyUV(R), rlod).rgb;
 
 
   // sun glitter
@@ -705,20 +1212,6 @@ struct SO { @builtin(position) pos: vec4f, @location(0) wp: vec3f, @location(1) 
   o.n = (u.shipModel * vec4f(n, 0.0)).xyz; o.col = c; return o;
 }
 @fragment fn fsShip(i: SO) -> @location(0) vec4f { return vec4f(litObject(i.wp, normalize(i.n), i.col, 0.12), 1.0); }
-@vertex fn vsLand(@location(0) p: vec3f, @location(1) n: vec3f, @location(2) c: vec3f) -> SO {
-  var w = p; let off = w.xz - u.camPos.xz; w.y -= dot(off, off) / (2.0*RG);
-  var o: SO; o.pos = u.viewProj * vec4f(w, 1.0); o.wp = w; o.n = n; o.col = c; return o;
-}
-@fragment fn fsLand(i: SO) -> @location(0) vec4f { return vec4f(litObject(i.wp, normalize(i.n), i.col, 0.04), 1.0); }
-// mirrored about the sea surface for the water reflection; parts below the water are cut away
-@vertex fn vsLandRefl(@location(0) p: vec3f, @location(1) n: vec3f, @location(2) c: vec3f) -> SO {
-  var w = p; let off = w.xz - u.camPos.xz; w.y -= dot(off, off) / (2.0*RG);
-  var o: SO; o.pos = u.viewProj * vec4f(w.x, -w.y, w.z, 1.0); o.wp = p; o.n = n; o.col = c; return o;
-}
-@fragment fn fsLandRefl(i: SO) -> @location(0) vec4f {
-  if (i.wp.y < 0.0) { discard; }
-  return vec4f(litObject(i.wp, normalize(i.n), i.col, 0.0) * 0.92, 1.0);
-}
 
 @vertex fn vsBird(@location(0) p: vec3f, @location(1) c: vec3f, @location(2) ip: vec4f, @location(3) ib: vec4f) -> SO {
   let ax = abs(p.x); let sg = select(-1.0, 1.0, p.x >= 0.0);
@@ -875,7 +1368,6 @@ const bglScene = device.createBindGroupLayout({entries:[
   {binding:5, visibility:VF, texture:{sampleType:'float'}},
   {binding:6, visibility:VF, sampler:{}},
   {binding:7, visibility:VF, texture:{sampleType:'float'}},
-  {binding:8, visibility:VF, texture:{sampleType:'float'}},
 ]});
 const bglDetail = device.createBindGroupLayout({entries:[{binding:0, visibility:VF, buffer:{}}]});
 const bglDown = device.createBindGroupLayout({entries:[
@@ -958,15 +1450,7 @@ function scenePipes(sc){
   depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'},
   multisample:{count:sc},
 });
-  const landBuf = [{arrayStride:36, attributes:[
-    {shaderLocation:0, offset:0, format:'float32x3'}, {shaderLocation:1, offset:12, format:'float32x3'}, {shaderLocation:2, offset:24, format:'float32x3'}]}];
-  const land = device.createRenderPipeline({layout: sceneLayout,
-    vertex:{module:mObj, entryPoint:'vsLand', buffers:landBuf}, fragment:{module:mObj, entryPoint:'fsLand', targets:[{format:HDR}]},
-    primitive:{topology:'triangle-list', cullMode:'none'}, depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'}, multisample:{count:sc}});
-  const landRefl = device.createRenderPipeline({layout: baseLayout,
-    vertex:{module:mObj, entryPoint:'vsLandRefl', buffers:landBuf}, fragment:{module:mObj, entryPoint:'fsLandRefl', targets:[{format:HDR}]},
-    primitive:{topology:'triangle-list', cullMode:'none'}, depthStencil:{format:DEPTH, depthWriteEnabled:true, depthCompare:'greater'}});
-  return pipeCache[sc] = {sky, ocean, ship, bird, land, landRefl};
+  return pipeCache[sc] = {sky, ocean, ship, bird};
 }
 const baseLayout = device.createPipelineLayout({bindGroupLayouts:[bglBase]});
 const baseBG = device.createBindGroup({layout:bglBase, entries:[
@@ -1054,7 +1538,7 @@ function buildMesh(){
 const mesh = buildMesh();
 
 // ---- render targets (resized with the canvas)
-let curSC=0, W=0, H=0, hdrTex, msTex, skyHalfTex, reflTex, reflDepth, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
+let curSC=0, W=0, H=0, hdrTex, msTex, skyHalfTex, depthTex, bloomA, bloomB, bgBright, bgBlurH, bgBlurV, bgComp;
 let renderScale = 1.0;
 function resize(){
   const cap = Q.has('dpr') ? +Q.get('dpr') : (hiQ ? 3 : 2);
@@ -1065,14 +1549,12 @@ function resize(){
   if(w===W && h===H && curSC===sampleCount()) return;
   curSC = sampleCount();
   W=w; H=h; canvas.width=w; canvas.height=h;
-  [hdrTex, msTex, skyHalfTex, reflTex, reflDepth, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
-  reflTex = device.createTexture({size:[Math.max(1,w>>1), Math.max(1,h>>1)], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
-  reflDepth = device.createTexture({size:[Math.max(1,w>>1), Math.max(1,h>>1)], format:DEPTH, usage:GPUTextureUsage.RENDER_ATTACHMENT});
+  [hdrTex, msTex, skyHalfTex, depthTex, bloomA, bloomB].forEach(t=>t&&t.destroy());
   skyHalfTex = device.createTexture({size:[Math.max(1,w>>1), Math.max(1,h>>1)], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
   sceneBG = device.createBindGroup({layout:bglScene, entries:[
     {binding:0, resource:{buffer:ubo}}, {binding:1, resource:lutTex.createView()}, {binding:2, resource:sampLin},
     {binding:3, resource:detTex.createView()}, {binding:4, resource:sampDet},
-    {binding:5, resource:envTex.createView()}, {binding:6, resource:sampEnv}, {binding:7, resource:skyHalfTex.createView()}, {binding:8, resource:reflTex.createView()}]});
+    {binding:5, resource:envTex.createView()}, {binding:6, resource:sampEnv}, {binding:7, resource:skyHalfTex.createView()}]});
   msTex = curSC>1 ? device.createTexture({size:[w,h], format:HDR, sampleCount:curSC, usage:GPUTextureUsage.RENDER_ATTACHMENT}) : null;
   hdrTex = device.createTexture({size:[W,H], format:HDR, usage:GPUTextureUsage.RENDER_ATTACHMENT|GPUTextureUsage.TEXTURE_BINDING});
   depthTex = device.createTexture({size:[W,H], format:DEPTH, sampleCount:curSC, usage:GPUTextureUsage.RENDER_ATTACHMENT});
@@ -1116,8 +1598,8 @@ let HS_WIND1=1, HS_SWELL1=1;
 function swellRawCPU(x,z,t){ const L=[170,118,86], A=[0.95,0.55,0.32], D=[0.55,0.80,0.30]; let h=0;
   for(let j=0;j<3;j++){ const a=S.swellDir+(D[j]-0.55)*0.6, k=2*Math.PI/(L[j]*S.swellLen); const xx=k*(Math.cos(a)*x+Math.sin(a)*z)-Math.sqrt(9.81*k)*t+j*1.9; h+=A[j]*(2*Math.exp(Math.sin(xx)-1)-0.93); }
   return h*0.5; }
-const swellCPU=(x,z,t)=>swellRawCPU(x,z,t)*S.swellAmp*PL().swell;
-const oceanHCPU = (x,z,t)=>(wavesRawCPU(x,z,t,GEO_ITERS)-waveMean)*S.amp*PL().wind*1.6 + swellCPU(x,z,t);
+const swellCPU=(x,z,t)=>swellRawCPU(x,z,t)*S.swellAmp;
+const oceanHCPU = (x,z,t)=>(wavesRawCPU(x,z,t,GEO_ITERS)-waveMean)*S.amp*1.6 + swellCPU(x,z,t);
 
 // sun irradiance at sea level (transmittance march on CPU, same coefficients as the LUT)
 function sunColor(L){
@@ -1199,84 +1681,6 @@ function buildFisher(){
 }
 const shipCargo = buildCargo(), shipFisher = buildFisher();
 
-function buildIslands(){
-  let r = 4242; const rr=()=>{ r=(r*16807)%2147483647; return r/2147483647; };
-  const list=[];
-  for(let k=0; k<900 && list.length<48; k++){
-    let ang = rr()<0.7 ? (150 + (rr()+rr()-1)*95)*Math.PI/180 : rr()*Math.PI*2;
-    const dist = 90 + 3000*Math.pow(rr(), 2.0);
-    let R0 = 5 + 45*Math.pow(rr(), 2.2); if(dist<300) R0 = Math.min(R0, 26);
-    const x = Math.sin(ang)*dist, z = -Math.cos(ang)*dist;
-    if(list.some(o=>Math.hypot(o.x-x,o.z-z) < (o.R+R0)*1.25+18)) continue;
-    const H = Math.max(6, Math.min(42, R0*(0.95+0.6*rr())));
-    list.push({x, z, R:R0, H, ph:[rr()*6.28, rr()*6.28, rr()*6.28, rr()*6.28]});
-  }
-  const out=[];
-  const push=(p,n,c)=>out.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2]);
-  const tuff=(y,H,j)=>{ if(y<0.5) return [0.10,0.10,0.09]; if(y<1.4) return [0.26,0.25,0.21];
-    const st = 1 + 0.10*Math.sin(y*2.7 + j*0.05) + 0.05*Math.sin(y*7.3);
-    if(y > H*0.72) return [0.10,0.14,0.07];
-    if(y > H*0.6) return [0.24*st,0.27*st,0.17*st];
-    return [0.47*st, 0.46*st, 0.41*st]; };
-  for(const o of list){
-    const NT = o.R>25 ? 40 : 26, H=o.H, R=o.R;
-    const radF = j=>{ const t=j/NT*Math.PI*2; return 1 + 0.15*Math.sin(2*t+o.ph[0]) + 0.10*Math.sin(3*t+o.ph[1]) + 0.06*Math.sin(5*t+o.ph[2]) + 0.04*Math.sin(9*t+o.ph[3]); };
-    const lv=[[-3,0.86],[-0.5,0.80],[0.35,0.77],[1.0,0.88],[1.8,0.97]];
-    for(let k=1;k<=6;k++) lv.push([1.8+(0.70*H-1.8)*k/6, 1.0+0.06*Math.sin(k*1.7+o.ph[0])]);
-    lv.push([0.82*H, 0.93]); lv.push([0.92*H, 0.78]); lv.push([H, 0.5]);
-    const P=[], NRM=[];
-    for(let l=0;l<lv.length;l++){ P.push([]); NRM.push([]);
-      for(let j=0;j<NT;j++){ const t=j/NT*Math.PI*2, rf=R*radF(j)*lv[l][1]*(1+0.07*Math.sin(l*2.3+j*0.7)+0.05*Math.sin(l*5.1+j*1.9+o.ph[2]));
-        P[l].push([o.x+Math.cos(t)*rf, lv[l][0], o.z+Math.sin(t)*rf]); NRM[l].push([0,0,0]); } }
-    const top=[o.x, H+R*0.06, o.z], topN=[0,0,0];
-    const tris=[];
-    for(let l=0;l<lv.length-1;l++) for(let j=0;j<NT;j++){ const j1=(j+1)%NT;
-      tris.push([[l,j],[l+1,j],[l+1,j1]]); tris.push([[l,j],[l+1,j1],[l,j1]]); }
-    const L=lv.length-1;
-    for(let j=0;j<NT;j++) tris.push([[L,j],'top',[L,(j+1)%NT]]);
-    const gp=v=>v==='top'?top:P[v[0]][v[1]], gn=v=>v==='top'?topN:NRM[v[0]][v[1]];
-    for(const tr of tris){ const a=gp(tr[0]), b=gp(tr[1]), c=gp(tr[2]);
-      const u1=[b[0]-a[0],b[1]-a[1],b[2]-a[2]], v1=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
-      const fn=[u1[1]*v1[2]-u1[2]*v1[1], u1[2]*v1[0]-u1[0]*v1[2], u1[0]*v1[1]-u1[1]*v1[0]];
-      for(const v of tr){ const n=gn(v); n[0]+=fn[0]; n[1]+=fn[1]; n[2]+=fn[2]; } }
-    for(const tr of tris) for(const v of tr){ const p=gp(v), n=gn(v), l=Math.hypot(n[0],n[1],n[2])||1;
-      push(p,[n[0]/l,n[1]/l,n[2]/l], v==='top'?[0.10,0.14,0.07]:tuff(p[1],H,v[1])); }
-    // black pines (クロマツ): leaning trunks, flat umbrella canopies
-    const nP = Math.max(4, Math.min(70, Math.round(R*1.6)));
-    for(let q=0;q<nP;q++){
-      const a=rr()*Math.PI*2, rf=Math.pow(rr(),0.45)*0.95;
-      const ja=Math.round(a/(Math.PI*2)*NT)%NT, rad=R*radF(ja)*0.88*rf;
-      const bx=o.x+Math.cos(a)*rad, bz=o.z+Math.sin(a)*rad, by=H*(1.0 - 0.28*rf*rf);
-      const th=(4+7*rr())*Math.min(1.2, 0.5+R/14), lean=0.1+0.45*rf*rf;
-      const tx=bx+Math.cos(a)*th*lean, tz=bz+Math.sin(a)*th*lean, ty=by+th;
-      const tw=0.18+0.1*th/10, tc=[0.16,0.12,0.09];
-      for(let s2=0;s2<4;s2++){ const a0=s2*Math.PI/2, a1=a0+Math.PI/2;
-        const o0=[Math.cos(a0)*tw, Math.sin(a0)*tw], o1=[Math.cos(a1)*tw, Math.sin(a1)*tw];
-        const p00=[bx+o0[0],by,bz+o0[1]], p01=[bx+o1[0],by,bz+o1[1]], p10=[tx+o0[0]*0.6,ty,tz+o0[1]*0.6], p11=[tx+o1[0]*0.6,ty,tz+o1[1]*0.6];
-        const nn=[Math.cos(a0+Math.PI/4),0,Math.sin(a0+Math.PI/4)];
-        for(const p of [p00,p10,p11,p00,p11,p01]) push(p,nn,tc); }
-      const blobs=2+Math.floor(rr()*2);
-      for(let bI=0;bI<blobs;bI++){
-        const rx=(2.0+2.2*rr())*Math.max(0.7, th/7), ry=rx*(0.35+0.2*rr());
-        const cx=tx+(rr()-0.5)*rx*1.2, cz=tz+(rr()-0.5)*rx*1.2, cy=ty-bI*ry*1.1+(rr()-0.3)*0.4;
-        const g=0.8+0.4*rr(), cc=[0.045*g,0.085*g,0.04*g];
-        const SEG=8, RING=4, E=(i,k)=>{ const ph=i/RING*Math.PI, th2=k/SEG*Math.PI*2;
-          const nx=Math.sin(ph)*Math.cos(th2), ny=Math.cos(ph), nz=Math.sin(ph)*Math.sin(th2);
-          const w=1+0.18*Math.sin(th2*3+bI+q);
-          return [[cx+nx*rx*w, cy+ny*ry, cz+nz*rx*w],[nx/rx, ny/ry*0.6, nz/rx]]; };
-        for(let i=0;i<RING;i++) for(let k=0;k<SEG;k++){
-          const A=E(i,k),B=E(i+1,k),C=E(i+1,k+1),D=E(i,k+1);
-          for(const v of [A,B,C,A,C,D]){ const l=Math.hypot(...v[1])||1; push(v[0],[v[1][0]/l,v[1][1]/l,v[1][2]/l],cc); } }
-      }
-    }
-  }
-  const f=new Float32Array(out);
-  const buf=device.createBuffer({size:f.byteLength, usage:GPUBufferUsage.VERTEX, mappedAtCreation:true});
-  new Float32Array(buf.getMappedRange()).set(f); buf.unmap();
-  return {buf, count:f.length/9, list};
-}
-const islands = buildIslands();
-
 function buildBird(){
   const v=[]; const W=[0.92,0.92,0.92], G1=[0.56,0.58,0.62], G2=[0.48,0.50,0.54], K=[0.04,0.04,0.045];
   const t=(a,b,c,col)=>{ for(const p of [a,b,c]) v.push(p[0],p[1],p[2],col[0],col[1],col[2]); };
@@ -1297,23 +1701,15 @@ const birdBuf = device.createBuffer({size:birdInst.byteLength, usage:GPUBufferUs
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const life={ship:null, nextShip:3, gulls:[], nextGull:6, flocks:[], nextFlock:16, clock:0};
 function viewAxes(){ const fx=Math.sin(S.yaw), fz=-Math.cos(S.yaw); return {fx,fz,rx:-fz,rz:fx}; }
-function spawnShip(frac=0, kind, tries=0){
-  if(place==='matsushima') kind='fish';
+function spawnShip(frac=0, kind){
   kind = kind || (Math.random()<0.6?'cargo':'fish');
   const mesh = kind==='cargo'?shipCargo:shipFisher;
-  const D = place==='matsushima' ? rnd(160,520) : (kind==='cargo'?rnd(1400,2800):rnd(330,700));
+  const D = kind==='cargo'?rnd(1400,2800):rnd(330,700);
   const speed = kind==='cargo'?rnd(9,12):rnd(4,6);
   const {fx,fz,rx,rz}=viewAxes(); const dir=Math.random()<0.5?1:-1, tl=rnd(-0.35,0.35);
   let hx=rx*dir, hz=rz*dir; const c=Math.cos(tl), s=Math.sin(tl); [hx,hz]=[hx*c-hz*s, hx*s+hz*c];
   const half=D*Math.tan(42*Math.PI/180), total=2*half;
   const cx=cam.x+fx*D, cz=cam.z+fz*D;
-  if(place==='matsushima'){
-    const x0=cx-hx*half, z0=cz-hz*half;
-    for(let k=0;k<=40;k++){ const px=x0+hx*total*k/40, pz=z0+hz*total*k/40;
-      if(islands.list.some(o=>Math.hypot(o.x-px,o.z-pz) < o.R*1.15+28)){
-        if(tries<30) return spawnShip(frac, kind, tries+1);
-        life.nextShip = life.clock + 20; return; } }
-  }
   life.ship={mesh, x:cx-hx*half+hx*total*frac, z:cz-hz*half+hz*total*frac, hx, hz, speed, left:total*(1-frac)+mesh.L, heave:0, pitch:0, roll:0, fresh:true};
 }
 function spawnGulls(frac=0){
@@ -1353,7 +1749,7 @@ function spawnFlock(frac=0){
 function updateLife(dt, t){
   life.clock+=dt;
   if(!life.ship && life.clock>life.nextShip) spawnShip(0.12);
-  if(life.clock>life.nextGull){ spawnGulls(); life.nextGull=life.clock+(place==='matsushima'?rnd(8,18):rnd(22,48)); }
+  if(life.clock>life.nextGull){ spawnGulls(); life.nextGull=life.clock+rnd(22,48); }
   if(life.clock>life.nextFlock){ spawnFlock(); life.nextFlock=life.clock+rnd(55,110); }
   // ship: advance, then ride the swell (averaged over hull length)
   const sh=life.ship;
@@ -1517,6 +1913,7 @@ document.addEventListener('visibilitychange',()=>{ if(!Sound.ctx) return; if(doc
 // ---------------------------------------------------------------- camera & input
 const cam = {x:0, y:2, z:0, vy:0, tiltX:0, tiltZ:0, vx:0, vz:0};
 const keys = {};
+window.__keyH=true;
 addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyH') document.body.classList.toggle('clean'); });
 addEventListener('keyup', e=>{ keys[e.code]=false; });
 const pts = new Map(); let pinch0=0, alt0=0;
@@ -1537,7 +1934,8 @@ canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel
 canvas.addEventListener('wheel', e=>{ e.preventDefault(); setAlt(S.alt*Math.exp(e.deltaY*0.0015)); }, {passive:false});
 const elSun=document.getElementById('sun'), elAlt=document.getElementById('alt'), elAmp=document.getElementById('amp');
 elSun.value=S.sunEl; elAlt.value=S.alt; elAmp.value=S.amp;
-elSun.oninput=()=>{ setManual(); S.sunEl=+elSun.value; lutDirty=true; };
+elSun.oninput=()=>{ setManual(); S.sunEl=+elSun.value; lutDirty=true; if(window.__riseOff) window.__riseOff(); };
+window.__showSun = (el, az)=>{ setManual(); S.sunEl = el; S.sunAz = az*Math.PI/180; elSun.value = el; S.yaw = az*Math.PI/180; S.pitch = 2*Math.PI/180; lutDirty = true; };
 elAlt.oninput=()=>{ S.alt=+elAlt.value; };
 elAmp.oninput=()=>{ setManual(); S.amp=+elAmp.value; S.swellAmp=+elAmp.value; S.windSpeed=2+S.amp*3.5; S.whitecap=Math.min(1,Math.max(0,(S.windSpeed-3.5)/8.5)); };
 function setAlt(v){ S.alt=Math.max(0.6, Math.min(40, v)); elAlt.value=S.alt; }
@@ -1549,24 +1947,11 @@ if(Q.has('clean')) document.body.classList.add('clean');
 if(Q.has('demo')){ life.nextShip=1e9; life.nextGull=1e9; life.nextFlock=1e9; }
 var lutDirty = true;
 // ---------------------------------------------------------------- 仙台湾の実況（Open-Meteo）と太陽位置
-const PLACES = {
-  sendai:     {name:'仙台湾', lat:38.20, lon:141.15, sunLat:38.27, sunLon:140.87, yaw:110, wind:1.0, swell:1.0, wave:1.0},
-  matsushima: {name:'松島',   lat:38.36, lon:141.07, sunLat:38.37, sunLon:141.06, yaw:150, wind:0.32, swell:0.12, wave:0.55},
-};
-let place = (Q.get('place')==='matsushima') ? 'matsushima' : 'sendai';
-const PL = ()=>PLACES[place];
-let SITE = {lat:PL().lat, lon:PL().lon};
+const SITE = {lat:38.20, lon:141.15};
 let live = !Q.has('manual') && !Q.has('sun');
-const placeEl = document.getElementById('place'), placeSub = document.getElementById('placeSub');
+const bayBtn = document.getElementById('bay'), baySub = bayBtn.querySelector('small');
 function setManual(){ if(live){ live=false; renderWxPanel(); } }
-function setPlace(p){
-  const changed = p !== place;
-  place = p; SITE = {lat:PL().lat, lon:PL().lon};
-  live = true;
-  if(changed){ S.yaw = PL().yaw*Math.PI/180; cam.x = 0; cam.z = 0; life.ship = null; life.nextShip = life.clock + 4; WX = null; fetchWx(); }
-  applyAll(); renderWxPanel(); updatePlaceLabels();
-}
-placeEl.querySelectorAll('button').forEach(b=>b.onclick=()=>setPlace(b.dataset.p));
+bayBtn.onclick=()=>{ live=true; applyAll(); if(!WX) fetchWx(); renderWxPanel(); };
 function solarPos(date, lat, lon){
   const rad=Math.PI/180, n = date.getTime()/86400000 + 2440587.5 - 2451545.0;
   const L=(280.460+0.9856474*n)%360, g=(357.528+0.9856003*n)*rad;
@@ -1596,7 +1981,7 @@ function applyWeather(){
   const wwp=num(m.wind_wave_period, Math.max(1.5, 0.8*ws));
   const wwd=num(m.wind_wave_direction, wdir);
   S.wind = (wwd+90)*Math.PI/180;
-  S.waveScale = 2*Math.PI/Math.max(6, Math.min(120, 1.56*wwp*wwp*1.3*PL().wave));
+  S.waveScale = 2*Math.PI/Math.max(8, Math.min(120, 1.56*wwp*wwp*1.3));
   S.amp = Math.max(0.05, Math.min(6, wwh/HS_WIND1));
   // swell
   const swh=num(m.swell_wave_height, 0.4), swp=num(m.swell_wave_period, 8), swd=num(m.swell_wave_direction, wwd);
@@ -1616,74 +2001,21 @@ function applyWeather(){
   lutDirty = true;
 }
 function applySun(){
-  const p = solarPos(new Date(), PL().sunLat, PL().sunLon);
+  const p = solarPos(new Date(), 38.27, 140.87);
   sunReal = p;
   S.sunEl = Math.max(-2.5, Math.min(60, p.el)); S.sunAz = p.az*Math.PI/180;
   elSun.value = S.sunEl; lutDirty = true;
 }
 function applyAll(){ applySun(); applyWeather(); }
 function renderWxPanel(){
-  placeEl.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.p===place));
-  placeEl.classList.toggle('manual', !live);
-  if(!live){ placeSub.textContent = '手動設定中（場所をタップで実況）'; return; }
-  if(wxErr && !WX){ placeSub.textContent = '天気を取得できません'; return; }
-  if(!WX){ placeSub.textContent = '実況を取得中…'; return; }
+  bayBtn.classList.toggle('on', live);
+  if(!live){ baySub.textContent = 'タップで実況に戻す'; return; }
+  if(wxErr && !WX){ baySub.textContent = '天気を取得できません'; return; }
+  if(!WX){ baySub.textContent = '実況を取得中…'; return; }
   const c=WX.cur||{}, m=WX.mar||{};
   const f=(v,d=1)=>v==null?'—':(+v).toFixed(d);
-  const wh = m.wave_height==null ? null : m.wave_height*(place==='matsushima'?0.3:1);
-  placeSub.textContent = (c.time||'').slice(11,16)+' '+WX_JA(c.weather_code)+' 風'+f(c.wind_speed_10m)+'m 波'+f(wh)+'m';
+  baySub.textContent = (c.time||'').slice(11,16)+' '+WX_JA(c.weather_code)+' 風'+f(c.wind_speed_10m)+'m 波'+f(m.wave_height)+'m';
 }
-// ---------------------------------------------------------------- 「今日の仙台湾」をワンタップで投稿
-const shareBtn = document.getElementById('share'), toastEl = document.getElementById('toast');
-function toast(msg, ms=2500){ toastEl.textContent=msg; toastEl.style.display='block'; clearTimeout(toast.t); toast.t=setTimeout(()=>toastEl.style.display='none', ms); }
-const pageURL = location.origin + location.pathname;
-function wxLine(){
-  if(!live || !WX) return '（手動設定）';
-  const c=WX.cur||{}, m=WX.mar||{}; const f=(v,d=1)=>v==null?'—':(+v).toFixed(d);
-  const wh = m.wave_height==null ? null : m.wave_height*(place==='matsushima'?0.3:1);
-  return WX_JA(c.weather_code)+'　風 '+dirJa(c.wind_direction_10m)+' '+f(c.wind_speed_10m)+'m/s　波高 '+f(wh)+'m';
-}
-function stamp(){ const d=new Date(); const p=n=>String(n).padStart(2,'0');
-  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes()); }
-async function shareImage(src){
-  // caption band on the screenshot
-  const W2=src.width, H2=src.height, x=src.getContext('2d');
-  const u=Math.min(W2/560, H2/1000, Math.max(W2,H2)/1000);
-  const fit=(t,px,w)=>{ let f=px; x.font=w+' '+Math.round(f)+'px '+fam; while(x.measureText(t).width>W2-52*u && f>8){ f*=0.92; x.font=w+' '+Math.round(f)+'px '+fam; } };
-  const fam='-apple-system,system-ui,"Hiragino Sans","Noto Sans JP",sans-serif';
-  const g=x.createLinearGradient(0,H2*0.70,0,H2); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)');
-  x.fillStyle=g; x.fillRect(0,H2*0.70,W2,H2*0.30);
-  x.fillStyle='#fff'; x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=6*u;
-  const ttl='今日の'+PL().name, l3='#'+ttl+'　'+pageURL.replace(/^https?:\/\//,'');
-  fit(ttl, 40*u, '700'); x.fillText(ttl, 26*u, H2-104*u);
-  fit(stamp(), 20*u, '500'); x.fillText(stamp(), 26*u, H2-72*u);
-  fit(wxLine(), 20*u, '500'); x.fillText(wxLine(), 26*u, H2-46*u);
-  fit(l3, 14*u, '400'); x.globalAlpha=0.85; x.fillText(l3, 26*u, H2-20*u); x.globalAlpha=1;
-  const text = '今日の'+PL().name+' '+stamp()+' '+wxLine().replace(/　/g,' ')+'\n#今日の'+PL().name+'\n'+pageURL+(place==='matsushima'?'?place=matsushima':'');
-  const blob = await new Promise(r=>src.toBlob(r,'image/jpeg',0.92));
-  const file = new File([blob], 'sendai-bay.jpg', {type:'image/jpeg'});
-  try{
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text}); return; }
-  }catch(e){ if(e && e.name==='AbortError') return; }
-  // fallback: save the image and open a prefilled post
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sendai-bay.jpg'; document.body.appendChild(a); a.click(); a.remove();
-  window.open('https://x.com/intent/post?text='+encodeURIComponent(text), '_blank');
-  toast('画像を保存しました。投稿画面に画像を添付してください', 4000);
-}
-shareBtn.onclick=()=>{ window.__wantShare = true; toast('画像を作成中…', 1200); };
-window.__shareImage = shareImage;
-
-// ---------------------------------------------------------------- 24時間配信モード（?stream）
-const STREAM = Q.has('stream');
-if(STREAM){
-  document.body.classList.add('clean','stream');
-  const liveSub=document.getElementById('liveSub');
-  const upd=()=>{ liveSub.textContent = stamp().slice(-5)+'　'+(WX ? wxLine() : '実際の天気と波を再現'); };
-  setInterval(upd, 20000); setTimeout(upd, 3000);
-  toast('画面を一度クリックすると音声が始まります', 8000);
-  addEventListener('pointerdown', async ()=>{ try{ await navigator.wakeLock?.request('screen'); }catch(e){} }, {once:true});
-}
-
 async function fetchWx(){
   if(Q.has('wxtest')){
     const tests = {
@@ -1701,7 +2033,7 @@ async function fetchWx(){
     const wu=`https://api.open-meteo.com/v1/forecast?latitude=${SITE.lat}&longitude=${SITE.lon}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,visibility&wind_speed_unit=ms${tz}`;
     const mv='wave_height,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period';
     const mu=(la,lo)=>`https://marine-api.open-meteo.com/v1/marine?latitude=${la}&longitude=${lo}&current=${mv}${tz}`;
-    const [w, m0] = await Promise.all([fetch(wu).then(r=>r.json()), fetch(mu(38.20,141.15)).then(r=>r.json()).catch(()=>null)]);
+    const [w, m0] = await Promise.all([fetch(wu).then(r=>r.json()), fetch(mu(SITE.lat,SITE.lon)).then(r=>r.json()).catch(()=>null)]);
     let m = m0;
     if(!m || !m.current || m.current.wave_height==null){ m = await fetch(mu(38.10,141.40)).then(r=>r.json()).catch(()=>null); }
     if(!w || !w.current) throw new Error('no data');
@@ -1710,12 +2042,99 @@ async function fetchWx(){
   }catch(e){ wxErr = 'オフラインまたは通信がブロックされています'; }
   renderWxPanel();
 }
-if(live){ applySun(); if(!Q.has('yaw')) S.yaw = PL().yaw*Math.PI/180; }
-function updatePlaceLabels(){ const n=PL().name; document.querySelector('#live b').textContent = n+'ライブ'; document.title = n+'ライブ — 実際の天気と波を再現'; }
-updatePlaceLabels();
+if(live){ applySun(); if(!Q.has('yaw')) S.yaw = 110*Math.PI/180; }
 renderWxPanel(); fetchWx();
 setInterval(fetchWx, 15*60*1000);
 setInterval(()=>{ if(live) applySun(); renderWxPanel(); }, 30*1000);
+
+// ---------------------------------------------------------------- 共有：今の画面に日時と実況を入れて X / LINE へ
+var shotWaiters = [];   // 次の描画の直後に画面を受け取る
+const $ = id => document.getElementById(id);
+const shBox=$('share'), shImg=$('shImg'), shText=$('shText'), shMsg=$('shMsg'), shNote=$('shNote');
+let shFile=null, shUrl=null;
+const pad2 = n => String(n).padStart(2,'0');
+const pageUrl = /^https?:/.test(location.protocol) ? location.origin + location.pathname : '';
+function wxLine(){
+  if(!live || !WX) return null;
+  const c=WX.cur||{}, m=WX.mar||{}, parts=[WX_JA(c.weather_code)];
+  if(c.wind_speed_10m!=null) parts.push(dirJa(c.wind_direction_10m)+'の風 '+(+c.wind_speed_10m).toFixed(1)+'m/s');
+  if(m.wave_height!=null) parts.push('波 '+(+m.wave_height).toFixed(1)+'m');
+  if(c.temperature_2m!=null) parts.push('気温 '+(+c.temperature_2m).toFixed(1)+'℃');
+  return parts.join('・');
+}
+function buildText(d){
+  const when = (d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+  const w = wxLine();
+  return (w ? '仙台湾ライブ（'+when+'）\n'+w : '仙台湾ライブ（波と太陽を自分で調整）') + '\n#仙台湾ライブ #仙台湾 #仙台';
+}
+async function makeCard(blob, d){
+  const src = await createImageBitmap(blob);
+  const k = Math.min(1, 1600/Math.max(src.width, src.height));
+  const W2 = Math.round(src.width*k), H2 = Math.round(src.height*k);
+  const c = document.createElement('canvas'); c.width=W2; c.height=H2;
+  const x = c.getContext('2d'); x.drawImage(src, 0, 0, W2, H2);
+  const u = Math.max(W2, H2*0.75)/1000;               // 文字の基準サイズ
+  const g = x.createLinearGradient(0, H2-260*u, 0, H2);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.62)');
+  x.fillStyle=g; x.fillRect(0, H2-260*u, W2, 260*u);
+  const F='-apple-system,system-ui,"Hiragino Sans","Yu Gothic",sans-serif', L=40*u;
+  x.fillStyle='#fff'; x.textBaseline='alphabetic'; x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=8*u;
+  const w = wxLine();
+  x.font='700 '+Math.round(54*u)+'px '+F;
+  x.fillText('仙台湾ライブ', L, H2-122*u);
+  x.font='600 '+Math.round(26*u)+'px '+F;
+  const when = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
+  x.fillText(when+(w ? '　'+w : '　波と太陽を自分で調整'), L, H2-74*u, W2-2*L);
+  x.font='400 '+Math.round(17*u)+'px '+F; x.globalAlpha=.75;
+  const dt = w && WX.cur.time ? (WX.cur.time.slice(11,16)+' 時点の') : '';
+  x.fillText(w ? '天気・波は '+dt+'Open-Meteo（予報モデル）の値　太陽の位置は計算値' : 'リアルタイムに描いた3DCG', L, H2-38*u, W2-2*L);
+  x.globalAlpha=1;
+  return new Promise(r=>c.toBlob(r, 'image/jpeg', 0.9));
+}
+async function openShare(){
+  shMsg.textContent='画像を作っています…'; shBox.classList.add('open');
+  const d = new Date();
+  const blob = await new Promise(r=>shotWaiters.push(r));
+  if(!blob){ shMsg.textContent='画像を作れませんでした。もう一度お試しください。'; return; }
+  const jpg = await makeCard(blob, d);
+  const name = 'sendaiwan_'+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())+'.jpg';
+  shFile = new File([jpg], name, {type:'image/jpeg'});
+  if(shUrl) URL.revokeObjectURL(shUrl);
+  shUrl = URL.createObjectURL(jpg);
+  shImg.src = shUrl; $('shSave').href = shUrl; $('shSave').download = name;
+  shText.value = buildText(d); updateLinks();
+  const canFiles = !!(navigator.canShare && navigator.canShare({files:[shFile]}));
+  $('shNative').style.display = canFiles ? '' : 'none';
+  $('shCopy').style.display = (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) ? '' : 'none';
+  shNote.textContent = canFiles
+    ? '「画像つきで送る」で X や LINE を選ぶと、この画像が付きます。下のボタンは文章だけを送ります。'
+    : 'X・LINE のボタンは文章だけを送ります。画像は「画像をコピー」して投稿画面に貼り付けるか、「画像を保存」してから添付してください。';
+  shMsg.textContent='';
+}
+function updateLinks(){
+  const t = shText.value;
+  $('shX').href = 'https://x.com/intent/post?text='+encodeURIComponent(t)+(pageUrl?'&url='+encodeURIComponent(pageUrl):'');
+  $('shLine').href = 'https://line.me/R/share?text='+encodeURIComponent(t+(pageUrl?'\n'+pageUrl:''));
+}
+shText.addEventListener('input', updateLinks);
+$('shareBtn').onclick = openShare;
+$('shClose').onclick = ()=>shBox.classList.remove('open');
+shBox.addEventListener('click', e=>{ if(e.target===shBox) shBox.classList.remove('open'); });
+shBox.addEventListener('keydown', e=>{ e.stopPropagation(); if(e.key==='Escape') shBox.classList.remove('open'); });
+shBox.addEventListener('keyup', e=>e.stopPropagation());
+$('shNative').onclick = async ()=>{
+  const data = {files:[shFile], text: shText.value + (pageUrl?'\n'+pageUrl:'')};
+  try{ await navigator.share(data); }
+  catch(e){ if(e.name!=='AbortError') shMsg.textContent='送れませんでした（'+e.message+'）'; }
+};
+$('shCopy').onclick = async ()=>{
+  try{
+    const png = await createImageBitmap(shFile).then(b=>{ const c=document.createElement('canvas'); c.width=b.width; c.height=b.height;
+      c.getContext('2d').drawImage(b,0,0); return new Promise(r=>c.toBlob(r,'image/png')); });
+    await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);
+    shMsg.textContent='画像をコピーしました。X や LINE の投稿画面で貼り付けてください。';
+  }catch(e){ shMsg.textContent='コピーできませんでした。「画像を保存」をお使いください。'; }
+};
 
 let sunL=[0,1,0], sunC=[1,1,1];
 function updateSun(){
@@ -1738,11 +2157,10 @@ const tFixed = Q.has('t') ? +Q.get('t') : null;
 let last = t0, frames = 0;
 window.__frames = 0;
 function frame(now){
-  if(window.__sharePending){ requestAnimationFrame(frame); return; }  // let the GPU drain while the screenshot is read back
+  if(window.__liteOn) return;
   resize();
   const rawDt = (now-last)/1000;
   const dt = Math.min(0.05, rawDt); last = now;
-  if(STREAM && pts.size===0) S.yaw = (110 + 35*Math.sin(now/1000*2*Math.PI/600))*Math.PI/180;
   // watchdog: 最高画質が重すぎる端末では自動で軽量へ
   if(hiQ && !Q.has('shot') && !Q.has('fixed') && frames > 5){
     frame.slowT = (rawDt > 0.12) ? (frame.slowT||0) + rawDt : 0;
@@ -1818,9 +2236,9 @@ function frame(now){
   uData.set([...sunL, S.cover], 32);
   uData.set([...sunC, S.wind], 36);
   uData.set([W,H,1/W,1/H], 40);
-  uData.set([S.amp*PL().wind, S.waveScale, waveMean, S.chop], 44);
-  uData.set([S.swellDir, S.swellLen, S.ripple*(place==='matsushima'?0.7:1), S.whitecap*(place==='matsushima'?0.35:1)], 68);
-  uData.set([S.haze, S.fog, S.swellAmp*PL().swell, S.sunDim], 72);
+  uData.set([S.amp, S.waveScale, waveMean, S.chop], 44);
+  uData.set([S.swellDir, S.swellLen, S.ripple, S.whitecap], 68);
+  uData.set([S.haze, S.fog, S.swellAmp, S.sunDim], 72);
   uData.set([Q.has('q') ? +Q.get('q') : (hiQ?1:0), S.rain, 0, 0], 76);
   const shp = life.ship;
   if(shp){
@@ -1852,11 +2270,6 @@ function frame(now){
     mipChain(enc, envViews, envDownBG); }
   { const p=enc.beginRenderPass({colorAttachments:[{view:skyHalfTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,0]}]});
     p.setPipeline(skyHalfPipe); p.setBindGroup(0, baseBG); p.draw(3); p.end(); }
-  { // mirrored islands for the water reflection (cleared every frame; empty outside 松島)
-    const p=enc.beginRenderPass({colorAttachments:[{view:reflTex.createView(), loadOp:'clear', storeOp:'store', clearValue:[0,0,0,0]}],
-      depthStencilAttachment:{view:reflDepth.createView(), depthLoadOp:'clear', depthStoreOp:'discard', depthClearValue:0}});
-    if(place==='matsushima'){ const PP=scenePipes(curSC); p.setPipeline(PP.landRefl); p.setBindGroup(0, baseBG); p.setVertexBuffer(0, islands.buf); p.draw(islands.count); }
-    p.end(); }
   {
     const p = enc.beginRenderPass({
       colorAttachments:[msTex ? {view:msTex.createView(), resolveTarget:hdrTex.createView(), loadOp:'clear', storeOp:'discard', clearValue:[0,0,0,1]}
@@ -1865,7 +2278,6 @@ function frame(now){
     const PP = scenePipes(curSC);
     p.setBindGroup(0, sceneBG);
     p.setPipeline(PP.ocean); p.setVertexBuffer(0, mesh.vb); p.setIndexBuffer(mesh.ib, 'uint32'); p.drawIndexed(mesh.count);
-    if(place==='matsushima'){ p.setPipeline(PP.land); p.setVertexBuffer(0, islands.buf); p.draw(islands.count); }
     if(shp){ p.setPipeline(PP.ship); p.setVertexBuffer(0, shp.mesh.buf); p.draw(shp.mesh.count); }
     if(birdCount){ p.setPipeline(PP.bird); p.setVertexBuffer(0, birdMesh.buf); p.setVertexBuffer(1, birdBuf); p.draw(birdMesh.count, birdCount); }
     p.setPipeline(PP.sky); p.draw(3);
@@ -1878,22 +2290,21 @@ function frame(now){
   const outTex = ctx.getCurrentTexture();
   fs(compPipe, bgComp, outTex.createView());
   let rb=null;
-  const wantShare = window.__wantShare; window.__wantShare = false;
-  if(wantShare || (Q.has('shot') && frames===+(Q.get('shot')||3))){
+  if(Q.has('shot') && frames===+(Q.get('shot')||3)){
     const bpr = Math.ceil(W*4/256)*256;
     rb = device.createBuffer({size:bpr*H, usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
     enc.copyTextureToBuffer({texture:outTex}, {buffer:rb, bytesPerRow:bpr}, [W,H]);
-    rb.bpr=bpr; if(wantShare){ window.__sharePending = true; setTimeout(()=>{ window.__sharePending = false; }, 6000); }
+    rb.bpr=bpr;
   }
   device.queue.submit([enc.finish()]);
+  if(shotWaiters.length){ const ws=shotWaiters.splice(0); canvas.toBlob(b=>ws.forEach(f=>f(b)), 'image/png'); }
   if(Q.has('fixed')){ const g0=performance.now(); device.queue.onSubmittedWorkDone().then(()=>{ const d=performance.now()-g0; window.__gpuN=(window.__gpuN||0)+1; if(window.__gpuN>8) window.__gpu=(window.__gpu||d)*0.85+d*0.15; }); }
   if(rb){ rb.mapAsync(GPUMapMode.READ).then(()=>{ const src=new Uint8Array(rb.getMappedRange());
     const c2=document.createElement('canvas'); c2.width=W; c2.height=H; const x=c2.getContext('2d'); const img=x.createImageData(W,H);
     const bgra = presentFormat.startsWith('bgra');
     for(let y=0;y<H;y++) for(let i=0;i<W;i++){ const s=y*rb.bpr+i*4, d=(y*W+i)*4;
       img.data[d]=src[s+(bgra?2:0)]; img.data[d+1]=src[s+1]; img.data[d+2]=src[s+(bgra?0:2)]; img.data[d+3]=255; }
-    x.putImageData(img,0,0); rb.unmap(); rb.destroy(); window.__sharePending = false; last = performance.now();
-    if(wantShare) shareImage(c2); else window.__png=c2.toDataURL('image/png'); }); }
+    x.putImageData(img,0,0); window.__png=c2.toDataURL('image/png'); }); }
   frames++; window.__frames = frames;
   if(Q.has('shot') && frames > +(Q.get('shot')||3)) return;
   requestAnimationFrame(frame);
